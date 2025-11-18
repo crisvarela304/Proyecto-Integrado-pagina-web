@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Calendario de Exámenes{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera con filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Curso</label>
+                            <select name="curso" class="form-select">
+                                <option value="">Todos los cursos</option>
+                                {% for curso in cursos %}
+                                    <option value="{{ curso.id }}" {% if filtros.curso == curso.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ curso }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Asignatura</label>
+                            <select name="asignatura" class="form-select">
+                                <option value="">Todas las asignaturas</option>
+                                {% for asignatura in asignaturas %}
+                                    <option value="{{ asignatura.id }}" {% if filtros.asignatura == asignatura.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ asignatura.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">Desde</label>
+                            <input type="date" name="fecha_desde" class="form-control" value="{{ filtros.fecha_desde }}">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">Hasta</label>
+                            <input type="date" name="fecha_hasta" class="form-control" value="{{ filtros.fecha_hasta }}">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Total Exámenes</h6>
+                                    <h4 class="mb-0">{{ examenes|length }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-clipboard-check fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Esta Semana</h6>
+                                    <h4 class="mb-0">
+                                        {% with examenes_semanales=examenes|length %}
+                                            {{ examenes_semanales }}
+                                        {% endwith %}
+                                    </h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-calendar-week fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Cursos</h6>
+                                    <h4 class="mb-0">{{ cursos|length }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-people fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Asignaturas</h6>
+                                    <h4 class="mb-0">{{ asignaturas|length }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-book fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de exámenes -->
+    {% if examenes %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard-check"></i> Calendario de Exámenes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Examen</th>
+                                        <th>Asignatura</th>
+                                        <th>Curso</th>
+                                        <th>Profesor</th>
+                                        <th>Sala</th>
+                                        <th>Duración</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for examen in examenes %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i class="bi bi-calendar-check text-primary"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold">{{ examen.fecha_aplicacion|date:"d/m/Y" }}</div>
+                                                    <small class="text-muted">{{ examen.fecha_aplicacion|date:"l" }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ examen.hora_inicio|time:"H:i" }}</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="fw-semibold">{{ examen.titulo }}</div>
+                                                <small class="text-muted">{{ examen.get_tipo_periodo_display }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ examen.asignatura.nombre }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ examen.curso }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-person text-muted"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="small">{{ examen.profesor.get_full_name|default:examen.profesor.username }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if examen.sala %}
+                                                <span class="badge bg-light text-dark">{{ examen.sala }}</span>
+                                            {% else %}
+                                                <span class="text-muted">No asignada</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ examen.duracion_minutos }} min</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- No hay exámenes -->
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-clipboard-check display-1 text-muted"></i>
+                <h3 class="mt-3 text-muted">No hay exámenes programados</h3>
+                {% if filtros.curso or filtros.asignatura or filtros.fecha_desde or filtros.fecha_hasta %}
+                    <p class="text-muted">No se encontraron exámenes que coincidan con los filtros aplicados.</p>
+                    <a href="{% url 'documentos:examenes_calendario' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left"></i> Ver todos los exámenes
+                    </a>
+                {% else %}
+                    <p class="text-muted">Aún no se han programado exámenes para el período actual.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit del formulario cuando cambian los filtros
+    const selects = document.querySelectorAll('select[name="curso"], select[name="asignatura"]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+{% endblock %}

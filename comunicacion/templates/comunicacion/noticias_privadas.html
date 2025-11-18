@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Noticias privadas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Noticias privadas</h3>
+        <a href="{% url 'noticias' %}" class="btn btn-outline-secondary btn-sm">
+            Volver al sitio público
+        </a>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Título</th>
+                            <th>Categoría</th>
+                            <th>Estado</th>
+                            <th>Creado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for noticia in noticias %}
+                            <tr>
+                                <td>{{ noticia.titulo }}</td>
+                                <td>{{ noticia.get_categoria_display }}</td>
+                                <td>
+                                    {% if noticia.es_publica %}
+                                        <span class="badge bg-success">Pública</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Privada</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ noticia.creado|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    No hay noticias disponibles.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.carousel {
+  margin-top: 0;  
+}
+
+
+
+.carousel {
+  margin-bottom: 4rem;
+}
+
+
+.carousel-caption {
+  bottom: 3rem;
+  z-index: 10;
+}
+
+
+.carousel-item {
+  height: 32rem;
+}
+.carousel-item > img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  height: 32rem;
+  object-fit: cover;
+}
+
+
+.marketing .col-lg-4 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.marketing h2 {
+  font-weight: 400;
+}
+.marketing .col-lg-4 p {
+  margin: 0 .75rem;
+}
+
+
+@media (max-width: 768px) {
+  .carousel-item {
+    height: 20rem;
+  }
+  .carousel-item > img {
+    height: 20rem;
+  }
+}
+.fullwidth-carousel {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  .carousel{ margin-bottom:1rem } 
+}
+

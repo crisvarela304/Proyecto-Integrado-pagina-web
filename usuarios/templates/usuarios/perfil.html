@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Información del perfil -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        Mi Perfil Personal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Información básica -->
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre de usuario</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                                <small class="text-muted">El nombre de usuario no se puede cambiar</small>
+                            </div>
+                            
+                            {{ user_form|crispy }}
+                            
+                            <!-- Información del perfil -->
+                            {% if perfil %}
+                            <div class="col-md-6">
+                                <label class="form-label">RUT</label>
+                                <input type="text" class="form-control" value="{{ perfil.rut }}" readonly>
+                                <small class="text-muted">El RUT no se puede cambiar</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de usuario</label>
+                                <input type="text" class="form-control" value="{{ perfil.get_tipo_usuario_display }}" readonly>
+                            </div>
+                            
+                            {{ perfil_form|crispy }}
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre completo</label>
+                                <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
+                            </div>
+                            
+                            {% endif %}
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i>
+                                    Guardar Cambios
+                                </button>
+                                <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-secondary ms-2">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    Volver al Panel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel lateral con información adicional -->
+        <div class="col-lg-4">
+            <!-- Información de la cuenta -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Información de la Cuenta
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Último acceso:</small>
+                        <div>{{ user.last_login|date:"d/m/Y H:i"|default:"Primera vez" }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Fecha de registro:</small>
+                        <div>{{ user.date_joined|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Estado:</small>
+                        <span class="badge bg-success">Activo</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Acciones rápidas -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>
+                        Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'usuarios:cambiar_password' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-shield-lock me-1"></i>
+                            Cambiar Contraseña
+                        </a>
+                        <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-info">
+                            <i class="bi bi-house me-1"></i>
+                            Ir al Panel Principal
+                        </a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'admin:index' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-tools me-1"></i>
+                            Panel de Administración
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

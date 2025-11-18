@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Noticias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera con búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <!-- Búsqueda -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Buscar noticias</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="q" value="{{ query }}" 
+                                       placeholder="Buscar en título, resumen o contenido...">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtro por categoría -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <select name="categoria" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                <option value="académico" {% if categoria_filtro == 'académico' %}selected{% endif %}>Académico</option>
+                                <option value="actividades" {% if categoria_filtro == 'actividades' %}selected{% endif %}>Actividades</option>
+                                <option value="convivencia" {% if categoria_filtro == 'convivencia' %}selected{% endif %}>Convivencia Escolar</option>
+                                <option value="eventos" {% if categoria_filtro == 'eventos' %}selected{% endif %}>Eventos</option>
+                                <option value="deportes" {% if categoria_filtro == 'deportes' %}selected{% endif %}>Deportes</option>
+                                <option value="cultura" {% if categoria_filtro == 'cultura' %}selected{% endif %}>Cultura</option>
+                                <option value="administrativo" {% if categoria_filtro == 'administrativo' %}selected{% endif %}>Administrativo</option>
+                                <option value="comunicado" {% if categoria_filtro == 'comunicado' %}selected{% endif %}>Comunicado</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Ordenamiento -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Ordenar por</label>
+                            <select name="orden" class="form-select">
+                                <option value="recientes" {% if orden_actual == 'recientes' %}selected{% endif %}>
+                                    Más recientes
+                                </option>
+                                <option value="visitas" {% if orden_actual == 'visitas' %}selected{% endif %}>
+                                    Más visitadas
+                                </option>
+                                <option value="categoria" {% if orden_actual == 'categoria' %}selected{% endif %}>
+                                    Por categoría
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Botón aplicar filtros -->
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Total Noticias</h6>
+                                    <h4 class="mb-0">{{ page_obj.paginator.count }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-newspaper fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if query or categoria_filtro %}
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Resultados filtrados</h6>
+                                    <h4 class="mb-0">{{ page_obj.paginator.count }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-check-circle fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Página actual</h6>
+                                    <h4 class="mb-0">{{ page_obj.number }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-bookmark fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Páginas totales</h6>
+                                    <h4 class="mb-0">{{ page_obj.paginator.num_pages }}</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-files fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de noticias -->
+    {% if page_obj.object_list %}
+        <div class="row g-4">
+            {% for noticia in page_obj.object_list %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm border-0 noticia-card">
+                    <!-- Badges de estado -->
+                    <div class="position-absolute top-0 start-0 m-3 z-1">
+                        {% if noticia.urgente %}
+                            <span class="badge bg-danger">URGENTE</span>
+                        {% endif %}
+                        {% if noticia.destacado %}
+                            <span class="badge bg-warning text-dark">DESTACADA</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Imagen de portada -->
+                    <div class="position-relative">
+                        {% if noticia.portada %}
+                            <img src="{{ noticia.portada.url }}" class="card-img-top" 
+                                 alt="{{ noticia.titulo }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'img/hero1.jpg' %}" class="card-img-top" 
+                                 alt="{{ noticia.titulo }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        
+                        <!-- Overlay con categoría -->
+                        <div class="position-absolute bottom-0 start-0 w-100 bg-gradient bg-dark bg-opacity-50">
+                            <div class="p-2">
+                                <span class="badge bg-primary">{{ noticia.get_categoria_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Título y metadatos -->
+                        <h5 class="card-title mb-2">{{ noticia.titulo }}</h5>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
+                            <span>
+                                <i class="bi bi-person"></i> 
+                                {{ noticia.autor|default:"Administración" }}
+                            </span>
+                            <span>
+                                <i class="bi bi-calendar"></i> 
+                                {{ noticia.creado|date:"d/m/Y" }}
+                            </span>
+                            <span>
+                                <i class="bi bi-eye"></i> 
+                                {{ noticia.visitas }}
+                            </span>
+                        </div>
+                        
+                        <!-- Resumen -->
+                        {% if noticia.bajada %}
+                            <p class="card-text flex-grow-1">{{ noticia.bajada }}</p>
+                        {% else %}
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ noticia.cuerpo|truncatewords:20 }}
+                            </p>
+                        {% endif %}
+                        
+                        <!-- Botón leer más -->
+                        <div class="mt-auto">
+                            <a href="{% url 'noticia_detalle' noticia.pk %}" class="btn btn-primary w-100">
+                                <i class="bi bi-arrow-right"></i> Leer noticia completa
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación mejorada -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Navegación de páginas" class="mt-5">
+            <ul class="pagination justify-content-center">
+                <!-- Primera página -->
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if orden_actual != 'recientes' %}&orden={{ orden_actual }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if orden_actual != 'recientes' %}&orden={{ orden_actual }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Anterior</span>
+                    </li>
+                {% endif %}
+
+                <!-- Números de página -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if orden_actual != 'recientes' %}&orden={{ orden_actual }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Última página -->
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if orden_actual != 'recientes' %}&orden={{ orden_actual }}{% endif %}">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if orden_actual != 'recientes' %}&orden={{ orden_actual }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- No hay noticias -->
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-newspaper display-1 text-muted"></i>
+                <h3 class="mt-3 text-muted">No hay noticias disponibles</h3>
+                {% if query or categoria_filtro %}
+                    <p class="text-muted">No se encontraron noticias que coincidan con los filtros aplicados.</p>
+                    <a href="{% url 'noticias' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left"></i> Ver todas las noticias
+                    </a>
+                {% else %}
+                    <p class="text-muted">Aún no se han publicado noticias en el sistema.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.noticia-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.noticia-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.noticia-card .card-img-top {
+    transition: transform 0.2s ease-in-out;
+}
+
+.noticia-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit del formulario cuando cambian los filtros
+    const selects = document.querySelectorAll('select[name="categoria"], select[name="orden"]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+{% endblock %}

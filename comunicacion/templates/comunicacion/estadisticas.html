@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas de noticias{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row gy-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-1">Total de noticias publicadas</p>
+                    <h2 class="mb-0">{{ total_noticias }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Noticias por categoría</h5>
+                </div>
+                <div class="card-body">
+                    {% if noticias_por_categoria %}
+                        <ul class="list-group list-group-flush">
+                            {% for item in noticias_por_categoria %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>{{ item.categoria|capfirst }}</span>
+                                    <span class="badge bg-primary">{{ item.total }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">Sin datos disponibles.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Noticias más vistas</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Título</th>
+                            <th>Visitas</th>
+                            <th>Última actualización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for noticia in noticias_mas_vistas %}
+                            <tr>
+                                <td>{{ noticia.titulo }}</td>
+                                <td>{{ noticia.visitas }}</td>
+                                <td>{{ noticia.actualizado|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    No hay registros de visitas.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

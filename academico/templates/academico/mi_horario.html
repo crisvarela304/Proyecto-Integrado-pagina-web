@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Mi Horario{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="mb-1">Mi Horario de Clases</h2>
+                            <p class="text-muted mb-0">Planificación semanal de asignaturas y profesores</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'academico:dashboard_academico' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda de horarios -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title mb-2">Horarios de Clases</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>1°:</strong> 08:00 - 08:45
+                        </div>
+                        <div class="col-md-3">
+                            <strong>2°:</strong> 08:50 - 09:35
+                        </div>
+                        <div class="col-md-3">
+                            <strong>3°:</strong> 09:40 - 10:25
+                        </div>
+                        <div class="col-md-3">
+                            <strong>4°:</strong> 10:40 - 11:25
+                        </div>
+                        <div class="col-md-3">
+                            <strong>5°:</strong> 11:30 - 12:15
+                        </div>
+                        <div class="col-md-3">
+                            <strong>6°:</strong> 13:00 - 13:45
+                        </div>
+                        <div class="col-md-3">
+                            <strong>7°:</strong> 13:50 - 14:35
+                        </div>
+                        <div class="col-md-3">
+                            <strong>8°:</strong> 14:40 - 15:25
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Horario por días -->
+    <div class="row g-4">
+        {% for dia, clases in horario_por_dia.items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-day me-2"></i>{{ dia|title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if clases %}
+                        <div class="list-group list-group-flush">
+                            {% for clase in clases %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ clase.asignatura.codigo }}</h6>
+                                        <p class="mb-1 small">{{ clase.asignatura.nombre }}</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>{{ clase.get_hora_display }}
+                                            <br>
+                                            <i class="bi bi-geo-alt me-1"></i>{{ clase.sala|default:"Sala por asignar" }}
+                                            <br>
+                                            <i class="bi bi-person me-1"></i>{{ clase.profesor.get_full_name|default:clase.profesor.username }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2">No hay clases programadas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Resumen semanal -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Resumen Semanal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for dia, clases in horario_por_dia.items %}
+                        <div class="col-md-2">
+                            <h6>{{ dia|title }}</h6>
+                            {% if clases %}
+                                <ul class="list-unstyled small">
+                                    {% for clase in clases %}
+                                    <li>
+                                        <span class="badge bg-info me-1">{{ clase.get_hora_display|slice:":3" }}</span>
+                                        {{ clase.asignatura.nombre|truncatechars:15 }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted small">Sin clases</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

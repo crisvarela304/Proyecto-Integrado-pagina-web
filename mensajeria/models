@@ -1,0 +1,152 @@
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.core.validators import FileExtensionValidator
+import os
+
+class Conversacion(models.Model):
+    """
+    Conversación bidireccional entre alumno y profesor
+    """
+    alumno = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='conversaciones_alumno',
+        limit_choices_to={'groups__name__in': ['Alumno']}
+    )
+    profesor = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='conversaciones_profesor',
+        limit_choices_to={'groups__name__in': ['Profesor']}
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+    ultimo_mensaje_en = models.DateTimeField(default=timezone.now)
+    no_leidos_alumno = models.PositiveIntegerField(default=0)
+    no_leidos_profesor = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['alumno', 'profesor'], 
+                name='conversacion_unica_alumno_profesor'
+            )
+        ]
+        ordering = ['-ultimo_mensaje_en']
+        verbose_name = 'Conversación'
+        verbose_name_plural = 'Conversaciones'
+
+    def __str__(self):
+        return f"{self.alumno.get_full_name()} ↔ {self.profesor.get_full_name()}"
+
+    def get_otro_participante(self, usuario):
+        """Retorna el otro participante de la conversación"""
+        return self.profesor if usuario == self.alumno else self.alumno
+
+    def get_contador_no_leidos(self, usuario):
+        """Retorna el contador de no leídos para el usuario"""
+        if usuario == self.alumno:
+            return self.no_leidos_alumno
+        elif usuario == self.profesor:
+            return self.no_leidos_profesor
+        return 0
+
+    def marcar_como_leido(self, usuario):
+        """Marca los mensajes como leídos para el usuario"""
+        if usuario == self.alumno:
+            self.no_leidos_alumno = 0
+        elif usuario == self.profesor:
+            self.no_leidos_profesor = 0
+        self.save(update_fields=['no_leidos_alumno', 'no_leidos_profesor', 'actualizado_en'])
+
+class Mensaje(models.Model):
+    """
+    Mensaje en una conversación
+    """
+    conversacion = models.ForeignKey(
+        Conversacion, 
+        on_delete=models.CASCADE, 
+        related_name='mensajes'
+    )
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    contenido = models.TextField()
+    adjunto = models.FileField(
+        upload_to='mensajeria/adjuntos/',
+        blank=True,
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+                message='Tipo de archivo no permitido. Use PDF, JPG, PNG, DOC o DOCX.'
+            )
+        ]
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    leido_por_destinatario = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['creado_en']
+        verbose_name = 'Mensaje'
+        verbose_name_plural = 'Mensajes'
+
+    def __str__(self):
+        return f"Mensaje de {self.autor.get_full_name()} en {self.conversacion}"
+
+    @property
+    def archivo_adjunto(self):
+        """Retorna información del archivo adjunto"""
+        if self.adjunto:
+            return {
+                'nombre': os.path.basename(self.adjunto.name),
+                'tamaño': self.adjunto.size,
+                'url': self.adjunto.url,
+                'extension': os.path.splitext(self.adjunto.name)[1].lower()
+            }
+        return None
+
+    def puede_tener_adjunto(self):
+        """Verifica si el archivo adjunto cumple las restricciones"""
+        if not self.adjunto:
+            return True
+        
+        # Tamaño máximo 5MB
+        if self.adjunto.size > 5 * 1024 * 1024:  # 5MB
+            return False
+        
+        return True
+
+    def save(self, *args, **kwargs):
+        # Verificar que el autor pertenezca a la conversación
+        if self.conversacion and self.autor:
+            if self.autor not in [self.conversacion.alumno, self.conversacion.profesor]:
+                raise ValueError("El autor del mensaje debe participar en la conversación")
+        
+        # Verificar restricciones del archivo
+        if self.adjunto and not self.puede_tener_adjunto():
+            raise ValueError("El archivo adjunto no cumple las restricciones de tamaño o tipo")
+        
+        super().save(*args, **kwargs)
+        
+        # Actualizar último mensaje en la conversación
+        if self.conversacion:
+            self.conversacion.ultimo_mensaje_en = self.creado_en
+            self.conversacion.actualizado_en = timezone.now()
+            
+            # Incrementar contador de no leídos del destinatario
+            otro_usuario = self.conversacion.get_otro_participante(self.autor)
+            if otro_usuario == self.conversacion.alumno:
+                self.conversacion.no_leidos_alumno += 1
+            else:
+                self.conversacion.no_leidos_profesor += 1
+            
+            self.conversacion.save(update_fields=[
+                'ultimo_mensaje_en', 
+                'actualizado_en', 
+                'no_leidos_alumno', 
+                'no_leidos_profesor'
+            ])
+
+def get_upload_path(instance, filename):
+    """Genera el path de subida para archivos adjuntos"""
+    return f'mensajeria/adjuntos/{timezone.now().year}/{timezone.now().month}/{filename}'

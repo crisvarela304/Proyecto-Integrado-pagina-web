@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Fondo oscuro solo en esta vista */
+body {
+    background-color: #06242e;
+}
+
+/* Contenedor de toda la página de login */
+.login-page {
+    min-height: calc(100vh - 120px); /* deja espacio para header/footer del sitio */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tarjeta tipo “Log in” centrada */
+.login-card {
+    width: 360px;
+    max-width: 95%;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    padding: 28px 32px;
+}
+
+/* Título grande como en el ejemplo */
+.login-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+}
+
+/* Hacer el formulario de crispy más compacto */
+.login-card .form-group,
+.login-card .mb-3 {
+    margin-bottom: 0.6rem !important;
+}
+
+.login-card .form-label {
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+}
+
+.login-card .form-control {
+    border-radius: 0.6rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Botón grande estilo “Log in” */
+.btn-login {
+    width: 100%;
+    border-radius: 0.7rem;
+    padding: 0.65rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #02a9c2;
+    border: none;
+}
+
+/* Texto pequeño debajo del botón, como “or, sign up” */
+.login-footer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.9rem;
+}
+
+/* Links de abajo */
+.login-footer-text a {
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-footer-text a:hover {
+    text-decoration: underline;
+}
+
+/* Nota de RUT ultra discreta */
+.access-hint {
+    margin-top: 0.8rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-card">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} py-2 small" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h1 class="login-title">Iniciar sesión</h1>
+
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            {{ form|crispy }}
+
+            <button type="submit" class="btn btn-login mt-3">
+                Ingresar
+            </button>
+        </form>
+
+        <p class="login-footer-text mt-2">
+            o, <a href="{% url 'usuarios:registrar' %}">crear cuenta</a> ·
+            <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal">ayuda</a> ·
+            <a href="{% url 'home' %}">inicio</a>
+        </p>
+
+        <div class="access-hint">
+            Estudiantes: RUT completo. Funcionarios: usuario o RUT.
+        </div>
+    </div>
+</div>
+
+<!-- Modal de ayuda -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-question-circle me-2"></i>Ayuda de acceso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small">
+                Escríbenos a soporte@liceohualqui.cl o llama al +56 41 2XXX XXXX.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const rutInput = document.getElementById('id_rut_o_username');
+    if (!rutInput) return;
+
+    const formatRut = (value) => {
+        const clean = value.replace(/[.\-]/g, '').toUpperCase();
+        if (clean.length <= 1) return clean;
+        const body = clean.slice(0, -1);
+        const dv = clean.slice(-1);
+        const bodyFormatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return `${bodyFormatted}-${dv}`;
+    };
+
+    rutInput.addEventListener('input', (event) => {
+        const cursor = event.target.selectionStart;
+        event.target.value = formatRut(event.target.value);
+        event.target.setSelectionRange(cursor, cursor);
+    });
+
+    rutInput.focus();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Mis Calificaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="mb-1">Mis Calificaciones</h2>
+                            <p class="text-muted mb-0">Historial completo de evaluaciones y notas</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'academico:dashboard_academico' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por semestre</label>
+                            <select name="semestre" class="form-select">
+                                <option value="">Todos los semestres</option>
+                                <option value="1" {% if semestre_actual == '1' %}selected{% endif %}>Primer Semestre</option>
+                                <option value="2" {% if semestre_actual == '2' %}selected{% endif %}>Segundo Semestre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de promedios -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-award fs-1 mb-2"></i>
+                    <h4 class="mb-0">{{ promedio_general|default:"--" }}</h4>
+                    <small>Promedio General</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-1-circle fs-1 mb-2"></i>
+                    <h4 class="mb-0">{{ promedios.1|default:"--" }}</h4>
+                    <small>1° Semestre</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-2-circle fs-1 mb-2"></i>
+                    <h4 class="mb-0">{{ promedios.2|default:"--" }}</h4>
+                    <small>2° Semestre</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de calificaciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-data me-2"></i>Detalle de Calificaciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if calificaciones %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Asignatura</th>
+                                        <th>Curso</th>
+                                        <th>Tipo de Evaluación</th>
+                                        <th>Nota</th>
+                                        <th>Semestre</th>
+                                        <th>Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for calificacion in calificaciones %}
+                                    <tr>
+                                        <td>{{ calificacion.fecha_evaluacion|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <strong>{{ calificacion.asignatura }}</strong>
+                                        </td>
+                                        <td>{{ calificacion.curso }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ calificacion.get_tipo_evaluacion_display }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if calificacion.nota >= 4.0 %}bg-success{% elif calificacion.nota >= 3.0 %}bg-warning{% else %}bg-danger{% endif %} fs-6">
+                                                {{ calificacion.nota }}
+                                            </span>
+                                        </td>
+                                        <td>{{ calificacion.get_semestre_display }}</td>
+                                        <td>{{ calificacion.descripcion|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                            <h4 class="mt-3 text-muted">No hay calificaciones</h4>
+                            <p class="text-muted">No se encontraron calificaciones con los filtros aplicados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda de notas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">Escala de Calificaciones</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span class="badge bg-success fs-6">4.0 - 7.0</span> Aprobado
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge bg-warning fs-6">3.0 - 3.9</span> Insuficiente
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge bg-danger fs-6">1.0 - 2.9</span> Reprobado
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge bg-secondary fs-6">Sin nota</span> Pendiente
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,723 @@
+[
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "Alumno",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group", 
+    "pk": 2,
+    "fields": {
+      "name": "Profesor",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T21:30:00Z",
+      "is_superuser": false,
+      "username": "carlos.rodriguez",
+      "first_name": "Carlos",
+      "last_name": "Rodríguez",
+      "email": "carlos.rodriguez@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T21:25:00Z",
+      "is_superuser": false,
+      "username": "maria.gonzalez",
+      "first_name": "María",
+      "last_name": "González",
+      "email": "maria.gonzalez@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T20:45:00Z",
+      "is_superuser": false,
+      "username": "andres.martinez",
+      "first_name": "Andrés",
+      "last_name": "Martínez",
+      "email": "andres.martinez@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T19:15:00Z",
+      "is_superuser": false,
+      "username": "sofia.lopez",
+      "first_name": "Sofía",
+      "last_name": "López",
+      "email": "sofia.lopez@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T18:30:00Z",
+      "is_superuser": false,
+      "username": "valentina.castro",
+      "first_name": "Valentina",
+      "last_name": "Castro",
+      "email": "valentina.castro@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T17:45:00Z",
+      "is_superuser": false,
+      "username": "benjamin.morales",
+      "first_name": "Benjamín",
+      "last_name": "Morales",
+      "email": "benjamin.morales@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T21:00:00Z",
+      "is_superuser": false,
+      "username": "prof.gonzalez",
+      "first_name": "Patricia",
+      "last_name": "González",
+      "email": "patricia.gonzalez@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-08-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T20:30:00Z",
+      "is_superuser": false,
+      "username": "prof.rojas",
+      "first_name": "Roberto",
+      "last_name": "Rojas",
+      "email": "roberto.rojas@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-08-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 11,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T19:45:00Z",
+      "is_superuser": false,
+      "username": "prof.lagos",
+      "first_name": "Carmen",
+      "last_name": "Lagos",
+      "email": "carmen.lagos@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-08-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 12,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T18:15:00Z",
+      "is_superuser": false,
+      "username": "prof.silva",
+      "first_name": "Alberto",
+      "last_name": "Silva",
+      "email": "alberto.silva@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-08-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 13,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T17:00:00Z",
+      "is_superuser": false,
+      "username": "prof.moreno",
+      "first_name": "Luisa",
+      "last_name": "Moreno",
+      "email": "luisa.moreno@colegio.cl",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-08-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 14,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9Gn3z0S2l8S6$3BhT7UQqF2xY4cH5oV1j0l3F2H3j4k5l6m7n8o9p0=",
+      "last_login": "2025-11-06T16:30:00Z",
+      "is_superuser": false,
+      "username": "admin.colegio",
+      "first_name": "Administrador",
+      "last_name": "Sistema",
+      "email": "admin@colegio.cl",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-07-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 3,
+    "fields": {
+      "user": 3,
+      "rut": "12.345.678-9",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56912345678",
+      "direccion": "Calle Los Alerces 123, Hualqui",
+      "fecha_nacimiento": "2008-05-15",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 4,
+    "fields": {
+      "user": 4,
+      "rut": "12.345.679-7",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56987654321",
+      "direccion": "Avda. Central 456, Hualqui",
+      "fecha_nacimiento": "2008-03-22",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 5,
+    "fields": {
+      "user": 5,
+      "rut": "12.345.680-K",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56911223344",
+      "direccion": "Pasaje Norte 789, Hualqui",
+      "fecha_nacimiento": "2008-11-10",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 6,
+    "fields": {
+      "user": 6,
+      "rut": "12.345.681-2",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56955667788",
+      "direccion": "Calle Sur 321, Hualqui",
+      "fecha_nacimiento": "2008-07-08",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 7,
+    "fields": {
+      "user": 7,
+      "rut": "12.345.682-0",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56977889900",
+      "direccion": "Avda. Oriente 654, Hualqui",
+      "fecha_nacimiento": "2008-01-25",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 8,
+    "fields": {
+      "user": 8,
+      "rut": "12.345.683-9",
+      "tipo_usuario": "estudiante",
+      "telefono": "+56933445566",
+      "direccion": "Calle poniente 987, Hualqui",
+      "fecha_nacimiento": "2008-12-03",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 9,
+    "fields": {
+      "user": 9,
+      "rut": "11.111.111-1",
+      "tipo_usuario": "profesor",
+      "telefono": "+56911111111",
+      "direccion": "Calle Profesores 111, Hualqui",
+      "fecha_nacimiento": "1985-04-12",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 10,
+    "fields": {
+      "user": 10,
+      "rut": "11.111.111-2",
+      "tipo_usuario": "profesor",
+      "telefono": "+56922222222",
+      "direccion": "Calle Profesores 222, Hualqui",
+      "fecha_nacimiento": "1980-09-30",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 11,
+    "fields": {
+      "user": 11,
+      "rut": "11.111.111-3",
+      "tipo_usuario": "profesor",
+      "telefono": "+56933333333",
+      "direccion": "Calle Profesores 333, Hualqui",
+      "fecha_nacimiento": "1978-11-18",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 12,
+    "fields": {
+      "user": 12,
+      "rut": "11.111.111-4",
+      "tipo_usuario": "profesor",
+      "telefono": "+56944444444",
+      "direccion": "Calle Profesores 444, Hualqui",
+      "fecha_nacimiento": "1982-02-14",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 13,
+    "fields": {
+      "user": 13,
+      "rut": "11.111.111-5",
+      "tipo_usuario": "profesor",
+      "telefono": "+56955555555",
+      "direccion": "Calle Profesores 555, Hualqui",
+      "fecha_nacimiento": "1986-06-20",
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.perfilusuario",
+    "pk": 14,
+    "fields": {
+      "user": 14,
+      "rut": "10.000.000-0",
+      "tipo_usuario": "administrativo",
+      "telefono": "+56900000000",
+      "direccion": "Oficina Admin 001, Hualqui",
+      "fecha_nacimiento": "1975-03-10",
+      "activo": true
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 1,
+    "fields": {
+      "user": 3,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 2,
+    "fields": {
+      "user": 4,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 3,
+    "fields": {
+      "user": 5,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 4,
+    "fields": {
+      "user": 6,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 5,
+    "fields": {
+      "user": 7,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 6,
+    "fields": {
+      "user": 8,
+      "group": 1
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 7,
+    "fields": {
+      "user": 9,
+      "group": 2
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 8,
+    "fields": {
+      "user": 10,
+      "group": 2
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 9,
+    "fields": {
+      "user": 11,
+      "group": 2
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 10,
+    "fields": {
+      "user": 12,
+      "group": 2
+    }
+  },
+  {
+    "model": "auth.user_groups",
+    "pk": 11,
+    "fields": {
+      "user": 13,
+      "group": 2
+    }
+  },
+  {
+    "model": "mensajeria.conversacion",
+    "pk": 1,
+    "fields": {
+      "alumno": 3,
+      "profesor": 9,
+      "creado_en": "2025-11-01T14:30:00Z",
+      "actualizado_en": "2025-11-06T21:25:00Z",
+      "ultimo_mensaje_en": "2025-11-06T21:25:00Z",
+      "no_leidos_alumno": 0,
+      "no_leidos_profesor": 1
+    }
+  },
+  {
+    "model": "mensajeria.conversacion",
+    "pk": 2,
+    "fields": {
+      "alumno": 4,
+      "profesor": 10,
+      "creado_en": "2025-11-02T09:15:00Z",
+      "actualizado_en": "2025-11-06T20:45:00Z",
+      "ultimo_mensaje_en": "2025-11-06T20:45:00Z",
+      "no_leidos_alumno": 2,
+      "no_leidos_profesor": 0
+    }
+  },
+  {
+    "model": "mensajeria.conversacion",
+    "pk": 3,
+    "fields": {
+      "alumno": 5,
+      "profesor": 11,
+      "creado_en": "2025-11-03T16:20:00Z",
+      "actualizado_en": "2025-11-06T19:15:00Z",
+      "ultimo_mensaje_en": "2025-11-06T19:15:00Z",
+      "no_leidos_alumno": 0,
+      "no_leidos_profesor": 0
+    }
+  },
+  {
+    "model": "mensajeria.conversacion",
+    "pk": 4,
+    "fields": {
+      "alumno": 6,
+      "profesor": 12,
+      "creado_en": "2025-11-04T11:30:00Z",
+      "actualizado_en": "2025-11-06T18:30:00Z",
+      "ultimo_mensaje_en": "2025-11-06T18:30:00Z",
+      "no_leidos_alumno": 1,
+      "no_leidos_profesor": 0
+    }
+  },
+  {
+    "model": "mensajeria.conversacion",
+    "pk": 5,
+    "fields": {
+      "alumno": 7,
+      "profesor": 13,
+      "creado_en": "2025-11-05T13:45:00Z",
+      "actualizado_en": "2025-11-06T17:45:00Z",
+      "ultimo_mensaje_en": "2025-11-06T17:45:00Z",
+      "no_leidos_alumno": 0,
+      "no_leidos_profesor": 0
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 1,
+    "fields": {
+      "conversacion": 1,
+      "autor": 3,
+      "contenido": "Hola profesora, tengo una consulta sobre la tarea de matemáticas de la semana pasada.",
+      "adjunto": "",
+      "creado_en": "2025-11-01T14:32:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 2,
+    "fields": {
+      "conversacion": 1,
+      "autor": 9,
+      "contenido": "Hola Carlos, me alegra que tengas dudas. ¿Podrías ser más específico sobre qué parte de la tarea te genera dificultades?",
+      "adjunto": "",
+      "creado_en": "2025-11-01T15:15:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 3,
+    "fields": {
+      "conversacion": 1,
+      "autor": 3,
+      "contenido": "Específicamente en los ejercicios 5 y 6, no entiendo bien cómo aplicar la fórmula cuadrática.",
+      "adjunto": "",
+      "creado_en": "2025-11-01T15:18:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 4,
+    "fields": {
+      "conversacion": 1,
+      "autor": 9,
+      "contenido": "Te voy a enviar un PDF con la explicación paso a paso y algunos ejemplos adicionales.",
+      "adjunto": "mensajeria/adjuntos/explicacion_cuadratica.pdf",
+      "creado_en": "2025-11-06T21:25:00Z",
+      "leido_por_destinatario": false
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 5,
+    "fields": {
+      "conversacion": 2,
+      "autor": 4,
+      "contenido": "Buenos días profesor, ¿cuándo será la próxima prueba de historia?",
+      "adjunto": "",
+      "creado_en": "2025-11-02T09:17:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 6,
+    "fields": {
+      "conversacion": 2,
+      "autor": 10,
+      "contenido": "Hola María, la próxima prueba será el próximo viernes 15 de noviembre. Cubriremos desde la página 45 hasta la 78 del libro.",
+      "adjunto": "",
+      "creado_en": "2025-11-02T10:30:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 7,
+    "fields": {
+      "conversacion": 2,
+      "autor": 10,
+      "contenido": "Te recomiendo repasar los apuntes sobre la independencia de Chile y los personajes históricos que vimos en clase.",
+      "adjunto": "mensajeria/adjuntos/guia_estudio_historia.docx",
+      "creado_en": "2025-11-06T20:45:00Z",
+      "leido_por_destinatario": false
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 8,
+    "fields": {
+      "conversacion": 2,
+      "autor": 4,
+      "contenido": "¡Perfecto! Muchas gracias por la información. Una consulta, ¿podemos usar la calculadora en la prueba?",
+      "adjunto": "",
+      "creado_en": "2025-11-06T21:20:00Z",
+      "leido_por_destinatario": false
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 9,
+    "fields": {
+      "conversacion": 3,
+      "autor": 5,
+      "contenido": "Profesora Lagos, necesito justificar mi inasistencia del martes por motivos médicos. ¿Cómo puedo hacerlo?",
+      "adjunto": "",
+      "creado_en": "2025-11-03T16:22:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 10,
+    "fields": {
+      "conversacion": 3,
+      "autor": 11,
+      "contenido": "Hola Andrés, por supuesto. Puedes traer un certificado médico o una declaración de tus padres explicando el motivo.",
+      "adjunto": "",
+      "creado_en": "2025-11-03T17:45:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 11,
+    "fields": {
+      "conversacion": 4,
+      "autor": 6,
+      "contenido": "Profesor Silva, no pude entregar el proyecto de ciencias a tiempo. ¿Hay posibilidad de una prórroga?",
+      "adjunto": "",
+      "creado_en": "2025-11-04T11:32:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 12,
+    "fields": {
+      "conversacion": 4,
+      "autor": 12,
+      "contenido": "Hola Sofía, considerando las circunstancias, puedes entregarlo hasta el viernes. Pero tienes que justificar la demora.",
+      "adjunto": "",
+      "creado_en": "2025-11-04T12:15:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 13,
+    "fields": {
+      "conversacion": 4,
+      "autor": 6,
+      "contenido": "Muchas gracias profesor. Te haré llegar el certificado médico que tengo.",
+      "adjunto": "mensajeria/adjuntos/certificado_medico.png",
+      "creado_en": "2025-11-06T18:30:00Z",
+      "leido_por_destinatario": false
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 14,
+    "fields": {
+      "conversacion": 5,
+      "autor": 7,
+      "contenido": "Buenos días profesora, quería saber sobre las actividades extraescolares del próximo mes.",
+      "adjunto": "",
+      "creado_en": "2025-11-05T13:47:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 15,
+    "fields": {
+      "conversacion": 5,
+      "autor": 13,
+      "contenido": "Hola Valentina, este mes tendremos una salida al museo de ciencias naturales el 20 de noviembre, y un taller de teatro los viernes.",
+      "adjunto": "",
+      "creado_en": "2025-11-05T14:30:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 16,
+    "fields": {
+      "conversacion": 5,
+      "autor": 7,
+      "contenido": "¡Me interesa mucho el taller de teatro! ¿Cómo puedo inscribirme?",
+      "adjunto": "",
+      "creado_en": "2025-11-05T14:35:00Z",
+      "leido_por_destinatario": true
+    }
+  },
+  {
+    "model": "mensajeria.mensaje",
+    "pk": 17,
+    "fields": {
+      "conversacion": 5,
+      "autor": 13,
+      "contenido": "Puedes inscribirte conmigo durante los recreos o enviando un mensaje a través de esta plataforma.",
+      "adjunto": "",
+      "creado_en": "2025-11-06T17:45:00Z",
+      "leido_por_destinatario": true
+    }
+  }
+]

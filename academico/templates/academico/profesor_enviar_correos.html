@@ -1,0 +1,474 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Enviar Correos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient text-white" 
+                 style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center gap-4">
+                                <!-- Icono de correo -->
+                                <div class="correo-icon">
+                                    <div class="rounded-circle bg-white bg-opacity-20 d-flex justify-content-center align-items-center"
+                                         style="width:70px;height:70px;">
+                                        <i class="bi bi-envelope fs-2"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Información del envío -->
+                                <div class="correo-info">
+                                    <h4 class="mb-1">Enviar Correos</h4>
+                                    <p class="mb-1 opacity-90">
+                                        <i class="bi bi-person-workspace me-2"></i>
+                                        Comunicación con estudiantes y apoderados
+                                    </p>
+                                    <p class="mb-0 opacity-75">
+                                        <i class="bi bi-building me-2"></i>
+                                        Liceo Juan Bautista de Hualqui
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 text-md-end">
+                            <div class="correo-actions">
+                                <div class="d-flex gap-2 justify-content-md-end">
+                                    <a href="{% url 'academico:panel_profesor' %}" class="btn btn-light btn-sm">
+                                        <i class="bi bi-arrow-left me-1"></i>
+                                        Volver al Panel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de envío de correos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-send me-2 text-primary"></i>
+                        Redactar Mensaje
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="enviarCorreoForm">
+                        {% csrf_token %}
+                        
+                        <!-- Selección de destinatarios -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-people me-1"></i>
+                                Destinatarios
+                            </label>
+                            
+                            <!-- Filtros de destinatarios -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Filtrar por curso</label>
+                                    <select class="form-select form-select-sm" id="filtroCurso">
+                                        <option value="">Todos los cursos</option>
+                                        {% for curso in cursos_profesor %}
+                                            <option value="curso-{{ curso.id }}">{{ curso.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label small text-muted">Buscar estudiante</label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           id="buscarEstudiante" placeholder="Buscar por nombre o RUT...">
+                                </div>
+                            </div>
+                            
+                            <!-- Lista de estudiantes -->
+                            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                <div class="row g-2" id="listaEstudiantes">
+                                    {% for estudiante in estudiantes %}
+                                        <div class="col-12 col-sm-6 col-lg-4 estudiante-item" 
+                                             data-curso="curso-{{ estudiante.inscripcion_curso.first.curso.id|default_if_none:'' }}">
+                                            <div class="form-check border rounded p-2 h-100">
+                                                <input class="form-check-input destinatario-checkbox" 
+                                                       type="checkbox" 
+                                                       name="destinatarios" 
+                                                       value="{{ estudiante.id }}"
+                                                       id="estudiante_{{ estudiante.id }}">
+                                                <label class="form-check-label w-100" for="estudiante_{{ estudiante.id }}">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="text-primary">
+                                                            <i class="bi bi-person fs-5"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <strong>{{ estudiante.get_full_name|default:estudiante.username }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                {{ estudiante.inscripcion_curso.first.curso.nombre|default:"Sin curso" }}
+                                                            </small>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                RUT: {{ estudiante.perfil.rut|default:"No registrado" }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="col-12">
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                No hay estudiantes disponibles. Verifica que tengas cursos asignados.
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Botones de selección -->
+                            <div class="mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarTodos()">
+                                    <i class="bi bi-check-square me-1"></i>
+                                    Seleccionar Todos
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deseleccionarTodos()">
+                                    <i class="bi bi-square me-1"></i>
+                                    Deseleccionar Todos
+                                </button>
+                                <span class="text-muted small align-self-center">
+                                    <span id="destinatariosSeleccionados">0</span> destinatarios seleccionados
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Asunto y contenido -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="asunto" class="form-label fw-semibold">
+                                        <i class="bi bi-envelope-open me-1"></i>
+                                        Asunto
+                                    </label>
+                                    <input type="text" class="form-control" id="asunto" name="asunto" 
+                                           placeholder="Asunto del mensaje..." required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="mensaje" class="form-label fw-semibold">
+                                        <i class="bi bi-chat-text me-1"></i>
+                                        Mensaje
+                                    </label>
+                                    <textarea class="form-control" id="mensaje" name="mensaje" rows="8" 
+                                              placeholder="Escribe tu mensaje aquí..." required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Opciones adicionales -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="incluirApoderados" 
+                                           name="incluir_apoderados">
+                                    <label class="form-check-label" for="incluirApoderados">
+                                        <i class="bi bi-people me-1"></i>
+                                        Incluir también a los apoderados de los estudiantes seleccionados
+                                        <small class="text-muted d-block">
+                                            (Funcionalidad en desarrollo)
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex gap-3 justify-content-end">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>
+                                        Limpiar
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="vistaPrevia()">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Vista Previa
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="btnEnviar">
+                                        <i class="bi bi-send me-1"></i>
+                                        Enviar Correos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información adicional -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Información Importante
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Los correos se enviarán a los estudiantes seleccionados
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Se registrará el envío en el sistema
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                            Verifica los destinatarios antes de enviar
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                            Los correos enviados no se pueden deshacer
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Consejos para el Envío
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-1-circle text-primary me-2"></i>
+                            Usa un asunto claro y descriptivo
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-2-circle text-primary me-2"></i>
+                            Mantén el mensaje conciso y profesional
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-3-circle text-primary me-2"></i>
+                            Incluye toda la información necesaria
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-4-circle text-primary me-2"></i>
+                            Revisa la ortografía antes de enviar
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.correo-icon {
+    animation: fadeInLeft 0.8s ease-out;
+}
+
+.correo-info {
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.correo-actions {
+    animation: fadeInRight 0.8s ease-out 0.4s both;
+}
+
+.estudiante-item {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.form-check {
+    transition: all 0.3s ease;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .correo-icon, .correo-info, .correo-actions {
+        text-align: center;
+    }
+    
+    .correo-actions {
+        margin-top: 1rem;
+    }
+}
+</style>
+
+<script>
+function seleccionarTodos() {
+    const checkboxes = document.querySelectorAll('.destinatario-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    actualizarContador();
+}
+
+function deseleccionarTodos() {
+    const checkboxes = document.querySelectorAll('.destinatario-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    actualizarContador();
+}
+
+function actualizarContador() {
+    const checkboxes = document.querySelectorAll('.destinatario-checkbox:checked');
+    document.getElementById('destinatariosSeleccionados').textContent = checkboxes.length;
+}
+
+function filtrarEstudiantes() {
+    const filtroCurso = document.getElementById('filtroCurso').value;
+    const buscarEstudiante = document.getElementById('buscarEstudiante').value.toLowerCase();
+    const items = document.querySelectorAll('.estudiante-item');
+    
+    items.forEach(item => {
+        const texto = item.textContent.toLowerCase();
+        const cursoMatch = !filtroCurso || item.dataset.curso === filtroCurso;
+        const busquedaMatch = !buscarEstudiante || texto.includes(buscarEstudiante);
+        
+        if (cursoMatch && busquedaMatch) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function limpiarFormulario() {
+    if (confirm('¿Estás seguro de que quieres limpiar el formulario?')) {
+        document.getElementById('enviarCorreoForm').reset();
+        deseleccionarTodos();
+    }
+}
+
+function vistaPrevia() {
+    const asunto = document.getElementById('asunto').value;
+    const mensaje = document.getElementById('mensaje').value;
+    const checkboxes = document.querySelectorAll('.destinatario-checkbox:checked');
+    
+    if (!asunto || !mensaje || checkboxes.length === 0) {
+        alert('Por favor, completa el asunto, mensaje y selecciona al menos un destinatario para ver la vista previa.');
+        return;
+    }
+    
+    let destinatariosTexto = '';
+    checkboxes.forEach(checkbox => {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        const nombre = label.querySelector('strong').textContent;
+        destinatariosTexto += `• ${nombre}\n`;
+    });
+    
+    const preview = `
+Vista Previa del Envío:
+
+DESTINATARIOS (${checkboxes.length}):
+${destinatariosTexto}
+
+ASUNTO: ${asunto}
+
+MENSAJE:
+${mensaje}
+
+¿Deseas continuar con el envío?
+    `.trim();
+    
+    if (confirm(preview)) {
+        document.getElementById('btnEnviar').focus();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtros
+    document.getElementById('filtroCurso').addEventListener('change', filtrarEstudiantes);
+    document.getElementById('buscarEstudiante').addEventListener('input', filtrarEstudiantes);
+    
+    // Contador de destinatarios
+    document.querySelectorAll('.destinatario-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', actualizarContador);
+    });
+    
+    // Validación del formulario
+    const form = document.getElementById('enviarCorreoForm');
+    form.addEventListener('submit', function(e) {
+        const checkboxes = document.querySelectorAll('.destinatario-checkbox:checked');
+        const asunto = document.getElementById('asunto').value;
+        const mensaje = document.getElementById('mensaje').value;
+        
+        if (checkboxes.length === 0) {
+            e.preventDefault();
+            alert('Por favor, selecciona al menos un destinatario.');
+            return;
+        }
+        
+        if (!asunto.trim() || !mensaje.trim()) {
+            e.preventDefault();
+            alert('Por favor, completa el asunto y el mensaje.');
+            return;
+        }
+        
+        if (!confirm(`¿Estás seguro de enviar este mensaje a ${checkboxes.length} destinatarios?`)) {
+            e.preventDefault();
+        }
+    });
+    
+    // Animación de estudiantes
+    const items = document.querySelectorAll('.estudiante-item');
+    items.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

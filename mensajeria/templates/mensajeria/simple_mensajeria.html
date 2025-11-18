@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Mensajería Interna{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Panel lateral de navegación -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Mensajería</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'mensajeria:conversaciones_list' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-inbox me-2"></i>Bandeja de Entrada
+                    </a>
+                    <a href="{% url 'mensajeria:nueva_conversacion' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person-plus me-2"></i>Nuevo Mensaje
+                    </a>
+                    <a href="{% url 'notificaciones' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-bell me-2"></i>Notificaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-9">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Enviar Mensaje a Estudiante</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Búsqueda de estudiantes -->
+                    <div class="mb-4">
+                        <h5>Buscar Estudiante</h5>
+                        <form method="get" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" name="q" class="form-control" 
+                                       placeholder="Buscar por nombre, apellido o RUT..." 
+                                       value="{{ request.GET.q }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="curso" class="form-select">
+                                    <option value="">Todos los cursos</option>
+                                    {% for curso in cursos %}
+                                        <option value="{{ curso.id }}" {% if request.GET.curso == curso.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ curso.nombre }} - {{ curso.nivel }}°{{ curso.letra }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de estudiantes -->
+                    {% if estudiantes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>RUT</th>
+                                        <th>Curso</th>
+                                        <th>Apoderado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for estudiante in estudiantes %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                                {{ estudiante.user.get_full_name|default:estudiante.user.username }}
+                                            </div>
+                                        </td>
+                                        <td>{{ estudiante.rut }}</td>
+                                        <td>
+                                            {% for inscripcion in estudiante.inscripciones_activas %}
+                                                {{ inscripcion.curso.nombre }} - {{ inscripcion.curso.nivel }}°{{ inscripcion.curso.letra }}
+                                            {% empty %}
+                                                Sin curso asignado
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for inscripcion in estudiante.inscripciones_activas %}
+                                                {{ inscripcion.apoderado.get_full_name|default:inscripcion.apoderado.username }}
+                                            {% empty %}
+                                                Sin apoderado
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success" 
+                                                    onclick="enviarMensaje('{{ estudiante.user.id }}', '{{ estudiante.user.get_full_name|default:estudiante.user.username }}')">
+                                                <i class="bi bi-send"></i> Enviar Mensaje
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-person-x display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No se encontraron estudiantes</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para enviar mensaje -->
+<div class="modal fade" id="mensajeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enviar Mensaje</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formMensaje">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="destinatarioId" name="destinatario_id">
+                    <div class="mb-3">
+                        <label for="destinatarioNombre" class="form-label">Para:</label>
+                        <input type="text" class="form-control" id="destinatarioNombre" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mensaje" class="form-label">Mensaje:</label>
+                        <textarea class="form-control" id="mensaje" name="mensaje" rows="4" 
+                                  placeholder="Escribe tu mensaje aquí..." required></textarea>
+                    </div>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle me-1"></i>
+                        El mensaje se guardará en el sistema de mensajería interna.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Enviar Mensaje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function enviarMensaje(usuarioId, nombreUsuario) {
+    document.getElementById('destinatarioId').value = usuarioId;
+    document.getElementById('destinatarioNombre').value = nombreUsuario;
+    document.getElementById('mensaje').value = '';
+    new bootstrap.Modal(document.getElementById('mensajeModal')).show();
+}
+
+document.getElementById('formMensaje').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const destinatarioId = document.getElementById('destinatarioId').value;
+    const mensaje = document.getElementById('mensaje').value;
+    
+    if (!mensaje.trim()) {
+        alert('Por favor, escribe un mensaje');
+        return;
+    }
+    
+    // Crear conversación temporal y enviar mensaje
+    fetch('/mensajeria/crear-conversacion/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
+            usuarios: [destinatarioId],
+            titulo: ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Enviar el mensaje
+            return fetch('/mensajeria/enviar-mensaje/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    conversacion_id: data.conversacion_id,
+                    contenido: mensaje
+                })
+            });
+        } else {
+            throw new Error(data.error || 'Error al crear conversación');
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('¡Mensaje enviado correctamente!');
+            bootstrap.Modal.getInstance(document.getElementById('mensajeModal')).hide();
+        } else {
+            alert('Error al enviar mensaje: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al enviar mensaje: ' + error.message);
+    });
+});
+</script>
+{% endblock %}
