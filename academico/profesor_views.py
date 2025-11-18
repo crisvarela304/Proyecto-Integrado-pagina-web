@@ -33,7 +33,7 @@ def panel_profesor(request):
     
     # Obtener asignaturas que enseña
     asignaturas_profesor = Asignatura.objects.filter(
-        horario_clases__profesor=user
+        horarioclases__profesor=user
     ).distinct()
     
     # Estadísticas
@@ -155,7 +155,7 @@ def gestionar_calificaciones(request, estudiante_id):
     
     # Obtener asignaturas del profesor
     asignaturas_profesor = Asignatura.objects.filter(
-        horario_clases__profesor=user
+        horarioclases__profesor=user
     ).distinct()
     
     if request.method == 'POST':
@@ -393,7 +393,7 @@ def estadisticas_profesor(request):
     
     # Estadísticas de calificaciones
     asignaturas_profesor = Asignatura.objects.filter(
-        horario_clases__profesor=user
+        horarioclases__profesor=user
     ).distinct()
     
     calificaciones = Calificacion.objects.filter(
