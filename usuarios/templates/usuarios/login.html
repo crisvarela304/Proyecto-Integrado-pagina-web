@@ -4,20 +4,20 @@
 
 {% block extra_css %}
 <style>
-/* Fondo oscuro solo en esta vista */
+/* Fondo oscuro para esta página */
 body {
     background-color: #06242e;
 }
 
-/* Contenedor de toda la página de login */
+/* Contenedor para centrar la tarjeta */
 .login-page {
-    min-height: calc(100vh - 120px); /* deja espacio para header/footer del sitio */
+    min-height: calc(100vh - 120px);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Tarjeta tipo “Log in” centrada */
+/* Tarjeta tipo “Log in” */
 .login-card {
     width: 360px;
     max-width: 95%;
@@ -27,14 +27,14 @@ body {
     padding: 28px 32px;
 }
 
-/* Título grande como en el ejemplo */
+/* Título */
 .login-title {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 1.2rem;
 }
 
-/* Hacer el formulario de crispy más compacto */
+/* Formulario crispy más compacto */
 .login-card .form-group,
 .login-card .mb-3 {
     margin-bottom: 0.6rem !important;
@@ -51,7 +51,7 @@ body {
     padding: 0.5rem 0.75rem;
 }
 
-/* Botón grande estilo “Log in” */
+/* Botón “Log in” */
 .btn-login {
     width: 100%;
     border-radius: 0.7rem;
@@ -62,7 +62,7 @@ body {
     border: none;
 }
 
-/* Texto pequeño debajo del botón, como “or, sign up” */
+/* Texto tipo “or, sign up” */
 .login-footer-text {
     text-align: center;
     font-size: 0.85rem;
@@ -70,7 +70,6 @@ body {
     margin-top: 0.9rem;
 }
 
-/* Links de abajo */
 .login-footer-text a {
     text-decoration: none;
     font-weight: 600;
@@ -80,7 +79,6 @@ body {
     text-decoration: underline;
 }
 
-/* Nota de RUT ultra discreta */
 .access-hint {
     margin-top: 0.8rem;
     font-size: 0.75rem;
