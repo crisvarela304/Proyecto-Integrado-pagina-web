@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
-import os
 
 
 class Conversacion(models.Model):
@@ -16,16 +15,16 @@ class Conversacion(models.Model):
     Constraint único para evitar duplicados
     """
     alumno = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='conversaciones_como_alumno',
-        limit_choices_to={'groups__name': 'Alumno'}
+        limit_choices_to={'perfil__tipo_usuario': 'estudiante'}
     )
     profesor = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='conversaciones_como_profesor',
-        limit_choices_to={'groups__name': 'Profesor'}
+        limit_choices_to={'perfil__tipo_usuario': 'profesor'}
     )
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
@@ -46,7 +45,10 @@ class Conversacion(models.Model):
         verbose_name_plural = "Conversaciones"
     
     def __str__(self):
-        return f"Conversación {self.alumno.get_full_name() or self.alumno.username} ↔ {self.profesor.get_full_name() or self.profesor.username}"
+        return (
+            f"Conversacion {self.alumno.get_full_name() or self.alumno.username} "
+            f"<-> {self.profesor.get_full_name() or self.profesor.username}"
+        )
     
     def get_otro_participante(self, usuario):
         """Retorna el otro participante de la conversación"""
@@ -86,11 +88,17 @@ class Mensaje(models.Model):
     Mensajes con validación de archivos y contenido seguro
     """
     conversacion = models.ForeignKey(
-        Conversacion, 
-        on_delete=models.CASCADE, 
+        Conversacion,
+        on_delete=models.CASCADE,
         related_name='mensajes'
     )
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mensajes_enviados')
+    receptor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='mensajes_recibidos'
+    )
+    asunto = models.CharField(max_length=150, blank=True)
     contenido = models.TextField()
     # Archivos adjuntos seguros
     adjunto = models.FileField(
@@ -104,21 +112,23 @@ class Mensaje(models.Model):
             )
         ]
     )
-    creado_en = models.DateTimeField(auto_now_add=True)
-    leido_por_destinatario = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    leido = models.BooleanField(default=False)
     
     class Meta:
-        ordering = ['creado_en']
+        ordering = ['fecha_creacion']
         verbose_name = "Mensaje"
         verbose_name_plural = "Mensajes"
         # Índices para performance
         indexes = [
-            models.Index(fields=['conversacion', 'creado_en']),
-            models.Index(fields=['autor', 'creado_en']),
+            models.Index(fields=['conversacion', 'fecha_creacion'], name='mensaje_conversacion_fecha_idx'),
+            models.Index(fields=['autor', 'fecha_creacion'], name='mensaje_autor_fecha_idx'),
+            models.Index(fields=['receptor', 'fecha_creacion'], name='mensaje_receptor_fecha_idx'),
         ]
     
     def __str__(self):
-        return f"Mensaje de {self.autor} en conversación {self.conversacion.id}"
+        destino = self.receptor.get_full_name() or self.receptor.username
+        return f"Mensaje de {self.autor} para {destino}"
     
     def clean(self):
         """Validaciones de seguridad a nivel de modelo"""
@@ -128,6 +138,14 @@ class Mensaje(models.Model):
         if self.conversacion and self.autor:
             if not self.conversacion.puede_acceder(self.autor):
                 raise ValidationError("El autor no participa en esta conversación")
+
+        # Establecer receptor automático cuando no se proporciona
+        if not self.receptor and self.conversacion and self.autor:
+            self.receptor = self.conversacion.get_otro_participante(self.autor)
+
+        if self.receptor and self.conversacion:
+            if not self.conversacion.puede_acceder(self.receptor):
+                raise ValidationError("El receptor no participa en esta conversación")
         
         # Validar archivo adjunto si existe
         if self.adjunto:
@@ -153,26 +171,22 @@ class Mensaje(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs):
         """Override save para manejo de contadores y validaciones"""
-        # Validar antes de guardar
+        es_nuevo = self.pk is None
         self.full_clean()
         
-        # Si es un nuevo mensaje, actualizar contadores
-        if not self.pk:
+        super().save(*args, **kwargs)
+
+        if es_nuevo:
             self._actualizar_contadores_no_leidos()
-            # Actualizar último mensaje en conversación
             self.conversacion.ultimo_mensaje_en = timezone.now()
             self.conversacion.save(update_fields=['ultimo_mensaje_en'])
-        
-        super().save(*args, **kwargs)
     
     def _actualizar_contadores_no_leidos(self):
         """Actualiza contadores de no leídos de forma atómica"""
         # Determinar destinatario
         if self.autor == self.conversacion.alumno:
-            destinatario = self.conversacion.profesor
             campo_contador = 'no_leidos_profesor'
         else:
-            destinatario = self.conversacion.alumno
             campo_contador = 'no_leidos_alumno'
         
         # Incrementar contador de forma atómica
@@ -181,6 +195,13 @@ class Mensaje(models.Model):
         ).update(
             **{campo_contador: models.F(campo_contador) + 1}
         )
+    
+    def marcar_como_leido(self, usuario):
+        """Marca el mensaje como leído por el destinatario"""
+        if usuario != self.receptor or self.leido:
+            return
+        self.leido = True
+        super(Mensaje, self).save(update_fields=['leido'])
     
     def es_mio(self, usuario):
         """Verifica si el mensaje es del usuario"""

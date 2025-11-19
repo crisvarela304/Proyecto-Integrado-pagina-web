@@ -66,12 +66,12 @@ class MensajeAdmin(admin.ModelAdmin):
         'get_conversacion_display',
         'contenido_preview',
         'get_adjunto_info',
-        'leido_por_destinatario',
-        'creado_en'
+        'leido',
+        'fecha_creacion'
     ]
     list_filter = [
-        'creado_en', 
-        'leido_por_destinatario',
+        'fecha_creacion',
+        'leido',
         'conversacion__alumno',
         'conversacion__profesor'
     ]
@@ -82,11 +82,11 @@ class MensajeAdmin(admin.ModelAdmin):
         'autor__last_name'
     ]
     readonly_fields = [
-        'id', 
-        'creado_en', 
-        'leido_por_destinatario'
+        'id',
+        'fecha_creacion',
+        'leido'
     ]
-    date_hierarchy = 'creado_en'
+    date_hierarchy = 'fecha_creacion'
     
     def get_queryset(self, request):
         """Query optimizado"""

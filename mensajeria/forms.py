@@ -7,8 +7,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import transaction
-from .models import Conversacion, Mensaje, RateLimit
 from django.conf import settings
+
+from academico.models import InscripcionCurso, HorarioClases
+from .models import Conversacion, Mensaje, RateLimit
 
 
 class BusquedaConversacionForm(forms.Form):
@@ -41,19 +43,31 @@ class NuevaConversacionForm(forms.Form):
         self.usuario = usuario
         
         if usuario:
-            # Filtrar destinatarios según el tipo de usuario
-            if usuario.groups.filter(name='Alumno').exists():
-                # Alumno puede crear conversación con profesor
+            perfil = getattr(usuario, 'perfil', None)
+            if perfil and perfil.tipo_usuario == 'estudiante':
+                cursos = InscripcionCurso.objects.filter(
+                    estudiante=usuario,
+                    estado='activo'
+                ).values_list('curso_id', flat=True)
+                profesores_ids = HorarioClases.objects.filter(
+                    curso_id__in=cursos
+                ).values_list('profesor_id', flat=True)
                 self.fields['destinatario'].queryset = User.objects.filter(
-                    groups__name='Profesor',
+                    id__in=profesores_ids,
                     is_active=True
-                ).exclude(id=usuario.id)
-            elif usuario.groups.filter(name='Profesor').exists():
-                # Profesor puede crear conversación con alumno
+                ).distinct()
+            elif perfil and perfil.tipo_usuario == 'profesor':
+                cursos_profesor = HorarioClases.objects.filter(
+                    profesor=usuario
+                ).values_list('curso_id', flat=True).distinct()
+                estudiantes_ids = InscripcionCurso.objects.filter(
+                    curso_id__in=cursos_profesor,
+                    estado='activo'
+                ).values_list('estudiante_id', flat=True)
                 self.fields['destinatario'].queryset = User.objects.filter(
-                    groups__name='Alumno',
+                    id__in=estudiantes_ids,
                     is_active=True
-                ).exclude(id=usuario.id)
+                ).distinct()
     
     def clean_destinatario(self):
         """Validaciones de destinatario y rate limiting"""
@@ -67,12 +81,13 @@ class NuevaConversacionForm(forms.Form):
         if self._verificar_rate_limit(usuario, 'nueva_conversacion'):
             raise ValidationError("Demasiadas solicitudes. Intenta en unos minutos.")
         
-        # Verificar que el usuario puede crear conversación con este destinatario
-        if usuario.groups.filter(name='Alumno').exists():
-            if not destinatario.groups.filter(name='Profesor').exists():
+        perfil = getattr(usuario, 'perfil', None)
+        destino_perfil = getattr(destinatario, 'perfil', None)
+        if perfil and perfil.tipo_usuario == 'estudiante':
+            if not destino_perfil or destino_perfil.tipo_usuario != 'profesor':
                 raise ValidationError("Los alumnos solo pueden conversar con profesores")
-        elif usuario.groups.filter(name='Profesor').exists():
-            if not destinatario.groups.filter(name='Alumno').exists():
+        elif perfil and perfil.tipo_usuario == 'profesor':
+            if not destino_perfil or destino_perfil.tipo_usuario != 'estudiante':
                 raise ValidationError("Los profesores solo pueden conversar con alumnos")
         
         # Verificar que no es el mismo usuario
@@ -127,14 +142,13 @@ class NuevaConversacionForm(forms.Form):
         destinatario = self.cleaned_data['destinatario']
         
         # Determinar roles y crear conversación
-        if usuario.groups.filter(name='Alumno').exists():
-            # Usuario es alumno
+        perfil = getattr(usuario, 'perfil', None)
+        if perfil and perfil.tipo_usuario == 'estudiante':
             conversacion, created = Conversacion.objects.get_or_create(
                 alumno=usuario,
                 profesor=destinatario
             )
         else:
-            # Usuario es profesor
             conversacion, created = Conversacion.objects.get_or_create(
                 alumno=destinatario,
                 profesor=usuario
@@ -147,8 +161,13 @@ class MensajeForm(forms.ModelForm):
     """Formulario para enviar mensajes con validaciones de seguridad"""
     class Meta:
         model = Mensaje
-        fields = ['contenido', 'adjunto']
+        fields = ['asunto', 'contenido', 'adjunto']
         widgets = {
+            'asunto': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Asunto del mensaje (opcional)',
+                'maxlength': 150
+            }),
             'contenido': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Escribe tu mensaje...',
@@ -169,6 +188,12 @@ class MensajeForm(forms.ModelForm):
         # Guardar usuario y conversación para validaciones
         self.usuario = usuario
         self.conversacion = conversacion
+        self.fields['asunto'].required = False
+
+        if conversacion:
+            ultimo = conversacion.mensajes.order_by('-fecha_creacion').first()
+            if ultimo and ultimo.asunto:
+                self.fields['asunto'].initial = ultimo.asunto
     
     def clean_contenido(self):
         """Sanitizar contenido del mensaje"""
@@ -205,6 +230,40 @@ class MensajeForm(forms.ModelForm):
             # El archivo se validará también en el modelo con _validar_archivo_adjunto()
         
         return adjunto
+
+
+class ProfesorMensajeForm(forms.Form):
+    """Formulario sencillo para que el profesor escriba a sus estudiantes"""
+    destinatario = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        label='Estudiante',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    asunto = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Asunto del mensaje'})
+    )
+    contenido = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Contenido del mensaje'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        profesor = kwargs.pop('profesor', None)
+        super().__init__(*args, **kwargs)
+        self.profesor = profesor
+
+        if profesor:
+            cursos_profesor = HorarioClases.objects.filter(
+                profesor=profesor
+            ).values_list('curso_id', flat=True).distinct()
+            estudiantes_ids = InscripcionCurso.objects.filter(
+                curso_id__in=cursos_profesor,
+                estado='activo'
+            ).values_list('estudiante_id', flat=True)
+            self.fields['destinatario'].queryset = User.objects.filter(
+                id__in=estudiantes_ids,
+                is_active=True
+            ).distinct()
     
     def _verificar_rate_limit_archivos(self):
         """Verifica límites de archivos por minuto"""

@@ -12,20 +12,47 @@ from django.db.models import Q, Count, F
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import OuterRef
+from academico.models import HorarioClases, InscripcionCurso
 from .models import Conversacion, Mensaje, ConfiguracionMensajeria
 from .forms import (
-    BusquedaConversacionForm, 
-    NuevaConversacionForm, 
+    BusquedaConversacionForm,
+    NuevaConversacionForm,
     MensajeForm,
-    PaginacionForm
+    PaginacionForm,
+    ProfesorMensajeForm,
 )
 
 
 def verificar_rol_mensajeria(user):
     """Decorator interno para verificar roles permitidos"""
-    return user.is_authenticated and (
-        user.groups.filter(name__in=['Alumno', 'Profesor']).exists()
-    )
+    if not user.is_authenticated:
+        return False
+    perfil = getattr(user, 'perfil', None)
+    return perfil and perfil.tipo_usuario in ['estudiante', 'profesor']
+
+
+def _estudiantes_de_profesor(profesor):
+    """Obtiene estudiantes asociados a los cursos impartidos por el profesor"""
+    cursos_ids = HorarioClases.objects.filter(
+        profesor=profesor
+    ).values_list('curso_id', flat=True).distinct()
+    return User.objects.filter(
+        cursos_inscrito__curso_id__in=cursos_ids,
+        cursos_inscrito__estado='activo',
+        perfil__tipo_usuario='estudiante'
+    ).distinct()
+
+
+def _profesores_de_estudiante(estudiante):
+    """Obtiene profesores vinculados a los cursos del estudiante"""
+    cursos_ids = InscripcionCurso.objects.filter(
+        estudiante=estudiante,
+        estado='activo'
+    ).values_list('curso_id', flat=True)
+    return User.objects.filter(
+        horarioclases__curso_id__in=cursos_ids,
+        perfil__tipo_usuario='profesor'
+    ).distinct()
 
 
 @login_required
@@ -96,6 +123,119 @@ def conversaciones_list(request):
 
 
 @login_required
+def bandeja_entrada(request):
+    """Listado simple de mensajes recibidos por el usuario."""
+    if not verificar_rol_mensajeria(request.user):
+        return redirect('usuarios:panel')
+
+    mensajes_qs = Mensaje.objects.filter(
+        receptor=request.user
+    ).select_related('autor', 'conversacion').order_by('-fecha_creacion')
+
+    paginator = Paginator(mensajes_qs, 20)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except (EmptyPage, InvalidPage):
+        page_obj = paginator.get_page(1)
+
+    # Marcar todos los mensajes mostrados como leídos
+    Mensaje.objects.filter(
+        id__in=[m.id for m in page_obj.object_list],
+        leido=False
+    ).update(leido=True)
+
+    contexto = {
+        'page_obj': page_obj,
+        'mensajes': page_obj.object_list,
+    }
+    return render(request, 'mensajeria/bandeja_entrada.html', contexto)
+
+
+@login_required
+def mensajes_enviados(request):
+    """Listado de mensajes enviados por el usuario."""
+    if not verificar_rol_mensajeria(request.user):
+        return redirect('usuarios:panel')
+
+    mensajes_qs = Mensaje.objects.filter(
+        autor=request.user
+    ).select_related('receptor', 'conversacion').order_by('-fecha_creacion')
+
+    paginator = Paginator(mensajes_qs, 20)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except (EmptyPage, InvalidPage):
+        page_obj = paginator.get_page(1)
+
+    contexto = {
+        'page_obj': page_obj,
+        'mensajes': page_obj.object_list,
+    }
+    return render(request, 'mensajeria/bandeja_enviados.html', contexto)
+
+
+@login_required
+def mensaje_detalle(request, mensaje_id):
+    """Detalle individual de un mensaje directo."""
+    mensaje = get_object_or_404(
+        Mensaje.objects.select_related('autor', 'receptor', 'conversacion'),
+        id=mensaje_id
+    )
+    if request.user not in (mensaje.autor, mensaje.receptor):
+        return HttpResponseForbidden("No puedes ver este mensaje")
+
+    if request.user == mensaje.receptor:
+        mensaje.marcar_como_leido(request.user)
+        mensaje.conversacion.marcar_como_leido(request.user)
+
+    contexto = {
+        'mensaje': mensaje,
+        'conversacion': mensaje.conversacion,
+        'otro_participante': mensaje.conversacion.get_otro_participante(request.user),
+    }
+    return render(request, 'mensajeria/mensaje_detalle.html', contexto)
+
+
+@login_required
+def profesor_redactar(request):
+    """Vista simplificada para que el profesor envíe mensajes a sus alumnos."""
+    perfil = getattr(request.user, 'perfil', None)
+    if not perfil or perfil.tipo_usuario != 'profesor':
+        messages.error(request, 'Solo los profesores pueden acceder a esta sección.')
+        return redirect('usuarios:panel')
+
+    if request.method == 'POST':
+        form = ProfesorMensajeForm(request.POST, profesor=request.user)
+        if form.is_valid():
+            destinatario = form.cleaned_data['destinatario']
+            asunto = form.cleaned_data['asunto']
+            contenido = form.cleaned_data['contenido']
+            conversacion, _ = Conversacion.objects.get_or_create(
+                alumno=destinatario,
+                profesor=request.user
+            )
+            Mensaje.objects.create(
+                conversacion=conversacion,
+                autor=request.user,
+                receptor=destinatario,
+                asunto=asunto,
+                contenido=contenido
+            )
+            messages.success(request, 'Mensaje enviado correctamente.')
+            return redirect('mensajeria:mensajes_enviados')
+    else:
+        form = ProfesorMensajeForm(profesor=request.user)
+
+    contexto = {
+        'form': form,
+        'estudiantes': _estudiantes_de_profesor(request.user),
+    }
+    return render(request, 'mensajeria/profesor_redactar.html', contexto)
+
+
+@login_required
 def conversacion_detail(request, conversacion_id):
     """
     Detalle de conversación con mensajes
@@ -113,12 +253,16 @@ def conversacion_detail(request, conversacion_id):
     if not conversacion.puede_acceder(request.user):
         return HttpResponseForbidden("No tienes permisos para acceder a esta conversación")
     
-    # Marcar como leído de forma atómica
+    # Marcar como leído de forma atómica y actualizar mensajes del usuario
     with transaction.atomic():
         conversacion.marcar_como_leido(request.user)
+        conversacion.mensajes.filter(
+            receptor=request.user,
+            leido=False
+        ).update(leido=True)
     
     # Obtener mensajes con select_related para optimizar
-    mensajes = conversacion.mensajes.select_related('autor').order_by('-creado_en')
+    mensajes = conversacion.mensajes.select_related('autor').order_by('-fecha_creacion')
     
     # Paginación de mensajes (50 por página)
     paginator = Paginator(mensajes, 50)
@@ -248,9 +392,10 @@ def enviar_mensaje(request, conversacion_id):
             return JsonResponse({
                 'status': 'success',
                 'message_id': mensaje.id,
+                'asunto': mensaje.asunto,
                 'contenido': mensaje.contenido,
                 'autor': mensaje.autor.get_full_name() or mensaje.autor.username,
-                'creado_en': mensaje.creado_en.strftime('%d/%m/%Y %H:%M'),
+                'fecha_creacion': mensaje.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
             })
         except Exception as e:
             return JsonResponse({
@@ -297,8 +442,8 @@ def eliminar_conversacion(request, conversacion_id):
     if not verificar_rol_mensajeria(request.user):
         return redirect('usuarios:panel')
     
-    # Solo alumnos pueden eliminar conversaciones
-    if not request.user.groups.filter(name='Alumno').exists():
+    perfil = getattr(request.user, 'perfil', None)
+    if not perfil or perfil.tipo_usuario != 'estudiante':
         messages.error(request, 'Solo los alumnos pueden eliminar conversaciones')
         return redirect('mensajeria:conversaciones_list')
     
@@ -338,7 +483,8 @@ def mensajes_destacados(request):
         return redirect('usuarios:panel')
     
     # Solo mostrar si el usuario es staff o profesor
-    if not (request.user.is_staff or request.user.groups.filter(name='Profesor').exists()):
+    perfil = getattr(request.user, 'perfil', None)
+    if not (request.user.is_staff or (perfil and perfil.tipo_usuario == 'profesor')):
         messages.error(request, 'No tienes permisos para ver esta página')
         return redirect('mensajeria:conversaciones_list')
     
@@ -353,7 +499,7 @@ def mensajes_destacados(request):
         Q(contenido__icontains='urgente')
     ).select_related(
         'conversacion', 'autor'
-    ).order_by('-creado_en')
+    ).order_by('-fecha_creacion')
     
     # Paginación
     paginator = Paginator(mensajes_destacados, 30)

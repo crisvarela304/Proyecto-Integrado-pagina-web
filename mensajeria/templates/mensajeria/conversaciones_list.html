@@ -161,7 +161,7 @@
                                                         <small>
                                                             <strong>{{ ultimo_mensaje.autor.get_full_name|default:ultimo_mensaje.autor.username }}:</strong>
                                                             {{ ultimo_mensaje.contenido|truncatewords:10 }}
-                                                            <span class="text-muted ms-2">{{ ultimo_mensaje.creado_en|naturaltime }}</span>
+                                                            <span class="text-muted ms-2">{{ ultimo_mensaje.fecha_creacion|naturaltime }}</span>
                                                         </small>
                                                     </p>
                                                 {% else %}

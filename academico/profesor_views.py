@@ -15,6 +15,7 @@ from academico.models import (
     Asignatura, Curso, InscripcionCurso, Calificacion, 
     Asistencia, HorarioClases
 )
+from .forms import SeleccionCursoAsignaturaForm, CalificacionForm
 from documentos.models import ComunicadoPadres
 
 @login_required
@@ -28,12 +29,17 @@ def panel_profesor(request):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
-    # Obtener cursos del profesor
-    cursos_profesor = Curso.objects.filter(profesor_jefe=user)
+    # Obtener cursos del profesor (como jefe o docente)
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
     
     # Obtener asignaturas que enseña
+    asignaturas_ids = HorarioClases.objects.filter(
+        profesor=user
+    ).values_list('asignatura_id', flat=True)
     asignaturas_profesor = Asignatura.objects.filter(
-        horarioclases__profesor=user
+        id__in=asignaturas_ids
     ).distinct()
     
     # Estadísticas
@@ -47,7 +53,7 @@ def panel_profesor(request):
     
     # Últimas calificaciones registradas
     ultimas_calificaciones = Calificacion.objects.filter(
-        asignatura__in=asignaturas_profesor
+        profesor=user
     ).order_by('-fecha_evaluacion')[:5]
     
     # Próximas clases (próximos 5 horarios)
@@ -80,7 +86,7 @@ def panel_profesor(request):
     return render(request, 'academico/profesor_panel.html', context)
 
 @login_required
-def mis_estudiantes(request):
+def mis_estudiantes_profesor(request):
     """Lista todos los estudiantes del profesor"""
     user = request.user
     perfil = getattr(user, 'perfil', None)
@@ -89,14 +95,13 @@ def mis_estudiantes(request):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
-    # Obtener cursos del profesor
-    cursos_profesor = Curso.objects.filter(profesor_jefe=user)
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
     
-    # Filtros
     curso_seleccionado = request.GET.get('curso', '')
     busqueda = request.GET.get('busqueda', '').strip()
     
-    # Estudiantes en los cursos del profesor
     estudiantes_query = InscripcionCurso.objects.filter(
         curso__in=cursos_profesor
     ).select_related('estudiante', 'estudiante__perfil', 'curso')
@@ -112,7 +117,6 @@ def mis_estudiantes(request):
             Q(estudiante__username__icontains=busqueda)
         )
     
-    # Paginación
     paginator = Paginator(estudiantes_query, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -124,7 +128,7 @@ def mis_estudiantes(request):
         'busqueda': busqueda,
     }
     
-    return render(request, 'academico/profesor_panel.html', context)
+    return render(request, 'academico/profesor_mis_estudiantes.html', context)
 
 @login_required
 def gestionar_calificaciones(request, estudiante_id):
@@ -136,33 +140,32 @@ def gestionar_calificaciones(request, estudiante_id):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
-    # Obtener estudiante
     estudiante = get_object_or_404(
         User.objects.select_related('perfil'),
         id=estudiante_id
     )
     
-    # Verificar que el estudiante esté en algún curso del profesor
-    cursos_profesor = Curso.objects.filter(profesor_jefe=user)
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
     inscripcion = InscripcionCurso.objects.filter(
         estudiante=estudiante,
         curso__in=cursos_profesor
-    ).first()
+    ).select_related('curso').first()
     
     if not inscripcion:
         messages.error(request, 'Este estudiante no está en ninguno de tus cursos.')
-        return redirect('academico:mis_estudiantes')
+        return redirect('academico:mis_estudiantes_profesor')
     
-    # Obtener asignaturas del profesor
     asignaturas_profesor = Asignatura.objects.filter(
-        horarioclases__profesor=user
+        horarioclases__profesor=user,
+        horarioclases__curso=inscripcion.curso
     ).distinct()
     
     if request.method == 'POST':
-        # Procesar actualización de calificaciones
         try:
             for asignatura in asignaturas_profesor:
-                for i in range(1, 4):  # 3 evaluaciones
+                for i in range(1, 4):
                     campo_nota = f'nota_{asignatura.id}_{i}'
                     campo_desc = f'desc_{asignatura.id}_{i}'
                     
@@ -174,7 +177,6 @@ def gestionar_calificaciones(request, estudiante_id):
                             try:
                                 nota = float(nota_str)
                                 if 1.0 <= nota <= 7.0:
-                                    # Crear o actualizar calificación
                                     Calificacion.objects.update_or_create(
                                         estudiante=estudiante,
                                         asignatura=asignatura,
@@ -183,7 +185,10 @@ def gestionar_calificaciones(request, estudiante_id):
                                         defaults={
                                             'nota': nota,
                                             'descripcion': descripcion,
-                                            'fecha_evaluacion': datetime.date.today()
+                                            'fecha_evaluacion': datetime.date.today(),
+                                            'profesor': user,
+                                            'tipo_evaluacion': 'nota',
+                                            'semestre': '1',
                                         }
                                     )
                             except ValueError:
@@ -195,19 +200,15 @@ def gestionar_calificaciones(request, estudiante_id):
         except Exception as e:
             messages.error(request, f'Error al actualizar calificaciones: {str(e)}')
     
-    # Obtener calificaciones actuales
     calificaciones = Calificacion.objects.filter(
         estudiante=estudiante,
         asignatura__in=asignaturas_profesor,
         curso=inscripcion.curso
     ).select_related('asignatura').order_by('asignatura__nombre', 'numero_evaluacion')
     
-    # Organizar calificaciones por asignatura
     calificaciones_dict = {}
     for cal in calificaciones:
-        if cal.asignatura.id not in calificaciones_dict:
-            calificaciones_dict[cal.asignatura.id] = []
-        calificaciones_dict[cal.asignatura.id].append(cal)
+        calificaciones_dict.setdefault(cal.asignatura.id, []).append(cal)
     
     context = {
         'estudiante': estudiante,
@@ -284,7 +285,9 @@ def enviar_correos(request):
             messages.error(request, f'Error al enviar correos: {str(e)}')
     
     # Obtener cursos del profesor para filtrar estudiantes
-    cursos_profesor = Curso.objects.filter(profesor_jefe=user)
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
     
     # Obtener estudiantes de los cursos del profesor
     estudiantes = User.objects.filter(
@@ -383,33 +386,31 @@ def estadisticas_profesor(request):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
-    # Obtener cursos del profesor
-    cursos_profesor = Curso.objects.filter(profesor_jefe=user)
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
     
-    # Estadísticas de estudiantes
     total_estudiantes = InscripcionCurso.objects.filter(
         curso__in=cursos_profesor
     ).values('estudiante').distinct().count()
     
-    # Estadísticas de calificaciones
     asignaturas_profesor = Asignatura.objects.filter(
         horarioclases__profesor=user
     ).distinct()
     
     calificaciones = Calificacion.objects.filter(
-        asignatura__in=asignaturas_profesor
+        profesor=user
     )
     
     promedio_general = calificaciones.aggregate(
         promedio=Avg('nota')
     )['promedio'] or 0
     
-    # Estudiantes con promedio bajo
     estudiantes_bajo_rendimiento = []
     for estudiante in User.objects.filter(perfil__tipo_usuario='estudiante'):
         promedio_estudiante = Calificacion.objects.filter(
             estudiante=estudiante,
-            asignatura__in=asignaturas_profesor
+            profesor=user
         ).aggregate(promedio=Avg('nota'))['promedio']
         
         if promedio_estudiante and promedio_estudiante < 4.0:
@@ -424,4 +425,4 @@ def estadisticas_profesor(request):
         'estudiantes_bajo_rendimiento': estudiantes_bajo_rendimiento[:10],  # Top 10
     }
     
-    return render(request, 'academico/profesor_panel.html', context)
+    return render(request, 'academico/profesor_estadisticas.html', context)

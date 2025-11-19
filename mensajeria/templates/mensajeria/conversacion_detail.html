@@ -223,9 +223,9 @@
                     {% endif %}
                 </div>
                 <div class="message-time">
-                    {{ mensaje.creado_en|date:"d/m/Y H:i" }}
+                    {{ mensaje.fecha_creacion|date:"d/m/Y H:i" }}
                     {% if mensaje.autor == request.user %}
-                        {% if mensaje.leido_por_destinatario %}
+                        {% if mensaje.leido %}
                             <i class="bi bi-check2-all text-success" title="Leído"></i>
                         {% else %}
                             <i class="bi bi-check2" title="Enviado"></i>

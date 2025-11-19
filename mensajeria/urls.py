@@ -10,6 +10,10 @@ app_name = 'mensajeria'
 urlpatterns = [
     # Lista de conversaciones
     path('', views.conversaciones_list, name='conversaciones_list'),
+    path('bandeja/', views.bandeja_entrada, name='bandeja_entrada'),
+    path('enviados/', views.mensajes_enviados, name='mensajes_enviados'),
+    path('mensaje/<int:mensaje_id>/', views.mensaje_detalle, name='mensaje_detalle'),
+    path('profesor/enviar/', views.profesor_redactar, name='profesor_redactar'),
     
     # Detalle de conversación
     path('conversacion/<int:conversacion_id>/', views.conversacion_detail, name='conversacion_detail'),

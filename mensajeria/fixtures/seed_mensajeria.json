@@ -525,7 +525,7 @@
       "contenido": "Hola profesora, tengo una consulta sobre la tarea de matemáticas de la semana pasada.",
       "adjunto": "",
       "creado_en": "2025-11-01T14:32:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -537,7 +537,7 @@
       "contenido": "Hola Carlos, me alegra que tengas dudas. ¿Podrías ser más específico sobre qué parte de la tarea te genera dificultades?",
       "adjunto": "",
       "creado_en": "2025-11-01T15:15:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -549,7 +549,7 @@
       "contenido": "Específicamente en los ejercicios 5 y 6, no entiendo bien cómo aplicar la fórmula cuadrática.",
       "adjunto": "",
       "creado_en": "2025-11-01T15:18:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -561,7 +561,7 @@
       "contenido": "Te voy a enviar un PDF con la explicación paso a paso y algunos ejemplos adicionales.",
       "adjunto": "mensajeria/adjuntos/explicacion_cuadratica.pdf",
       "creado_en": "2025-11-06T21:25:00Z",
-      "leido_por_destinatario": false
+      "leido": false
     }
   },
   {
@@ -573,7 +573,7 @@
       "contenido": "Buenos días profesor, ¿cuándo será la próxima prueba de historia?",
       "adjunto": "",
       "creado_en": "2025-11-02T09:17:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -585,7 +585,7 @@
       "contenido": "Hola María, la próxima prueba será el próximo viernes 15 de noviembre. Cubriremos desde la página 45 hasta la 78 del libro.",
       "adjunto": "",
       "creado_en": "2025-11-02T10:30:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -597,7 +597,7 @@
       "contenido": "Te recomiendo repasar los apuntes sobre la independencia de Chile y los personajes históricos que vimos en clase.",
       "adjunto": "mensajeria/adjuntos/guia_estudio_historia.docx",
       "creado_en": "2025-11-06T20:45:00Z",
-      "leido_por_destinatario": false
+      "leido": false
     }
   },
   {
@@ -609,7 +609,7 @@
       "contenido": "¡Perfecto! Muchas gracias por la información. Una consulta, ¿podemos usar la calculadora en la prueba?",
       "adjunto": "",
       "creado_en": "2025-11-06T21:20:00Z",
-      "leido_por_destinatario": false
+      "leido": false
     }
   },
   {
@@ -621,7 +621,7 @@
       "contenido": "Profesora Lagos, necesito justificar mi inasistencia del martes por motivos médicos. ¿Cómo puedo hacerlo?",
       "adjunto": "",
       "creado_en": "2025-11-03T16:22:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -633,7 +633,7 @@
       "contenido": "Hola Andrés, por supuesto. Puedes traer un certificado médico o una declaración de tus padres explicando el motivo.",
       "adjunto": "",
       "creado_en": "2025-11-03T17:45:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -645,7 +645,7 @@
       "contenido": "Profesor Silva, no pude entregar el proyecto de ciencias a tiempo. ¿Hay posibilidad de una prórroga?",
       "adjunto": "",
       "creado_en": "2025-11-04T11:32:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -657,7 +657,7 @@
       "contenido": "Hola Sofía, considerando las circunstancias, puedes entregarlo hasta el viernes. Pero tienes que justificar la demora.",
       "adjunto": "",
       "creado_en": "2025-11-04T12:15:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -669,7 +669,7 @@
       "contenido": "Muchas gracias profesor. Te haré llegar el certificado médico que tengo.",
       "adjunto": "mensajeria/adjuntos/certificado_medico.png",
       "creado_en": "2025-11-06T18:30:00Z",
-      "leido_por_destinatario": false
+      "leido": false
     }
   },
   {
@@ -681,7 +681,7 @@
       "contenido": "Buenos días profesora, quería saber sobre las actividades extraescolares del próximo mes.",
       "adjunto": "",
       "creado_en": "2025-11-05T13:47:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -693,7 +693,7 @@
       "contenido": "Hola Valentina, este mes tendremos una salida al museo de ciencias naturales el 20 de noviembre, y un taller de teatro los viernes.",
       "adjunto": "",
       "creado_en": "2025-11-05T14:30:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -705,7 +705,7 @@
       "contenido": "¡Me interesa mucho el taller de teatro! ¿Cómo puedo inscribirme?",
       "adjunto": "",
       "creado_en": "2025-11-05T14:35:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   },
   {
@@ -717,7 +717,7 @@
       "contenido": "Puedes inscribirte conmigo durante los recreos o enviando un mensaje a través de esta plataforma.",
       "adjunto": "",
       "creado_en": "2025-11-06T17:45:00Z",
-      "leido_por_destinatario": true
+      "leido": true
     }
   }
 ]

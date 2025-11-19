@@ -90,7 +90,7 @@ class MensajeriaModelTests(TestCase):
         self.assertEqual(self.mensaje.conversacion, self.conversacion)
         self.assertEqual(self.mensaje.autor, self.alumno)
         self.assertEqual(self.mensaje.contenido, 'Mensaje de prueba')
-        self.assertFalse(self.mensaje.leido_por_destinatario)
+        self.assertFalse(self.mensaje.leido)
     
     def test_get_otro_participante(self):
         """Test obtener el otro participante"""

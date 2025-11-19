@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas del Profesor{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6>Total cursos</h6>
+                    <h3 class="text-primary">{{ total_cursos }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6>Total asignaturas</h6>
+                    <h3 class="text-primary">{{ total_asignaturas }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6>Total estudiantes</h6>
+                    <h3 class="text-primary">{{ total_estudiantes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6>Promedio general</h6>
+                    <h3 class="text-primary">{{ promedio_general }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Estudiantes con promedio bajo</h5>
+        </div>
+        <div class="card-body">
+            {% if estudiantes_bajo_rendimiento %}
+                <ul class="list-group">
+                    {% for estudiante, promedio in estudiantes_bajo_rendimiento %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ estudiante.get_full_name|default:estudiante.username }}
+                            <span class="badge bg-danger">{{ promedio|floatformat:1 }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">Todos los estudiantes mantienen promedios adecuados.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

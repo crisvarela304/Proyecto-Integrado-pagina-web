@@ -172,7 +172,7 @@ def panel(request):
         {"icon": "bi-file-earmark-text", "title": "Certificados", "desc": "Descargar certificados",
          "url": reverse("documentos:documentos_list"),                  "color": "success"},
         {"icon": "bi-envelope-paper", "title": "Mensajería",    "desc": "Comunicaciones internas",
-         "url": reverse("mensajeria:conversaciones_list"),                  "color": "warning"},
+         "url": reverse("mensajeria:bandeja_entrada"),                  "color": "warning"},
     ]
     
     # Enlaces adicionales según tipo de usuario
