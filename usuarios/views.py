@@ -6,6 +6,15 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import transaction
 from .models import PerfilUsuario
+from .forms import (
+    UserRegistrationForm,
+    PerfilUsuarioRegistrationForm,
+    LoginForm,
+    UserEditForm,
+    PerfilUsuarioEditForm,
+    PasswordChangeForm,
+)
+from mensajeria.forms import ContactoColegioForm
 
 def limpiar_rut(rut):
     """Limpia y formatea un RUT chileno"""
@@ -68,8 +77,6 @@ def autenticar_con_rut(request, rut, password):
     except PerfilUsuario.DoesNotExist:
         return None
 
-from .forms import UserRegistrationForm, PerfilUsuarioRegistrationForm
-
 # Registrar usuario
 def registrar_usuario(request):
     if request.method == 'POST':
@@ -104,8 +111,6 @@ def registrar_usuario(request):
         'user_form': user_form,
         'perfil_form': perfil_form
     })
-
-from .forms import UserRegistrationForm, PerfilUsuarioRegistrationForm, LoginForm
 
 # Iniciar sesión
 def login_usuario(request):
@@ -194,17 +199,24 @@ def panel(request):
             {"title": "Estadísticas", "url": reverse("estadisticas_noticias")},
         ]
 
+    initial_contacto = {
+        "nombre": user.get_full_name() or user.username,
+        "correo": user.email,
+    }
+    contacto_form = ContactoColegioForm(initial=initial_contacto)
+    
     ctx = {
         "user_profile": perfil,
+        "perfil": perfil,
         "tipo_usuario": tipo_usuario,
         "rut": rut,
         "quick_links": quick_links,
         "admin_links": admin_links,
         "is_admin": user.is_staff,
+        "contacto_form": contacto_form,
+        "form": contacto_form,
     }
     return render(request, "usuarios/panel.html", ctx)
-
-from .forms import UserRegistrationForm, PerfilUsuarioRegistrationForm, LoginForm, UserEditForm, PerfilUsuarioEditForm
 
 # Vista de perfil del usuario
 @login_required
@@ -214,7 +226,7 @@ def mi_perfil(request):
     
     if request.method == 'POST':
         user_form = UserEditForm(request.POST, instance=user)
-        perfil_form = PerfilUsuarioEditForm(request.POST, instance=perfil)
+        perfil_form = PerfilUsuarioEditForm(request.POST, request.FILES, instance=perfil)
         if user_form.is_valid() and perfil_form.is_valid():
             try:
                 with transaction.atomic():
@@ -240,8 +252,6 @@ def mi_perfil(request):
         "user_form": user_form,
         "perfil_form": perfil_form
     })
-
-from .forms import UserRegistrationForm, PerfilUsuarioRegistrationForm, LoginForm, UserEditForm, PerfilUsuarioEditForm, PasswordChangeForm
 
 # Vista de cambio de contraseña
 @login_required

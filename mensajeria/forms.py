@@ -10,7 +10,7 @@ from django.db import transaction
 from django.conf import settings
 
 from academico.models import InscripcionCurso, HorarioClases
-from .models import Conversacion, Mensaje, RateLimit
+from .models import Conversacion, Mensaje, RateLimit, ContactoColegio
 
 
 class BusquedaConversacionForm(forms.Form):
@@ -354,3 +354,16 @@ class PaginacionForm(forms.Form):
         if pagina and pagina < 1:
             raise ValidationError("Número de página inválido")
         return pagina
+
+class ContactoColegioForm(forms.ModelForm):
+    '''Formulario para que estudiantes contacten al colegio.'''
+
+    class Meta:
+        model = ContactoColegio
+        fields = ['nombre', 'correo', 'asunto', 'mensaje']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tu nombre completo'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'tu@correo.com'}),
+            'asunto': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Motivo del mensaje'}),
+            'mensaje': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Escribe tu mensaje'}),
+        }

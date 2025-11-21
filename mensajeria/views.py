@@ -20,6 +20,7 @@ from .forms import (
     MensajeForm,
     PaginacionForm,
     ProfesorMensajeForm,
+    ContactoColegioForm,
 )
 
 
@@ -63,15 +64,20 @@ def conversaciones_list(request):
     """
     if not verificar_rol_mensajeria(request.user):
         return redirect('usuarios:panel')
+
+    usuario_actual = request.user
     
     # Crear configuración si no existe
     config, created = ConfiguracionMensajeria.objects.get_or_create(
-        usuario=request.user
+        usuario=usuario_actual
     )
+
+    es_alumno = usuario_actual.groups.filter(name="Alumno").exists()
+    es_profesor = usuario_actual.groups.filter(name="Profesor").exists()
     
     # Query optimizado con select_related para evitar N+1
     conversaciones = Conversacion.objects.filter(
-        Q(alumno=request.user) | Q(profesor=request.user)
+        Q(alumno=usuario_actual) | Q(profesor=usuario_actual)
     ).select_related(
         'alumno', 'profesor'
     ).annotate(
@@ -115,8 +121,10 @@ def conversaciones_list(request):
         'form_busqueda': form_busqueda,
         'no_leidos_total': no_leidos,
         'total_conversaciones': total_conversaciones,
-        'usuario_actual': request.user,
+        'usuario_actual': usuario_actual,
         'config': config,
+        'es_alumno': es_alumno,
+        'es_profesor': es_profesor,
     }
     
     return render(request, 'mensajeria/conversaciones_list.html', contexto)
@@ -127,24 +135,18 @@ def bandeja_entrada(request):
     """Listado simple de mensajes recibidos por el usuario."""
     if not verificar_rol_mensajeria(request.user):
         return redirect('usuarios:panel')
-
+    
     mensajes_qs = Mensaje.objects.filter(
         receptor=request.user
     ).select_related('autor', 'conversacion').order_by('-fecha_creacion')
-
+    
     paginator = Paginator(mensajes_qs, 20)
     page_number = request.GET.get('page', 1)
     try:
         page_obj = paginator.get_page(page_number)
     except (EmptyPage, InvalidPage):
         page_obj = paginator.get_page(1)
-
-    # Marcar todos los mensajes mostrados como leídos
-    Mensaje.objects.filter(
-        id__in=[m.id for m in page_obj.object_list],
-        leido=False
-    ).update(leido=True)
-
+    
     contexto = {
         'page_obj': page_obj,
         'mensajes': page_obj.object_list,
@@ -515,6 +517,26 @@ def mensajes_destacados(request):
     }
     
     return render(request, 'mensajeria/mensajes_destacados.html', contexto)
+
+
+def contacto_colegio(request):
+    """Formulario embebido para contactar al colegio."""
+    if request.method == "POST":
+        form = ContactoColegioForm(request.POST)
+        if form.is_valid():
+            contacto = form.save(commit=False)
+            if request.user.is_authenticated:
+                contacto.user = request.user
+            contacto.save()
+            messages.success(request, "Tu mensaje fue enviado correctamente.")
+            return redirect('usuarios:panel')
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            initial["nombre"] = request.user.get_full_name() or request.user.username
+            initial["correo"] = request.user.email
+        form = ContactoColegioForm(initial=initial)
+    return render(request, "mensajeria/contacto_colegio_embed.html", {"form": form})
 
 
 # Error handlers personalizados

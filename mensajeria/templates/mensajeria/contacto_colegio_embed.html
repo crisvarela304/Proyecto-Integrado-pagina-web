@@ -1,0 +1,41 @@
+{% csrf_token %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger py-2 mb-3">
+    {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-12">
+    {{ form.nombre.label_tag }}
+    {{ form.nombre }}
+    {% if form.nombre.errors %}
+    <div class="text-danger small mt-1">{{ form.nombre.errors|join:", " }}</div>
+    {% endif %}
+  </div>
+  <div class="col-12">
+    {{ form.correo.label_tag }}
+    {{ form.correo }}
+    {% if form.correo.errors %}
+    <div class="text-danger small mt-1">{{ form.correo.errors|join:", " }}</div>
+    {% endif %}
+  </div>
+  <div class="col-12">
+    {{ form.asunto.label_tag }}
+    {{ form.asunto }}
+    {% if form.asunto.errors %}
+    <div class="text-danger small mt-1">{{ form.asunto.errors|join:", " }}</div>
+    {% endif %}
+  </div>
+  <div class="col-12">
+    {{ form.mensaje.label_tag }}
+    {{ form.mensaje }}
+    {% if form.mensaje.errors %}
+    <div class="text-danger small mt-1">{{ form.mensaje.errors|join:", " }}</div>
+    {% endif %}
+  </div>
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary w-100">Enviar mensaje</button>
+  </div>
+</div>

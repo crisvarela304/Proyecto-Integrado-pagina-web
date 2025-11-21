@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load dict_extras %}
 {% block title %}Enviar Correos{% endblock %}
 
 {% block content %}
@@ -103,6 +104,7 @@
                                                        name="destinatarios" 
                                                        value="{{ estudiante.id }}"
                                                        id="estudiante_{{ estudiante.id }}">
+                                                {% with perfil=perfiles_estudiantes|get_item:estudiante.id %}
                                                 <label class="form-check-label w-100" for="estudiante_{{ estudiante.id }}">
                                                     <div class="d-flex align-items-center gap-2">
                                                         <div class="text-primary">
@@ -116,11 +118,34 @@
                                                             </small>
                                                             <br>
                                                             <small class="text-muted">
-                                                                RUT: {{ estudiante.perfil.rut|default:"No registrado" }}
+                                                                RUT:
+                                                                {% if perfil %}
+                                                                    {{ perfil.rut }}
+                                                                {% else %}
+                                                                    Sin registro
+                                                                {% endif %}
+                                                            </small>
+                                                            <br>
+                                                            <small class="text-muted d-block">
+                                                                Tel. estudiante:
+                                                                {% if perfil and perfil.telefono_estudiante %}
+                                                                    {{ perfil.telefono_estudiante }}
+                                                                {% else %}
+                                                                    Sin registro
+                                                                {% endif %}
+                                                            </small>
+                                                            <small class="text-muted d-block">
+                                                                Tel. apoderado:
+                                                                {% if perfil and perfil.telefono_apoderado %}
+                                                                    {{ perfil.telefono_apoderado }}
+                                                                {% else %}
+                                                                    Sin registro
+                                                                {% endif %}
                                                             </small>
                                                         </div>
                                                     </div>
                                                 </label>
+                                                {% endwith %}
                                             </div>
                                         </div>
                                     {% empty %}

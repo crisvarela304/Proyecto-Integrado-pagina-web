@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 
 class Conversacion(models.Model):
@@ -262,3 +263,26 @@ class ConfiguracionSistema(models.Model):
     
     def __str__(self):
         return f"{self.clave}: {self.valor[:50]}{'...' if len(self.valor) > 50 else ''}"
+
+
+class ContactoColegio(models.Model):
+    """Mensajes enviados desde el panel del estudiante al colegio."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    nombre = models.CharField(max_length=100)
+    correo = models.EmailField()
+    asunto = models.CharField(max_length=150)
+    mensaje = models.TextField()
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-creado_en"]
+        verbose_name = "Contacto del Colegio"
+        verbose_name_plural = "Contactos del Colegio"
+
+    def __str__(self):
+        return f"{self.asunto} - {self.correo}"

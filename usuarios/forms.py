@@ -34,7 +34,7 @@ class UserEditForm(forms.ModelForm):
 class PerfilUsuarioEditForm(forms.ModelForm):
     class Meta:
         model = PerfilUsuario
-        fields = ['telefono', 'direccion']
+        fields = ['telefono', 'telefono_estudiante', 'telefono_apoderado', 'direccion', 'foto_perfil']
 
 class PasswordChangeForm(AuthPasswordChangeForm):
     old_password = forms.CharField(widget=forms.PasswordInput, label="Contraseña actual")

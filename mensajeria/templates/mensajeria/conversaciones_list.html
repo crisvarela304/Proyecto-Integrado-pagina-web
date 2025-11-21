@@ -77,10 +77,12 @@
                         <div>
                             <h6 class="card-title">Tu Rol</h6>
                             <small>
-                                {% if usuario_actual.groups.filter(name='Alumno').exists %}
+                                {% if es_alumno %}
                                     <span class="badge bg-info">Estudiante</span>
-                                {% elif usuario_actual.groups.filter(name='Profesor').exists %}
+                                {% elif es_profesor %}
                                     <span class="badge bg-success">Profesor</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Usuario</span>
                                 {% endif %}
                             </small>
                         </div>
@@ -182,7 +184,7 @@
                                             <i class="bi bi-chat-fill me-1"></i>Abrir Chat
                                         </a>
                                         
-                                        {% if usuario_actual.groups.filter(name='Alumno').exists and conversacion.alumno == usuario_actual %}
+                                        {% if es_alumno and conversacion.alumno == usuario_actual %}
                                             <a href="{% url 'mensajeria:eliminar_conversacion' conversacion.id %}" 
                                                class="btn btn-outline-danger btn-sm"
                                                onclick="return confirm('¿Estás seguro de eliminar esta conversación? Esta acción no se puede deshacer.')">

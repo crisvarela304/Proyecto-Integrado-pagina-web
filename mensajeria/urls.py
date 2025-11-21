@@ -14,6 +14,7 @@ urlpatterns = [
     path('enviados/', views.mensajes_enviados, name='mensajes_enviados'),
     path('mensaje/<int:mensaje_id>/', views.mensaje_detalle, name='mensaje_detalle'),
     path('profesor/enviar/', views.profesor_redactar, name='profesor_redactar'),
+    path('contacto/', views.contacto_colegio, name='contacto_colegio'),
     
     # Detalle de conversación
     path('conversacion/<int:conversacion_id>/', views.conversacion_detail, name='conversacion_detail'),

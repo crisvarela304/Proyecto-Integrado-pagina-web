@@ -121,11 +121,15 @@ def mis_estudiantes_profesor(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    estudiantes_ids = [inscripcion.estudiante_id for inscripcion in page_obj.object_list]
+    perfiles_estudiantes = PerfilUsuario.objects.filter(user_id__in=estudiantes_ids).in_bulk(field_name='user_id')
+    
     context = {
         'page_obj': page_obj,
         'cursos_profesor': cursos_profesor,
         'curso_seleccionado': curso_seleccionado,
         'busqueda': busqueda,
+        'perfiles_estudiantes': perfiles_estudiantes,
     }
     
     return render(request, 'academico/profesor_mis_estudiantes.html', context)
@@ -210,11 +214,14 @@ def gestionar_calificaciones(request, estudiante_id):
     for cal in calificaciones:
         calificaciones_dict.setdefault(cal.asignatura.id, []).append(cal)
     
+    perfil_estudiante = PerfilUsuario.objects.filter(user=estudiante).first()
+    
     context = {
         'estudiante': estudiante,
         'inscripcion': inscripcion,
         'asignaturas_profesor': asignaturas_profesor,
         'calificaciones_dict': calificaciones_dict,
+        'perfil_estudiante': perfil_estudiante,
     }
     
     return render(request, 'academico/profesor_gestionar_calificaciones.html', context)
@@ -294,10 +301,13 @@ def enviar_correos(request):
         perfil__tipo_usuario='estudiante',
         cursos_inscrito__curso__in=cursos_profesor
     ).select_related('perfil').distinct().order_by('first_name', 'last_name')
+    estudiantes_ids = list(estudiantes.values_list('id', flat=True))
+    perfiles_estudiantes = PerfilUsuario.objects.filter(user_id__in=estudiantes_ids).in_bulk(field_name='user_id')
     
     context = {
         'estudiantes': estudiantes,
         'cursos_profesor': cursos_profesor,
+        'perfiles_estudiantes': perfiles_estudiantes,
     }
     
     return render(request, 'academico/profesor_enviar_correos.html', context)

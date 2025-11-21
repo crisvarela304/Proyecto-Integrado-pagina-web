@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load dict_extras %}
 {% block title %}Mis Estudiantes{% endblock %}
 
 {% block content %}
@@ -55,6 +56,8 @@
                             <th>Nombre</th>
                             <th>RUT</th>
                             <th>Curso</th>
+                            <th>Teléfono estudiante</th>
+                            <th>Teléfono apoderado</th>
                             <th>Estado</th>
                             <th></th>
                         </tr>
@@ -62,9 +65,30 @@
                     <tbody>
                         {% for inscripcion in page_obj %}
                         <tr>
+                            {% with perfil=perfiles_estudiantes|get_item:inscripcion.estudiante.id %}
                             <td>{{ inscripcion.estudiante.get_full_name|default:inscripcion.estudiante.username }}</td>
-                            <td>{{ inscripcion.estudiante.perfil.rut }}</td>
+                            <td>
+                                {% if perfil %}
+                                    {{ perfil.rut }}
+                                {% else %}
+                                    Sin registro
+                                {% endif %}
+                            </td>
                             <td>{{ inscripcion.curso }}</td>
+                            <td>
+                                {% if perfil and perfil.telefono_estudiante %}
+                                    {{ perfil.telefono_estudiante }}
+                                {% else %}
+                                    Sin registro
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if perfil and perfil.telefono_apoderado %}
+                                    {{ perfil.telefono_apoderado }}
+                                {% else %}
+                                    Sin registro
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge bg-success">{{ inscripcion.get_estado_display }}</span>
                             </td>
@@ -73,6 +97,7 @@
                                     Ver calificaciones
                                 </a>
                             </td>
+                            {% endwith %}
                         </tr>
                         {% endfor %}
                     </tbody>

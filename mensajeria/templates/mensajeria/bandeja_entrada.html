@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mensajería interna{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1 text-primary">Mensajería interna</h2>
+            <p class="text-muted mb-0">Revisa los mensajes recibidos desde profesores y personal del colegio.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'mensajeria:nueva_conversacion' %}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-2"></i>
+                Redactar mensaje
+            </a>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" href="{% url 'mensajeria:bandeja_entrada' %}">Bandeja de entrada</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'mensajeria:mensajes_enviados' %}">Enviados</a>
+        </li>
+    </ul>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            {% if mensajes %}
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Remitente</th>
+                            <th scope="col">Asunto</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col" class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mensaje in mensajes %}
+                        <tr class="position-relative">
+                            <td>
+                                <a href="{% url 'mensajeria:mensaje_detalle' mensaje.id %}" class="stretched-link text-decoration-none text-dark fw-semibold">
+                                    {{ mensaje.autor.get_full_name|default:mensaje.autor.username }}
+                                </a>
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ mensaje.asunto|default:"(Sin asunto)" }}</div>
+                                <div class="text-muted small text-truncate" style="max-width: 380px;">
+                                    {{ mensaje.contenido|truncatechars:80 }}
+                                </div>
+                            </td>
+                            <td>{{ mensaje.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td class="text-center">
+                                {% if mensaje.leido %}
+                                    <span class="badge bg-success rounded-pill">Leído</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark rounded-pill">No leído</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
+                <p class="mb-1">No tienes mensajes en tu bandeja de entrada.</p>
+                <small>Cuando recibas mensajes aparecerán aquí.</small>
+            </div>
+            {% endif %}
+        </div>
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2 px-4 py-3">
+            <div class="text-muted small">
+                Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }} mensajes
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                        <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1">Anterior</a>
+                    </li>
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num == page_obj.number %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num <= page_obj.number|add:1 and num >= page_obj.number|add:-1 %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
