@@ -1,227 +1,113 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}{{ noticia.titulo }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container py-5">
     <div class="row">
-        <!-- Contenido principal -->
-        <div class="col-lg-8">
+        <div class="col-md-8 offset-md-2">
+
             <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'home' %}">Inicio</a>
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-light p-3 rounded-3 shadow-sm">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'noticias' %}" class="text-decoration-none">Noticias</a>
                     </li>
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'noticias' %}">Noticias</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        {{ noticia.titulo|truncatechars:50 }}
-                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ noticia.titulo|truncatechars:30 }}</li>
                 </ol>
             </nav>
 
-            <!-- Noticia -->
-            <article class="card border-0 shadow-sm">
-                <!-- Badges de estado -->
-                <div class="position-absolute top-0 start-0 m-3 z-1">
-                    {% if noticia.urgente %}
-                        <span class="badge bg-danger">URGENTE</span>
-                    {% endif %}
-                    {% if noticia.destacado %}
-                        <span class="badge bg-warning text-dark">DESTACADA</span>
-                    {% endif %}
-                </div>
-
+            <article class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <!-- Imagen de portada -->
-                {% if noticia.portada %}
                 <div class="position-relative">
-                    <img src="{{ noticia.portada.url }}" class="card-img-top" 
-                         alt="{{ noticia.titulo }}" style="max-height: 400px; object-fit: cover;">
-                    
-                    <!-- Overlay con categoría -->
-                    <div class="position-absolute bottom-0 start-0 w-100 bg-gradient bg-dark bg-opacity-50">
-                        <div class="p-3">
-                            <span class="badge bg-primary fs-6">{{ noticia.get_categoria_display }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div class="card-header bg-light">
-                    <span class="badge bg-primary">{{ noticia.get_categoria_display }}</span>
-                </div>
-                {% endif %}
+                    {% if noticia.portada %}
+                    <img src="{{ noticia.portada.url }}" class="card-img-top" alt="{{ noticia.titulo }}"
+                        style="max-height: 450px; object-fit: cover;">
+                    {% else %}
+                    <img src="{% static 'img/hero1.jpg' %}" class="card-img-top" alt="Imagen por defecto"
+                        style="max-height: 450px; object-fit: cover;">
+                    {% endif %}
 
-                <div class="card-body">
-                    <!-- Título -->
-                    <h1 class="card-title mb-3">{{ noticia.titulo }}</h1>
-                    
-                    <!-- Metadatos -->
-                    <div class="d-flex justify-content-between align-items-center mb-4 text-muted">
-                        <div class="d-flex align-items-center gap-3">
-                            <span>
-                                <i class="bi bi-person"></i>
-                                {{ noticia.autor|default:"Administración" }}
-                            </span>
-                            <span>
-                                <i class="bi bi-calendar"></i>
-                                {{ noticia.creado|date:"d/m/Y H:i" }}
-                            </span>
-                            <span>
-                                <i class="bi bi-eye"></i>
-                                {{ noticia.visitas }} visitas
-                            </span>
-                        </div>
-                        {% if noticia.actualizado > noticia.creado %}
-                        <small>
-                            <i class="bi bi-clock"></i>
-                            Actualizado: {{ noticia.actualizado|date:"d/m/Y H:i" }}
-                        </small>
+                    <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-gradient-dark">
+                        <span class="badge bg-primary mb-2">{{ noticia.get_categoria_display }}</span>
+                        {% if noticia.urgente %}
+                        <span class="badge bg-danger mb-2">URGENTE</span>
                         {% endif %}
                     </div>
-                    
-                    <!-- Resumen si existe -->
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Título -->
+                    <h1 class="display-5 fw-bold mb-3 text-dark">{{ noticia.titulo }}</h1>
+
+                    <!-- Metadatos -->
+                    <div class="d-flex align-items-center text-muted mb-4 pb-4 border-bottom">
+                        <div class="d-flex align-items-center me-4">
+                            <i class="bi bi-person-circle fs-4 me-2"></i>
+                            <div>
+                                <small class="d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Autor</small>
+                                <span class="fw-semibold">{{ noticia.autor|default:"Administración" }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-calendar-event fs-4 me-2"></i>
+                            <div>
+                                <small class="d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Fecha</small>
+                                <span class="fw-semibold">{{ noticia.creado|date:"d M, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bajada/Resumen -->
                     {% if noticia.bajada %}
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Resumen
-                        </h6>
-                        <p class="mb-0">{{ noticia.bajada }}</p>
+                    <div class="lead text-muted fst-italic mb-4 ps-4 border-start border-4 border-primary">
+                        {{ noticia.bajada }}
                     </div>
                     {% endif %}
-                    
+
                     <!-- Contenido -->
-                    <div class="noticia-contenido">
+                    <div class="noticia-contenido lh-lg text-secondary">
                         {{ noticia.cuerpo|linebreaks }}
                     </div>
-                    
-                    <!-- Etiquetas -->
-                    {% if noticia.bajada %}
-                    <div class="mt-4">
-                        <small class="text-muted">
-                            <i class="bi bi-tags me-1"></i>
-                            Etiquetas:
-                            <a href="#" class="text-decoration-none">{{ noticia.get_categoria_display }}</a>
-                        </small>
+
+                    <!-- Footer del artículo -->
+                    <div class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
+                        <a href="{% url 'noticias' %}" class="btn btn-outline-primary rounded-pill px-4">
+                            <i class="bi bi-arrow-left me-2"></i>Volver a Noticias
+                        </a>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-light rounded-circle shadow-sm" title="Compartir"
+                                onclick="copiarURL()">
+                                <i class="bi bi-share"></i>
+                            </button>
+                        </div>
                     </div>
-                    {% endif %}
                 </div>
             </article>
-            
-            <!-- Acciones de compartir -->
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="bi bi-share me-1"></i>
-                        Compartir esta noticia
-                    </h6>
-                    <div class="d-flex gap-2">
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
-                           target="_blank" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-facebook"></i> Facebook
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ noticia.titulo }}" 
-                           target="_blank" class="btn btn-outline-info btn-sm">
-                            <i class="bi bi-twitter"></i> Twitter
-                        </a>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="copiarURL()">
-                            <i class="bi bi-link-45deg"></i> Copiar enlace
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Panel lateral -->
-        <div class="col-lg-4">
-            <!-- Noticias relacionadas -->
-            {% if noticias_relacionadas %}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-link-45deg me-2"></i>
-                        Noticias Relacionadas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    {% for n in noticias_relacionadas %}
-                    <div class="mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
-                        <h6 class="mb-1">
-                            <a href="{% url 'noticia_detalle' n.pk %}" class="text-decoration-none">
-                                {{ n.titulo|truncatechars:60 }}
-                            </a>
-                        </h6>
-                        <small class="text-muted">
-                            {{ n.creado|date:"d/m/Y" }} - {{ n.visitas }} visitas
-                        </small>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Noticias destacadas -->
-            {% if destacadas %}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0">
-                        <i class="bi bi-star me-2"></i>
-                        Noticias Destacadas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    {% for n in destacadas %}
-                    <div class="mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
-                        <h6 class="mb-1">
-                            <a href="{% url 'noticia_detalle' n.pk %}" class="text-decoration-none">
-                                {{ n.titulo|truncatechars:60 }}
-                            </a>
-                        </h6>
-                        <small class="text-muted">
-                            {{ n.creado|date:"d/m/Y" }} - {{ n.visitas }} visitas
-                        </small>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Acciones rápidas -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-lightning me-2"></i>
-                        Acciones Rápidas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'noticias' %}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-newspaper me-1"></i>
-                            Ver todas las noticias
-                        </a>
-                        <a href="{% url 'contacto' %}" class="btn btn-info btn-sm">
-                            <i class="bi bi-envelope me-1"></i>
-                            Contactar
-                        </a>
-                        <a href="{% url 'usuarios:panel' %}" class="btn btn-success btn-sm">
-                            <i class="bi bi-house me-1"></i>
-                            Panel de Usuario
-                        </a>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 </div>
 
+<style>
+    .bg-gradient-dark {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .noticia-contenido p {
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+</style>
+
 <script>
-function copiarURL() {
-    navigator.clipboard.writeText(window.location.href).then(function() {
-        alert('Enlace copiado al portapapeles');
-    });
-}
+    function copiarURL() {
+        navigator.clipboard.writeText(window.location.href).then(function () {
+            // Podrías usar un toast de bootstrap aquí si quisieras ser más elegante
+            alert('Enlace copiado al portapapeles');
+        });
+    }
 </script>
 {% endblock %}

@@ -12,13 +12,14 @@ from decimal import Decimal
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 django.setup()
 
 from django.contrib.auth.models import User
 from usuarios.models import PerfilUsuario
 from comunicacion.models import CategoriaNoticia, Noticia
-from academico.models import Asignatura, Curso, InscripcionCurso, Calificacion, HorarioClases, Asistencia
-from documentos.models import CategoriaDocumento, Documento, TipoExamen, Examen, ComunicadoPadres
+from academico.models import Asignatura, Curso, InscripcionCurso, Calificacion, HorarioClases, Asistencia, TipoExamen, Examen
+from documentos.models import CategoriaDocumento, Documento, ComunicadoPadres
 
 def limpiar_datos():
     """Limpia todos los datos existentes (excepto superusuarios)"""

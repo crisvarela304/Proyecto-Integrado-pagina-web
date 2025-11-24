@@ -29,35 +29,4 @@ def error_404(request, exception):
     """
     Manejador personalizado para errores 404.
     """
-    html = '''<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Página no encontrada</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container text-center mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card border-0 shadow">
-                    <div class="card-body py-5">
-                        <h1 class="display-1 text-muted">404</h1>
-                        <h2 class="mb-3">Página no encontrada</h2>
-                        <p class="lead text-muted mb-4">
-                            La página que buscas no existe.
-                        </p>
-                        <div class="d-flex justify-content-center gap-3">
-                            <a href="/" class="btn btn-primary">
-                                Volver al Inicio
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>'''
-    return HttpResponse(html, status=404)
+    return render(request, 'core/404.html', status=404)

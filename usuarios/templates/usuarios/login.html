@@ -1,62 +1,62 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+
 {% block title %}Iniciar sesión{% endblock %}
 
 {% block content %}
-<div style="min-height: calc(100vh - 120px); background-color:#06242e; display:flex; align-items:center; justify-content:center;">
+<div class="container d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
 
-    <div class="bg-white shadow-lg"
-         style="width:360px; max-width:95%; border-radius:18px; padding:28px 32px;">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 fw-bold mb-1">Bienvenido</h1>
+                        <p class="text-muted small">Ingresa tus credenciales para continuar</p>
+                    </div>
 
-        {# Mensajes de Django #}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} py-2 small" role="alert">
-                    {{ message }}
+                    {# Mensajes de Django #}
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} py-2 small text-center mb-3" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="loginForm">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                                Iniciar Sesión
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4 small">
+                        <p class="text-muted mb-2">¿No tienes cuenta?</p>
+                        <a href="{% url 'usuarios:registrar' %}" class="text-decoration-none fw-semibold">Crear cuenta
+                            nueva</a>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 small">
+                        <a href="{% url 'home' %}" class="text-muted text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+                        </a>
+                        <a href="/admin/" class="text-muted text-decoration-none">
+                            <i class="bi bi-shield-lock me-1"></i>Administración
+                        </a>
+                    </div>
+
                 </div>
-            {% endfor %}
-        {% endif %}
-
-        <h1 style="font-size:2rem; font-weight:700; margin-bottom:1.2rem;">
-            Iniciar sesión
-        </h1>
-
-        <form method="post" id="loginForm">
-            {% csrf_token %}
-            {{ form|crispy }}
-
-            <button type="submit"
-                    class="btn btn-primary w-100 mt-3"
-                    style="border-radius:0.7rem; padding:0.65rem; font-size:1rem; font-weight:600; background:#02a9c2; border:none;">
-                Ingresar
-            </button>
-        </form>
-
-        <p class="mt-3"
-           style="text-align:center; font-size:0.85rem; color:#6c757d;">
-            o, <a href="{% url 'usuarios:registrar' %}">crear cuenta</a> ·
-            <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal">ayuda</a> ·
-            <a href="{% url 'home' %}">inicio</a>
-        </p>
-
-        <div style="margin-top:0.8rem; font-size:0.75rem; color:#6c757d; text-align:center;">
-            Estudiantes: RUT completo. Funcionarios: usuario o RUT.
-        </div>
-    </div>
-</div>
-
-<!-- Modal de ayuda -->
-<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-question-circle me-2"></i>Ayuda de acceso
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body small">
-                Escríbenos a soporte@liceohualqui.cl o llama al +56 41 2XXX XXXX.
+                <div class="card-footer bg-light border-0 py-3 text-center rounded-bottom-4">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Estudiantes: RUT completo · Funcionarios: Usuario o RUT
+                    </small>
+                </div>
             </div>
         </div>
     </div>
@@ -65,26 +65,35 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const rutInput = document.getElementById('id_rut_o_username');
-    if (!rutInput) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        const rutInput = document.getElementById('id_rut_o_username');
+        if (!rutInput) return;
 
-    const formatRut = (value) => {
-        const clean = value.replace(/[.\-]/g, '').toUpperCase();
-        if (clean.length <= 1) return clean;
-        const body = clean.slice(0, -1);
-        const dv = clean.slice(-1);
-        const bodyFormatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        return `${bodyFormatted}-${dv}`;
-    };
+        rutInput.addEventListener('input', (event) => {
+            let value = event.target.value;
 
-    rutInput.addEventListener('input', (event) => {
-        const cursor = event.target.selectionStart;
-        event.target.value = formatRut(event.target.value);
-        event.target.setSelectionRange(cursor, cursor);
+            // Si el primer caracter es un número, asumimos que es un RUT y aplicamos formato
+            if (/^\d/.test(value)) {
+                const cursor = event.target.selectionStart;
+
+                const clean = value.replace(/[.\-]/g, '').toUpperCase();
+                if (clean.length > 1) {
+                    const body = clean.slice(0, -1);
+                    const dv = clean.slice(-1);
+                    const bodyFormatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    value = `${bodyFormatted}-${dv}`;
+                } else {
+                    value = clean;
+                }
+
+                event.target.value = value;
+                // Intentar mantener la posición del cursor (aproximada)
+                // En inputs formateados es complejo, pero esto ayuda en escritura secuencial
+            }
+            // Si no empieza con número, dejamos el texto tal cual (para nombres de usuario)
+        });
+
+        rutInput.focus();
     });
-
-    rutInput.focus();
-});
 </script>
 {% endblock %}

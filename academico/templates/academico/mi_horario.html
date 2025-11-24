@@ -15,8 +15,8 @@
                             <p class="text-muted mb-0">Planificación semanal de asignaturas y profesores</p>
                         </div>
                         <div>
-                            <a href="{% url 'academico:dashboard_academico' %}" class="btn btn-outline-primary">
-                                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                            <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Volver al Panel
                             </a>
                         </div>
                     </div>
@@ -74,30 +74,31 @@
                 </div>
                 <div class="card-body">
                     {% if clases %}
-                        <div class="list-group list-group-flush">
-                            {% for clase in clases %}
-                            <div class="list-group-item border-0 px-0">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ clase.asignatura.codigo }}</h6>
-                                        <p class="mb-1 small">{{ clase.asignatura.nombre }}</p>
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock me-1"></i>{{ clase.get_hora_display }}
-                                            <br>
-                                            <i class="bi bi-geo-alt me-1"></i>{{ clase.sala|default:"Sala por asignar" }}
-                                            <br>
-                                            <i class="bi bi-person me-1"></i>{{ clase.profesor.get_full_name|default:clase.profesor.username }}
-                                        </small>
-                                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for clase in clases %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ clase.asignatura.codigo }}</h6>
+                                    <p class="mb-1 small">{{ clase.asignatura.nombre }}</p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>{{ clase.get_hora_display }}
+                                        <br>
+                                        <i class="bi bi-geo-alt me-1"></i>{{ clase.sala|default:"Sala por asignar" }}
+                                        <br>
+                                        <i class="bi bi-person me-1"></i>{{
+                                        clase.profesor.get_full_name|default:clase.profesor.username }}
+                                    </small>
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
-                            <p class="text-muted mt-2">No hay clases programadas</p>
-                        </div>
+                    <div class="text-center py-4">
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">No hay clases programadas</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -120,16 +121,16 @@
                         <div class="col-md-2">
                             <h6>{{ dia|title }}</h6>
                             {% if clases %}
-                                <ul class="list-unstyled small">
-                                    {% for clase in clases %}
-                                    <li>
-                                        <span class="badge bg-info me-1">{{ clase.get_hora_display|slice:":3" }}</span>
-                                        {{ clase.asignatura.nombre|truncatechars:15 }}
-                                    </li>
-                                    {% endfor %}
-                                </ul>
+                            <ul class="list-unstyled small">
+                                {% for clase in clases %}
+                                <li>
+                                    <span class="badge bg-info me-1">{{ clase.get_hora_display|slice:":3" }}</span>
+                                    {{ clase.asignatura.nombre|truncatechars:15 }}
+                                </li>
+                                {% endfor %}
+                            </ul>
                             {% else %}
-                                <p class="text-muted small">Sin clases</p>
+                            <p class="text-muted small">Sin clases</p>
                             {% endif %}
                         </div>
                         {% endfor %}

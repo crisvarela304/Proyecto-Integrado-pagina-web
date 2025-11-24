@@ -7,9 +7,9 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from .models import (
-    Documento, CategoriaDocumento, HistorialDescargas, 
-    TipoExamen, Examen, PreguntaExamen, ComunicadoPadres
+    Documento, CategoriaDocumento, HistorialDescargas, ComunicadoPadres
 )
+from academico.models import TipoExamen, Examen, PreguntaExamen
 from .forms import DocumentoForm
 from usuarios.models import PerfilUsuario
 import mimetypes

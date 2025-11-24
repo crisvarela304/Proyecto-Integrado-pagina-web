@@ -16,52 +16,7 @@ from .forms import (
 )
 from mensajeria.forms import ContactoColegioForm
 
-def limpiar_rut(rut):
-    """Limpia y formatea un RUT chileno"""
-    if not rut:
-        return ""
-    rut = rut.strip().replace('.', '').replace('-', '').upper()
-    return rut
-
-def validar_rut_completo(rut):
-    """Valida un RUT chileno completo"""
-    if not rut:
-        return False
-    
-    # Limpiar RUT
-    rut = rut.strip().replace('.', '').replace('-', '').upper()
-    
-    if len(rut) < 2:
-        return False
-    
-    # Separar cuerpo y dígito verificador
-    cuerpo = rut[:-1]
-    dv = rut[-1]
-    
-    try:
-        # Calcular dígito verificador
-        suma = 0
-        multiplicador = 2
-        
-        for digito in reversed(cuerpo):
-            suma += int(digito) * multiplicador
-            multiplicador += 1
-            if multiplicador == 8:
-                multiplicador = 2
-        
-        resto = suma % 11
-        dv_calculado = 11 - resto
-        
-        if dv_calculado == 11:
-            dv_calculado = '0'
-        elif dv_calculado == 10:
-            dv_calculado = 'K'
-        else:
-            dv_calculado = str(dv_calculado)
-        
-        return dv == dv_calculado
-    except:
-        return False
+from core.utils import limpiar_rut, validar_rut
 
 def autenticar_con_rut(request, rut, password):
     """Autentica un usuario usando su RUT"""
@@ -76,6 +31,10 @@ def autenticar_con_rut(request, rut, password):
         return None
     except PerfilUsuario.DoesNotExist:
         return None
+
+
+
+
 
 # Registrar usuario
 def registrar_usuario(request):
@@ -114,6 +73,7 @@ def registrar_usuario(request):
 
 # Iniciar sesión
 def login_usuario(request):
+    """Login genérico o redirección"""
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -143,14 +103,80 @@ def login_usuario(request):
     
     return render(request, 'usuarios/login.html', {'form': form})
 
+def login_base(request, allowed_roles, template_context, success_url='usuarios:panel'):
+    """Vista base para logins específicos"""
+    if request.user.is_authenticated:
+        return redirect(success_url)
+
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            rut_o_username = form.cleaned_data['rut_o_username']
+            password = form.cleaned_data['password']
+            
+            user = autenticar_con_rut(request, rut_o_username, password)
+            if not user:
+                user = authenticate(request, username=rut_o_username, password=password)
+            
+            if user is not None:
+                # Verificar rol
+                try:
+                    perfil = user.perfil
+                    if not perfil.activo:
+                        messages.error(request, 'Su cuenta ha sido desactivada.')
+                        return render(request, 'usuarios/login_role.html', {**template_context, 'form': form})
+                    
+                    if perfil.tipo_usuario not in allowed_roles and not user.is_staff:
+                        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+                        return render(request, 'usuarios/login_role.html', {**template_context, 'form': form})
+                        
+                except PerfilUsuario.DoesNotExist:
+                    if not user.is_staff: # Permitir staff sin perfil
+                        messages.error(request, 'Perfil de usuario no encontrado.')
+                        return render(request, 'usuarios/login_role.html', {**template_context, 'form': form})
+                
+                login(request, user)
+                return redirect(success_url)
+            else:
+                messages.error(request, 'Credenciales incorrectas.')
+    else:
+        form = LoginForm()
+    
+    context = {**template_context, 'form': form}
+    return render(request, 'usuarios/login_role.html', context)
+
+def login_profesor(request):
+    return login_base(
+        request, 
+        allowed_roles=['profesor', 'administrativo', 'directivo'],
+        template_context={
+            'page_title': 'Acceso Docentes',
+            'page_subtitle': 'Plataforma de Gestión Académica',
+            'theme_color': 'primary',
+            'icon_class': 'bi-briefcase'
+        }
+    )
+
+def login_estudiante(request):
+    return login_base(
+        request, 
+        allowed_roles=['estudiante', 'apoderado'],
+        template_context={
+            'page_title': 'Acceso Estudiantes',
+            'page_subtitle': 'Portal del Alumno',
+            'theme_color': 'info',
+            'icon_class': 'bi-mortarboard'
+        }
+    )
+
 # Cerrar sesión
 def logout_usuario(request):
     logout(request)
-    return redirect('usuarios:login')
+    return redirect('home') # Redirigir al home público en lugar del login genérico
 
 # Página de inicio -> redirige al login
 def index(request):
-    return redirect('login')
+    return redirect('usuarios:login_estudiante') # Por defecto al login de estudiantes
 
 # Panel tipo intranet (con accesos rápidos)
 @login_required
@@ -163,25 +189,35 @@ def panel(request):
         rut = perfil.rut
         tipo_usuario = perfil.get_tipo_usuario_display()
         nombre_completo = perfil.nombre_completo
+        rol_codigo = perfil.tipo_usuario
     else:
         rut = user.username
         tipo_usuario = "Usuario"
         nombre_completo = user.get_full_name() or user.username
+        rol_codigo = 'admin' if user.is_staff else 'unknown'
     
-    # Enlaces rápidos según tipo de usuario
+    # Flags para la plantilla
+    es_profesor = rol_codigo in ['profesor', 'administrativo', 'directivo'] or user.is_staff
+    es_estudiante = rol_codigo in ['estudiante', 'apoderado']
+    
+    # Enlaces rápidos comunes
     quick_links = [
         {"icon": "bi-journal-text",   "title": "Noticias",     "desc": "Comunicados y avisos del liceo",
          "url": reverse("noticias"),  "color": "primary"},
-        {"icon": "bi-calendar-date",  "title": "Mi horario",    "desc": "Horarios y asignaturas",
-         "url": reverse("academico:mi_horario"),                  "color": "info"},
-        {"icon": "bi-file-earmark-text", "title": "Certificados", "desc": "Descargar certificados",
-         "url": reverse("documentos:documentos_list"),                  "color": "success"},
         {"icon": "bi-envelope-paper", "title": "Mensajería",    "desc": "Comunicaciones internas",
          "url": reverse("mensajeria:bandeja_entrada"),                  "color": "warning"},
     ]
     
-    # Enlaces adicionales según tipo de usuario
-    if perfil and perfil.tipo_usuario in ['profesor', 'administrativo', 'directivo']:
+    # Enlaces específicos
+    if es_estudiante:
+        quick_links.extend([
+             {"icon": "bi-calendar-date",  "title": "Mi horario",    "desc": "Horarios y asignaturas",
+             "url": reverse("academico:mi_horario"),                  "color": "info"},
+            {"icon": "bi-file-earmark-text", "title": "Certificados", "desc": "Descargar certificados",
+             "url": reverse("documentos:documentos_list"),                  "color": "success"},
+        ])
+    
+    if es_profesor:
         quick_links.extend([
             {"icon": "bi-people", "title": "Gestionar alumnos", "desc": "Administrar estudiantes",
              "url": reverse("academico:panel_profesor"), "color": "secondary"},
@@ -215,6 +251,8 @@ def panel(request):
         "is_admin": user.is_staff,
         "contacto_form": contacto_form,
         "form": contacto_form,
+        "es_profesor": es_profesor,
+        "es_estudiante": es_estudiante,
     }
     return render(request, "usuarios/panel.html", ctx)
 

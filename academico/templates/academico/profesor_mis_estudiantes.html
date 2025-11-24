@@ -24,7 +24,7 @@
                     <select name="curso" class="form-select">
                         <option value="">Todos</option>
                         {% for curso in cursos_profesor %}
-                            <option value="{{ curso.id }}" {% if curso_seleccionado == curso.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ curso.id }}" {% if curso_seleccionado  ==  curso.id|stringformat:"s" %}selected{% endif %}>
                                 {{ curso }}
                             </option>
                         {% endfor %}

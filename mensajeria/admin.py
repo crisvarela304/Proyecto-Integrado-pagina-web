@@ -10,7 +10,7 @@ from .models import (
     Mensaje, 
     ConfiguracionMensajeria, 
     RateLimit,
-    ConfiguracionSistema
+
 )
 
 @admin.register(Conversacion)
@@ -181,38 +181,14 @@ class RateLimitAdmin(admin.ModelAdmin):
     def es_activo(self, obj):
         """Indica si el registro está activo (última hora)"""
         from django.utils import timezone
-        una_hora_atras = timezone.now() - timezone.timedelta(hours=1)
-        return obj.timestamp >= una_hora_atras
+        import datetime
+        return obj.timestamp >= timezone.now() - datetime.timedelta(hours=1)
     es_activo.boolean = True
-    es_activo.short_description = 'Activo (última hora)'
 
 
-@admin.register(ConfiguracionSistema)
-class ConfiguracionSistemaAdmin(admin.ModelAdmin):
-    """Panel de administración para configuraciones del sistema"""
-    list_display = [
-        'clave',
-        'valor_preview',
-        'descripcion',
-        'activo',
-        'created_at'
-    ]
-    list_filter = ['activo', 'created_at']
-    search_fields = ['clave', 'descripcion']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
-    def valor_preview(self, obj):
-        """Vista previa del valor"""
-        if len(obj.valor) > 50:
-            return obj.valor[:50] + '...'
-        return obj.valor
-    valor_preview.short_description = 'Valor'
-
-
-# Acciones personalizadas para administradores
-@admin.action(description='Marcar conversaciones como leídas para todos los usuarios')
+@admin.action(description='Marcar todas como leídas')
 def marcar_todas_leidas(modeladmin, request, queryset):
-    """Acción para marcar todas las conversaciones como leídas"""
+    """Acción para marcar conversaciones como leídas"""
     for conversacion in queryset:
         conversacion.no_leidos_alumno = 0
         conversacion.no_leidos_profesor = 0

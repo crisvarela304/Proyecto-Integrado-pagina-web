@@ -4,76 +4,40 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Cabecera con búsqueda y filtros -->
     <div class="row mb-4">
         <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="fw-bold mb-0 text-primary">Documentos</h2>
+                {% if user.is_authenticated %}
+                <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+                </a>
+                {% endif %}
+            </div>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <form method="get" class="row g-3 align-items-end">
-                        <!-- Búsqueda -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label fw-semibold">Buscar documentos</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="q" value="{{ query }}" 
-                                       placeholder="Buscar por título, descripción o tags...">
+                                <input type="text" class="form-control" name="q" value="{{ query }}"
+                                    placeholder="Buscar por título, descripción o tags...">
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
-                        </div>
-                        
-                        <!-- Filtro por categoría -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Categoría</label>
-                            <select name="categoria" class="form-select">
-                                <option value="">Todas las categorías</option>
-                                {% for categoria in categorias %}
-                                    <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id|stringformat:"s" %}selected{% endif %}>
-                                        {{ categoria.nombre }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Filtro por tipo -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Tipo de archivo</label>
-                            <select name="tipo" class="form-select">
-                                <option value="">Todos los tipos</option>
-                                {% for tipo_key, tipo_name in tipos_documento.items %}
-                                    <option value="{{ tipo_key }}" {% if tipo_filtro == tipo_key %}selected{% endif %}>
-                                        {{ tipo_name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Filtro por visibilidad -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Visibilidad</label>
-                            <select name="visibilidad" class="form-select">
-                                <option value="">Todas</option>
-                                {% for vis_key, vis_name in tipos_visibilidad.items %}
-                                    <option value="{{ vis_key }}" {% if visibilidad_filtro == vis_key %}selected{% endif %}>
-                                        {{ vis_name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Botón aplicar filtros -->
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-funnel"></i> Filtrar
-                            </button>
-                        </div>
+
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-funnel"></i> Filtrar
+                                </button>
+                            </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Estadísticas y resumen -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="row g-3">
@@ -92,7 +56,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {% if user.is_authenticated %}
                 <div class="col-md-3">
                     <div class="card text-white bg-success">
@@ -110,7 +74,7 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
                 <div class="col-md-3">
                     <div class="card text-white bg-info">
                         <div class="card-body">
@@ -126,7 +90,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <div class="card text-white bg-warning">
                         <div class="card-body">
@@ -146,210 +110,172 @@
         </div>
     </div>
 
-    <!-- Lista de documentos -->
     {% if page_obj.object_list %}
-        <div class="row g-4">
-            {% for documento in page_obj.object_list %}
-            <div class="col-12 col-md-6 col-lg-4">
-                <article class="card h-100 shadow-sm border-0 documento-card">
-                    <!-- Badges de estado -->
-                    <div class="position-absolute top-0 start-0 m-3 z-1">
-                        {% if documento.es_oficial %}
-                            <span class="badge bg-warning text-dark">OFICIAL</span>
-                        {% endif %}
-                        {% if documento.visibilidad != 'publico' %}
-                            <span class="badge bg-secondary">RESTRINGIDO</span>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Icono del tipo de archivo -->
-                    <div class="card-header bg-light text-center py-4">
-                        {% if documento.tipo == 'pdf' %}
-                            <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 3rem;"></i>
-                        {% elif documento.tipo == 'doc' %}
-                            <i class="bi bi-file-earmark-word text-primary" style="font-size: 3rem;"></i>
-                        {% elif documento.tipo == 'xls' %}
-                            <i class="bi bi-file-earmark-excel text-success" style="font-size: 3rem;"></i>
-                        {% elif documento.tipo == 'ppt' %}
-                            <i class="bi bi-file-earmark-ppt text-warning" style="font-size: 3rem;"></i>
-                        {% else %}
-                            <i class="bi bi-file-earmark text-secondary" style="font-size: 3rem;"></i>
-                        {% endif %}
-                    </div>
-
-                    <div class="card-body d-flex flex-column">
-                        <!-- Título y categoría -->
-                        <div class="mb-3">
-                            <h5 class="card-title mb-2">{{ documento.titulo }}</h5>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge bg-primary">{{ documento.categoria.nombre }}</span>
-                                <small class="text-muted">{{ documento.tipo.upper }}</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Descripción -->
-                        {% if documento.descripcion %}
-                            <p class="card-text flex-grow-1">{{ documento.descripcion|truncatewords:15 }}</p>
-                        {% else %}
-                            <p class="card-text text-muted flex-grow-1">Sin descripción disponible.</p>
-                        {% endif %}
-                        
-                        <!-- Metadatos -->
-                        <div class="mb-3">
-                            <div class="row text-muted small">
-                                <div class="col-6">
-                                    <i class="bi bi-calendar"></i> {{ documento.fecha_creacion|date:"d/m/Y" }}
-                                </div>
-                                <div class="col-6 text-end">
-                                    <i class="bi bi-hdd"></i> {{ documento.tamaño_formateado }}
-                                </div>
-                            </div>
-                            <div class="row text-muted small">
-                                <div class="col-6">
-                                    <i class="bi bi-download"></i> {{ documento.descargar_count }}
-                                </div>
-                                <div class="col-6 text-end">
-                                    <i class="bi bi-person"></i> {{ documento.creado_por.first_name|default:documento.creado_por.username }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Tags -->
-                        {% if documento.tags %}
-                            <div class="mb-3">
-                                {% for tag in documento.tags.split|slice:":3" %}
-                                    <span class="badge bg-light text-dark me-1">{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        
-                        <!-- Botones de acción -->
-                        <div class="mt-auto">
-                            <div class="d-flex gap-2">
-                                <a href="{% url 'documentos:documento_detalle' documento.pk %}" class="btn btn-primary flex-fill">
-                                    <i class="bi bi-eye"></i> Ver
-                                </a>
-                                {% if user.is_authenticated %}
-                                <a href="{% url 'documentos:descargar_documento' documento.pk %}" class="btn btn-outline-success">
-                                    <i class="bi bi-download"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </article>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Paginación -->
-        {% if page_obj.has_other_pages %}
-        <nav aria-label="Navegación de páginas" class="mt-5">
-            <ul class="pagination justify-content-center">
-                <!-- Primera página -->
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
-                            <i class="bi bi-chevron-double-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
-                            <i class="bi bi-chevron-left"></i> Anterior
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="bi bi-chevron-left"></i> Anterior</span>
-                    </li>
-                {% endif %}
-
-                <!-- Números de página -->
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                    {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
-                                {{ num }}
-                            </a>
-                        </li>
+    <div class="row g-4">
+        {% for documento in page_obj.object_list %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <article class="card h-100 shadow-sm border-0 documento-card">
+                <div class="position-absolute top-0 start-0 m-3 z-1">
+                    {% if documento.es_oficial %}
+                    <span class="badge bg-warning text-dark">OFICIAL</span>
                     {% endif %}
+                    {% if documento.visibilidad != 'publico' %}
+                    <span class="badge bg-secondary">RESTRINGIDO</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-header bg-light text-center py-4">
+                    {% if documento.tipo == 'pdf' %}
+                    <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 3rem;"></i>
+                    {% elif documento.tipo == 'doc' %}
+                    <i class="bi bi-file-earmark-word text-primary" style="font-size: 3rem;"></i>
+                    {% elif documento.tipo == 'xls' %}
+                    <i class="bi bi-file-earmark-excel text-success" style="font-size: 3rem;"></i>
+                    {% elif documento.tipo == 'ppt' %}
+                    <i class="bi bi-file-earmark-ppt text-warning" style="font-size: 3rem;"></i>
+                    {% else %}
+                    <i class="bi bi-file-earmark text-secondary" style="font-size: 3rem;"></i>
+                    {% endif %}
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <h5 class="card-title mb-2">{{ documento.titulo }}</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">{{ documento.categoria.nombre }}</span>
+                            <small class="text-muted">{{ documento.tipo.upper }}</small>
+                        </div>
+                    </div>
+
+                    {% if documento.descripcion %}
+                    <p class="card-text flex-grow-1">{{ documento.descripcion|truncatewords:15 }}</p>
+                    {% else %}
+                    <p class="card-text text-muted flex-grow-1">Sin descripción disponible.</p>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <div class="row text-muted small">
+                            <div class="col-6">
+                                <i class="bi bi-calendar"></i> {{ documento.fecha_creacion|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-6 text-end">
+                                <i class="bi bi-hdd"></i> {{ documento.tamaño_formateado }}
+                            </div>
+                        </div>
+                        <div class="row text-muted small">
+                            <div class="col-6">
+                                <i class="bi bi-download"></i> {{ documento.descargar_count }}
+                            </div>
+                            <div class="col-6 text-end">
+                                <i class="bi bi-person"></i> {{
+                                documento.creado_por.first_name|default:documento.creado_por.username }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if documento.tags %}
+                    <div class="mb-3">
+                        {% for tag in documento.tags.split|slice:":3" %}
+                        <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'documentos:documento_detalle' documento.pk %}"
+                                class="btn btn-primary flex-fill">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'documentos:descargar_documento' documento.pk %}"
+                                class="btn btn-outline-success">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Navegación de páginas" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %} <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
+                    {{ num }}
+                </a>
+                </li>
+                {% endif %}
                 {% endfor %}
 
-                <!-- Última página -->
                 {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
-                            Siguiente <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
-                            <i class="bi bi-chevron-double-right"></i>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Siguiente <i class="bi bi-chevron-right"></i></span>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
-                    </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if visibilidad_filtro %}&visibilidad={{ visibilidad_filtro }}{% endif %}">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
                 {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 
     {% else %}
-        <!-- No hay documentos -->
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="bi bi-file-earmark display-1 text-muted"></i>
-                <h3 class="mt-3 text-muted">No hay documentos disponibles</h3>
-                {% if query or categoria_filtro or tipo_filtro %}
-                    <p class="text-muted">No se encontraron documentos que coincidan con los filtros aplicados.</p>
-                    <a href="{% url 'documentos:documentos_list' %}" class="btn btn-primary">
-                        <i class="bi bi-arrow-left"></i> Ver todos los documentos
-                    </a>
-                {% else %}
-                    <p class="text-muted">Aún no se han subido documentos al sistema.</p>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'documentos:subir_documento' %}" class="btn btn-success">
-                        <i class="bi bi-upload"></i> Subir primer documento
-                    </a>
-                    {% endif %}
-                {% endif %}
-            </div>
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No hay documentos disponibles</h3>
+            {% if query or categoria_filtro or tipo_filtro %}
+            <p class="text-muted">No se encontraron documentos que coincidan con los filtros aplicados.</p>
+            <a href="{% url 'documentos:documentos_list' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Ver todos los documentos
+            </a>
+            {% else %}
+            <p class="text-muted">Aún no se han subido documentos al sistema.</p>
+            {% endif %}
         </div>
+    </div>
     {% endif %}
 </div>
 
 <style>
-.documento-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
+    .documento-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
 
-.documento-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
-}
+    .documento-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-submit del formulario cuando cambian los filtros
-    const selects = document.querySelectorAll('select[name="categoria"], select[name="tipo"], select[name="visibilidad"]');
-    selects.forEach(select => {
-        select.addEventListener('change', function() {
-            this.closest('form').submit();
+    document.addEventListener('DOMContentLoaded', function () {
+        const selects = document.querySelectorAll('select[name="categoria"], select[name="tipo"], select[name="visibilidad"]');
+        selects.forEach(select => {
+            select.addEventListener('change', function () {
+                this.closest('form').submit();
+            });
         });
     });
-});
 </script>
 {% endblock %}

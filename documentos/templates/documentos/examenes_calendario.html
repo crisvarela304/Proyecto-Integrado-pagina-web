@@ -15,7 +15,7 @@
                             <select name="curso" class="form-select">
                                 <option value="">Todos los cursos</option>
                                 {% for curso in cursos %}
-                                    <option value="{{ curso.id }}" {% if filtros.curso == curso.id|stringformat:"s" %}selected{% endif %}>
+                                    <option value="{{ curso.id }}" {% if filtros.curso  ==  curso.id|stringformat:"s" %}selected{% endif %}>
                                         {{ curso }}
                                     </option>
                                 {% endfor %}
@@ -27,7 +27,7 @@
                             <select name="asignatura" class="form-select">
                                 <option value="">Todas las asignaturas</option>
                                 {% for asignatura in asignaturas %}
-                                    <option value="{{ asignatura.id }}" {% if filtros.asignatura == asignatura.id|stringformat:"s" %}selected{% endif %}>
+                                    <option value="{{ asignatura.id }}" {% if filtros.asignatura  ==  asignatura.id|stringformat:"s" %}selected{% endif %}>
                                         {{ asignatura.nombre }}
                                     </option>
                                 {% endfor %}

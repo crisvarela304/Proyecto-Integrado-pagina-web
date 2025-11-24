@@ -54,7 +54,7 @@
                                 <select name="curso" class="form-select">
                                     <option value="">Todos los cursos</option>
                                     {% for curso in cursos %}
-                                        <option value="{{ curso.id }}" {% if request.GET.curso == curso.id|stringformat:"s" %}selected{% endif %}>
+                                        <option value="{{ curso.id }}" {% if request.GET.curso  ==  curso.id|stringformat:"s" %}selected{% endif %}>
                                             {{ curso.nombre }} - {{ curso.nivel }}°{{ curso.letra }}
                                         </option>
                                     {% endfor %}

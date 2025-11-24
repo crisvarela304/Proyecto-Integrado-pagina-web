@@ -3,85 +3,66 @@
 {% block title %}Dashboard Profesor{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Cabecera -->
-        <div class="col-12">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-person-workspace me-2"></i>
-                        Dashboard del Profesor - {{ user.get_full_name|default:user.username }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        Panel de control académico para gestión de cursos, calificaciones y asistencias
-                    </p>
-                </div>
-            </div>
+<!-- Hero Section -->
+<div class="hero-section text-center mb-5" style="background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);">
+    <div class="container">
+        <div class="d-inline-flex justify-content-center align-items-center bg-white text-primary rounded-circle shadow-lg mb-3"
+            style="width: 80px; height: 80px;">
+            <i class="bi bi-person-workspace fs-1"></i>
         </div>
+        <h1 class="display-5 fw-bold mb-2">Panel Docente</h1>
+        <p class="lead opacity-75 mb-0">Bienvenido, Profesor {{ user.get_full_name|default:user.username }}</p>
     </div>
+</div>
 
-    <!-- Estadísticas principales -->
-    <div class="row g-4 mb-4">
+<div class="container pb-5">
+    <!-- Resumen -->
+    <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Cursos Asignados</h6>
-                            <h4 class="mb-0">{{ cursos_unicos.count }}</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-people fs-2"></i>
-                        </div>
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-primary-subtle text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-people fs-4"></i>
                     </div>
+                    <h6 class="text-muted mb-1">Cursos Asignados</h6>
+                    <h3 class="fw-bold mb-0 text-primary">{{ cursos_unicos.count }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Asignaturas</h6>
-                            <h4 class="mb-0">{{ asignaturas_unicas.count }}</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-book fs-2"></i>
-                        </div>
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-success-subtle text-success rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-book fs-4"></i>
                     </div>
+                    <h6 class="text-muted mb-1">Asignaturas</h6>
+                    <h3 class="fw-bold mb-0 text-success">{{ asignaturas_unicas.count }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Clases Hoy</h6>
-                            <h4 class="mb-0">{{ horario_hoy.count }}</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-calendar-check fs-2"></i>
-                        </div>
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-calendar-check fs-4"></i>
                     </div>
+                    <h6 class="text-muted mb-1">Clases Hoy</h6>
+                    <h3 class="fw-bold mb-0 text-warning">{{ horario_hoy.count }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-danger">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Pendientes</h6>
-                            <h4 class="mb-0">{{ calificaciones_pendientes.count }}</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-exclamation-triangle fs-2"></i>
-                        </div>
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-danger-subtle text-danger rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-exclamation-triangle fs-4"></i>
                     </div>
+                    <h6 class="text-muted mb-1">Pendientes</h6>
+                    <h3 class="fw-bold mb-0 text-danger">{{ calificaciones_pendientes.count }}</h3>
                 </div>
             </div>
         </div>
@@ -90,149 +71,131 @@
     <div class="row g-4">
         <!-- Horario de hoy -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
                         <i class="bi bi-calendar-event me-2"></i>
                         Horario de Hoy ({{ "now"|date:"l d/m/Y"|title }})
-                    </h6>
+                    </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body pt-0">
                     {% if horario_hoy %}
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Hora</th>
-                                        <th>Asignatura</th>
-                                        <th>Curso</th>
-                                        <th>Sala</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for clase in horario_hoy %}
-                                    <tr>
-                                        <td>{{ clase.hora }}° hora</td>
-                                        <td>{{ clase.asignatura.nombre }}</td>
-                                        <td>{{ clase.curso.nombre }}</td>
-                                        <td>{{ clase.sala }}</td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="#" class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-clipboard-data"></i>
-                                                    Calificar
-                                                </a>
-                                                <a href="#" class="btn btn-outline-success btn-sm">
-                                                    <i class="bi bi-check-circle"></i>
-                                                    Asistencia
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Asignatura</th>
+                                    <th>Curso</th>
+                                    <th>Sala</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for clase in horario_hoy %}
+                                <tr>
+                                    <td><span class="badge bg-light text-dark border">{{ clase.hora }}° hora</span></td>
+                                    <td class="fw-semibold">{{ clase.asignatura.nombre }}</td>
+                                    <td>{{ clase.curso.nombre }}</td>
+                                    <td>{{ clase.sala }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="#" class="btn btn-outline-primary">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a href="#" class="btn btn-outline-success">
+                                                <i class="bi bi-check-lg"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="bi bi-calendar-x display-4 text-muted"></i>
-                            <h6 class="mt-2 text-muted">No tienes clases programadas para hoy</h6>
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-calendar-check display-1 text-muted opacity-25"></i>
                         </div>
+                        <h5 class="text-muted fw-light">¡Día Libre!</h5>
+                        <p class="text-muted mb-0">No tienes clases programadas para el día de hoy.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <!-- Panel lateral -->
         <div class="col-lg-4">
-            <!-- Cursos asignados -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-success text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-people me-2"></i>
-                        Mis Cursos
-                    </h6>
-                </div>
-                <div class="card-body">
-                    {% if cursos_unicos %}
-                        {% for curso in cursos_unicos %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <strong>{{ curso.nombre }}</strong>
-                                <br>
-                                <small class="text-muted">{{ curso.nivel }}° Medio {{ curso.letra }}</small>
-                            </div>
-                            <div class="btn-group btn-group-sm">
-                                <a href="#" class="btn btn-outline-primary btn-sm">Notas</a>
-                                <a href="#" class="btn btn-outline-success btn-sm">Asistencia</a>
-                            </div>
-                        </div>
-                        {% if not forloop.last %}<hr>{% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted text-center">No hay cursos asignados</p>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Asignaturas -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0">
-                        <i class="bi bi-book me-2"></i>
-                        Mis Asignaturas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    {% if asignaturas_unicas %}
-                        {% for asignatura in asignaturas_unicas %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <strong>{{ asignatura.nombre }}</strong>
-                                <br>
-                                <small class="text-muted">{{ asignatura.codigo }} - {{ asignatura.horas_semanales }} hrs</small>
-                            </div>
-                            <span class="badge bg-primary">{{ asignatura.horas_semanales }}h</span>
-                        </div>
-                        {% if not forloop.last %}<hr>{% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted text-center">No hay asignaturas asignadas</p>
-                    {% endif %}
-                </div>
-            </div>
-            
             <!-- Acciones rápidas -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-lightning me-2"></i>
-                        Acciones Rápidas
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0 fw-bold text-secondary">
+                        <i class="bi bi-lightning-charge me-2"></i>Acciones Rápidas
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body pt-0">
                     <div class="d-grid gap-2">
-                        <a href="#" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Nueva Calificación
+                        <a href="#" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="bi bi-plus-circle"></i> Nueva Calificación
                         </a>
-                        <a href="#" class="btn btn-success btn-sm">
-                            <i class="bi bi-check-square me-1"></i>
-                            Registrar Asistencia
+                        <a href="#" class="btn btn-success d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="bi bi-check-square"></i> Registrar Asistencia
                         </a>
-                        <a href="#" class="btn btn-info btn-sm">
-                            <i class="bi bi-file-earmark-text me-1"></i>
-                            Generar Reportes
-                        </a>
-                        <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-house me-1"></i>
-                            Panel Principal
+                        <a href="#"
+                            class="btn btn-info text-white d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="bi bi-file-earmark-text"></i> Generar Reportes
                         </a>
                     </div>
+                </div>
+            </div>
+
+            <!-- Cursos asignados -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0 fw-bold text-secondary">
+                        <i class="bi bi-people me-2"></i>Mis Cursos
+                    </h6>
+                </div>
+                <div class="card-body pt-0">
+                    {% if cursos_unicos %}
+                    <div class="list-group list-group-flush">
+                        {% for curso in cursos_unicos %}
+                        <div class="list-group-item border-0 px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ curso.nombre }}</h6>
+                                    <small class="text-muted">{{ curso.nivel }}° Medio {{ curso.letra }}</small>
+                                </div>
+                                <span class="badge bg-light text-dark border">{{ curso.año }}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="#" class="btn btn-sm btn-outline-primary flex-grow-1">Notas</a>
+                                <a href="#" class="btn btn-sm btn-outline-success flex-grow-1">Asistencia</a>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                        <hr class="my-0 text-muted opacity-25">{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No hay cursos asignados</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
 {% endblock %}

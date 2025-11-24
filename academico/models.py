@@ -63,6 +63,15 @@ class InscripcionCurso(models.Model):
     def __str__(self):
         return f"{self.estudiante.username} - {self.curso}"
 
+    @property
+    def promedio_actual(self):
+        """Calcula el promedio actual del estudiante en este curso"""
+        from django.db.models import Avg
+        promedio = self.estudiante.calificaciones.filter(
+            curso=self.curso
+        ).aggregate(Avg('nota'))['nota__avg']
+        return round(promedio, 1) if promedio else None
+
 class Calificacion(models.Model):
     """Calificaciones de estudiantes"""
     TIPO_EVALUACION = [
@@ -96,6 +105,8 @@ class Calificacion(models.Model):
 
     def __str__(self):
         return f"{self.estudiante.username} - {self.asignatura} ({self.nota})"
+
+
 
 class HorarioClases(models.Model):
     """Horarios de clases"""
@@ -157,3 +168,79 @@ class Asistencia(models.Model):
 
     def __str__(self):
         return f"{self.estudiante.username} - {self.fecha} ({self.estado})"
+
+class TipoExamen(models.Model):
+    """Tipos de exámenes y evaluaciones"""
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True)
+    ponderacion_por_defecto = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Tipo de Examen"
+        verbose_name_plural = "Tipos de Exámenes"
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+class Examen(models.Model):
+    """Exámenes programados"""
+    TIPO_PERIODO = [
+        ('semestral', 'Semestral'),
+        ('trimestral', 'Trimestral'),
+        ('mensual', 'Mensual'),
+        ('prueba', 'Prueba'),
+    ]
+    
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    tipo_examen = models.ForeignKey(TipoExamen, on_delete=models.CASCADE, related_name='examenes')
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='examenes')
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, related_name='examenes')
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='examenes_creados')
+    tipo_periodo = models.CharField(max_length=15, choices=TIPO_PERIODO, default='prueba')
+    fecha_aplicacion = models.DateField()
+    hora_inicio = models.TimeField()
+    duracion_minutos = models.PositiveIntegerField(default=90)
+    sala = models.CharField(max_length=50, blank=True)
+    instrucciones = models.TextField(blank=True)
+    material_permitido = models.TextField(blank=True)
+    ponderacion = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    activo = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Examen"
+        verbose_name_plural = "Exámenes"
+        ordering = ['fecha_aplicacion', 'hora_inicio']
+
+    def __str__(self):
+        return f"{self.titulo} - {self.curso} - {self.asignatura}"
+
+class PreguntaExamen(models.Model):
+    """Preguntas para los exámenes"""
+    TIPO_PREGUNTA = [
+        ('opcion_multiple', 'Opción Múltiple'),
+        ('verdadero_falso', 'Verdadero/Falso'),
+        ('desarrollo', 'Desarrollo'),
+        ('completar', 'Completar'),
+    ]
+    
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name='preguntas')
+    numero = models.PositiveIntegerField()
+    tipo_pregunta = models.CharField(max_length=20, choices=TIPO_PREGUNTA)
+    enunciado = models.TextField()
+    opciones = models.TextField(blank=True, help_text="Para preguntas de opción múltiple (separadas por |)")
+    respuesta_correcta = models.TextField(blank=True)
+    puntos = models.DecimalField(max_digits=4, decimal_places=1, default=1.0)
+    orden = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Pregunta de Examen"
+        verbose_name_plural = "Preguntas de Exámenes"
+        ordering = ['orden', 'numero']
+        unique_together = ('examen', 'numero')
+
+    def __str__(self):
+        return f"Pregunta {self.numero} - {self.examen.titulo}"

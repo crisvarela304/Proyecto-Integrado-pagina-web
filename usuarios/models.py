@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 class PerfilUsuario(models.Model):
     """Perfil extendido del usuario para almacenar información adicional como RUT"""
@@ -37,58 +38,11 @@ class PerfilUsuario(models.Model):
         """Retorna el nombre completo del usuario"""
         return self.user.get_full_name() or self.user.username
 
-    def validar_rut(self, rut):
-        """Valida un RUT chileno"""
-        if not rut:
-            return False
-        
-        # Limpiar RUT
-        rut = rut.strip().replace('.', '').replace('-', '').upper()
-        
-        if len(rut) < 2:
-            return False
-        
-        # Separar cuerpo y dígito verificador
-        cuerpo = rut[:-1]
-        dv = rut[-1]
-        
-        try:
-            # Calcular dígito verificador
-            suma = 0
-            multiplicador = 2
-            
-            for digito in reversed(cuerpo):
-                suma += int(digito) * multiplicador
-                multiplicador += 1
-                if multiplicador == 8:
-                    multiplicador = 2
-            
-            resto = suma % 11
-            dv_calculado = 11 - resto
-            
-            if dv_calculado == 11:
-                dv_calculado = '0'
-            elif dv_calculado == 10:
-                dv_calculado = 'K'
-            else:
-                dv_calculado = str(dv_calculado)
-            
-            return dv == dv_calculado
-        except:
-            return False
+    def clean(self):
+        """Valida el RUT antes de guardar"""
+        from core.utils import validar_rut
+        super().clean()
+        if self.rut and not validar_rut(self.rut):
+            raise ValidationError({'rut': 'El RUT ingresado no es válido.'})
 
-class ConfiguracionSistema(models.Model):
-    """Configuraciones generales del sistema"""
-    clave = models.CharField(max_length=50, unique=True)
-    valor = models.TextField()
-    descripcion = models.TextField(blank=True)
-    activo = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Configuración del Sistema"
-        verbose_name_plural = "Configuraciones del Sistema"
-
-    def __str__(self):
-        return self.clave

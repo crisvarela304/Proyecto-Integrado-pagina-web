@@ -38,9 +38,26 @@ def dashboard_estudiante(request, context):
     """Dashboard específico para estudiantes"""
     user = request.user
     
-    # Datos del estudiante
-    cursos = InscripcionCurso.objects.filter(estudiante=user, estado='activo')
-    calificaciones = Calificacion.objects.filter(estudiante=user).order_by('-fecha_evaluacion')[:5]
+    # Datos del estudiante - Optimizado con select_related
+    cursos = InscripcionCurso.objects.filter(
+        estudiante=user, 
+        estado='activo'
+    ).select_related('curso')
+    
+    # Pre-calcular promedios para evitar N+1 en el template
+    calificaciones_all = Calificacion.objects.filter(estudiante=user).values('curso').annotate(
+        promedio=Avg('nota')
+    )
+    promedios_map = {item['curso']: item['promedio'] for item in calificaciones_all}
+    
+    for inscripcion in cursos:
+        promedio = promedios_map.get(inscripcion.curso.id)
+        inscripcion.promedio_calculado = round(promedio, 1) if promedio else None
+
+    # Calificaciones recientes - Optimizado
+    calificaciones = Calificacion.objects.filter(
+        estudiante=user
+    ).select_related('asignatura').order_by('-fecha_evaluacion')[:5]
     
     # Asistencia del mes actual
     hoy = datetime.now()
@@ -56,17 +73,15 @@ def dashboard_estudiante(request, context):
     )
     promedio_general = round(promedio_data['promedio'], 1) if promedio_data['promedio'] else None
     
-    # Horario de hoy
+    # Horario de hoy - Optimizado
     dias_semana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
     dia_actual = dias_semana[datetime.now().weekday()]
     
-    horario_hoy = []
-    for inscripcion in cursos:
-        clases_hoy = HorarioClases.objects.filter(
-            curso=inscripcion.curso,
-            dia=dia_actual
-        )
-        horario_hoy.extend(clases_hoy)
+    curso_ids = [inscripcion.curso.id for inscripcion in cursos]
+    horario_hoy = HorarioClases.objects.filter(
+        curso__id__in=curso_ids,
+        dia=dia_actual
+    ).select_related('asignatura', 'profesor', 'sala').order_by('hora')
     
     context.update({
         'cursos': cursos,
@@ -176,17 +191,20 @@ def mi_horario(request):
     
     # Obtener cursos del estudiante
     cursos = InscripcionCurso.objects.filter(estudiante=user, estado='activo')
+    curso_ids = cursos.values_list('curso_id', flat=True)
     
-    # Obtener horario agrupado por día
-    horario_por_dia = {}
+    # Obtener todo el horario en una sola consulta
+    horario_completo = HorarioClases.objects.filter(
+        curso__id__in=curso_ids
+    ).select_related('asignatura', 'profesor').order_by('hora')
+    
+    # Agrupar por día en memoria
     dias_semana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    horario_por_dia = {dia: [] for dia in dias_semana}
     
-    for dia in dias_semana:
-        clases_dia = HorarioClases.objects.filter(
-            curso__in=cursos.values('curso'),
-            dia=dia
-        ).order_by('hora')
-        horario_por_dia[dia] = clases_dia
+    for clase in horario_completo:
+        if clase.dia in horario_por_dia:
+            horario_por_dia[clase.dia].append(clase)
     
     return render(request, 'academico/mi_horario.html', {
         'horario_por_dia': horario_por_dia,

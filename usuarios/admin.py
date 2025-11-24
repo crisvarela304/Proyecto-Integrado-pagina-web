@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import PerfilUsuario, ConfiguracionSistema
+from .models import PerfilUsuario
 
 class PerfilUsuarioInline(admin.StackedInline):
     model = PerfilUsuario
@@ -25,16 +25,7 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
         return obj.user.email
     email_usuario.short_description = 'Email'
 
-@admin.register(ConfiguracionSistema)
-class ConfiguracionSistemaAdmin(admin.ModelAdmin):
-    list_display = ('clave', 'valor_preview', 'descripcion', 'activo')
-    list_filter = ('activo',)
-    search_fields = ('clave', 'descripcion')
-    readonly_fields = ('created_at', 'updated_at')
-    
-    def valor_preview(self, obj):
-        return obj.valor[:50] + '...' if len(obj.valor) > 50 else obj.valor
-    valor_preview.short_description = 'Valor'
+
 
 # Extender el admin de User para incluir el perfil
 class UserAdmin(BaseUserAdmin):

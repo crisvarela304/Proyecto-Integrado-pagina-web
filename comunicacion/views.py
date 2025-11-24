@@ -11,7 +11,8 @@ def noticias_list(request):
     orden = request.GET.get('orden', 'recientes')
     
     # Query base
-    qs = Noticia.objects.filter(es_publica=True)
+    # Query base optimizada
+    qs = Noticia.objects.filter(es_publica=True).select_related('autor')
     
     # Aplicar filtros
     if q:

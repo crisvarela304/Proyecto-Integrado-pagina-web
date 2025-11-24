@@ -3,53 +3,180 @@
 {% block title %}Inicio - Liceo Juan Bautista de Hualqui{% endblock %}
 
 {% block content %}
-<section class="hero-section text-center" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 60px 0;">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3"><i class="fas fa-graduation-cap me-3"></i>Liceo Juan Bautista de Hualqui</h1>
-        <p class="lead mb-4">Portal institucional moderno para mejorar la comunicación entre el establecimiento, apoderados y estudiantes.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="{% url 'noticias' %}" class="btn btn-light btn-lg"><i class="fas fa-newspaper me-2"></i>Ver Noticias</a>
-            <a href="{% url 'usuarios:login' %}" class="btn btn-outline-light btn-lg"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</a>
+<!-- Hero Section -->
+<section class="hero-section text-center position-relative overflow-hidden">
+    <div class="container position-relative z-1">
+        <div class="d-inline-flex justify-content-center align-items-center bg-white text-primary rounded-circle shadow-lg mb-4"
+            style="width: 100px; height: 100px;">
+            <i class="fas fa-graduation-cap display-4"></i>
+        </div>
+        <h1 class="display-3 fw-bold mb-3 text-white">Liceo Juan Bautista</h1>
+        <p class="lead text-white opacity-75 mb-5 mx-auto" style="max-width: 700px;">
+            Excelencia académica y formación integral para el futuro. Un espacio de aprendizaje moderno para nuestra
+            comunidad.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'noticias' %}"
+                class="btn btn-light btn-lg px-5 py-3 fw-bold rounded-pill shadow-sm transition-hover">
+                <i class="fas fa-newspaper me-2"></i>Ver Noticias
+            </a>
+            <a href="{% url 'usuarios:login' %}"
+                class="btn btn-outline-light btn-lg px-5 py-3 fw-bold rounded-pill transition-hover">
+                <i class="fas fa-sign-in-alt me-2"></i>Acceso Aula
+            </a>
         </div>
     </div>
+    <!-- Decorative shapes -->
+    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10"
+        style="background: url('data:image/svg+xml,...')"></div>
 </section>
 
-<div class="container my-5">
-    <div class="row">
+<div class="container my-5 pb-5">
+    <div class="row g-5">
+        <!-- Noticias Section -->
         <div class="col-lg-8">
-            <h2 class="mb-4"><i class="fas fa-star text-warning me-2"></i>Noticias Destacadas</h2>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h2 class="fw-bold text-dark mb-0">
+                    <span class="text-primary me-2"><i class="fas fa-star"></i></span>
+                    Noticias Destacadas
+                </h2>
+                <a href="{% url 'noticias' %}" class="btn btn-link text-decoration-none fw-semibold">
+                    Ver todas <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
             {% if noticias_destacadas %}
-                <div class="row g-3">
-                    {% for noticia in noticias_destacadas %}
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ noticia.titulo }}</h5>
-                                    <p class="card-text text-muted">{{ noticia.bajada }}</p>
-                                    <small class="text-muted">{{ noticia.creado|date:"d/m/Y" }}</small>
-                                    <div class="mt-auto">
-                                        <a href="{% url 'noticia_detalle' noticia.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye me-1"></i>Leer más</a>
-                                    </div>
-                                </div>
+            <div class="row g-4">
+                {% for noticia in noticias_destacadas %}
+                <div class="col-md-6">
+                    <article class="card h-100 border-0 shadow-sm hover-lift overflow-hidden">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="mb-3">
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    {{ noticia.creado|date:"d M, Y" }}
+                                </span>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3 text-dark">
+                                <a href="{% url 'noticia_detalle' noticia.pk %}"
+                                    class="text-decoration-none text-dark stretched-link">
+                                    {{ noticia.titulo }}
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted mb-4 flex-grow-1 line-clamp-3">
+                                {{ noticia.bajada }}
+                            </p>
+                            <div class="d-flex align-items-center text-primary fw-semibold">
+                                Leer artículo completo <i class="bi bi-arrow-right ms-2"></i>
                             </div>
                         </div>
-                    {% endfor %}
+                    </article>
                 </div>
-            {% else %}
-                <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No hay noticias destacadas disponibles.</div>
-            {% endif %}
-            <div class="text-center mt-4">
-                <a href="{% url 'noticias' %}" class="btn btn-primary btn-lg"><i class="fas fa-newspaper me-2"></i>Explorar Centro de Noticias</a>
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-3 me-3 text-info"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Sin noticias destacadas</h5>
+                    <p class="mb-0 opacity-75">Por el momento no hay noticias marcadas como destacadas.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
+
+        <!-- Sidebar / Quick Access -->
         <div class="col-lg-4">
-            <h3 class="mb-4"><i class="fas fa-bolt text-warning me-2"></i>Acceso Rápido</h3>
-            <div class="list-group mb-4">
-                <a href="{% url 'noticias' %}" class="list-group-item list-group-item-action border-0 shadow-sm mb-2"><i class="fas fa-newspaper text-primary me-3"></i>Centro de Noticias</a>
-                <a href="{% url 'usuarios:login' %}" class="list-group-item list-group-item-action border-0 shadow-sm mb-2"><i class="fas fa-sign-in-alt text-success me-3"></i>Iniciar Sesión</a>
-                <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action border-0 shadow-sm mb-2"><i class="fas fa-cog text-info me-3"></i>Administración</a>
+            <div class="sticky-top" style="top: 2rem;">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                    <div class="card-header bg-white border-0 p-4 pb-0">
+                        <h4 class="fw-bold mb-0">
+                            <span class="text-warning me-2"><i class="fas fa-bolt"></i></span>
+                            Acceso Rápido
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-grid gap-3">
+                            <a href="{% url 'noticias' %}"
+                                class="btn btn-light text-start p-3 rounded-3 border-0 shadow-sm d-flex align-items-center transition-hover group-hover">
+                                <div class="bg-primary-subtle text-primary rounded-circle p-3 me-3">
+                                    <i class="fas fa-newspaper fs-5"></i>
+                                </div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Centro de Noticias</span>
+                                    <small class="text-muted">Novedades y comunicados</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted opacity-50"></i>
+                            </a>
+
+                            <a href="{% url 'usuarios:login' %}"
+                                class="btn btn-light text-start p-3 rounded-3 border-0 shadow-sm d-flex align-items-center transition-hover">
+                                <div class="bg-success-subtle text-success rounded-circle p-3 me-3">
+                                    <i class="fas fa-sign-in-alt fs-5"></i>
+                                </div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Portal Académico</span>
+                                    <small class="text-muted">Acceso para estudiantes y profesores</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted opacity-50"></i>
+                            </a>
+
+                            <a href="{% url 'admin:index' %}"
+                                class="btn btn-light text-start p-3 rounded-3 border-0 shadow-sm d-flex align-items-center transition-hover">
+                                <div class="bg-info-subtle text-info rounded-circle p-3 me-3">
+                                    <i class="fas fa-cog fs-5"></i>
+                                </div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Administración</span>
+                                    <small class="text-muted">Panel de control del sistema</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted opacity-50"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="card border-0 shadow-sm rounded-4 bg-primary text-white overflow-hidden">
+                    <div class="card-body p-4 position-relative">
+                        <h5 class="fw-bold mb-3">¿Necesitas ayuda?</h5>
+                        <p class="opacity-75 mb-4">Si tienes problemas para ingresar a la plataforma, contacta con
+                            soporte técnico.</p>
+                        <a href="#" class="btn btn-light rounded-pill px-4 fw-bold text-primary">
+                            <i class="bi bi-envelope me-2"></i>Contactar Soporte
+                        </a>
+                        <i class="bi bi-headset position-absolute bottom-0 end-0 opacity-10 display-1 me-n3 mb-n2"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .transition-hover {
+        transition: all 0.2s ease;
+    }
+
+    .transition-hover:hover {
+        transform: translateY(-3px);
+    }
+
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
 {% endblock %}

@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    CategoriaDocumento, Documento, HistorialDescargas, 
-    TipoExamen, Examen, PreguntaExamen, ComunicadoPadres
+    CategoriaDocumento, Documento, HistorialDescargas, ComunicadoPadres
 )
 
 @admin.register(CategoriaDocumento)
@@ -54,42 +53,7 @@ class HistorialDescargasAdmin(admin.ModelAdmin):
     readonly_fields = ('fecha_descarga',)
     ordering = ('-fecha_descarga',)
 
-@admin.register(TipoExamen)
-class TipoExamenAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'ponderacion_por_defecto', 'activo')
-    list_filter = ('activo',)
-    search_fields = ('nombre', 'descripcion')
 
-@admin.register(Examen)
-class ExamenAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'curso', 'asignatura', 'tipo_periodo', 'fecha_aplicacion', 'profesor', 'activo')
-    list_filter = ('tipo_periodo', 'fecha_aplicacion', 'activo', 'curso', 'asignatura')
-    search_fields = ('titulo', 'descripcion', 'curso__nombre', 'asignatura__nombre')
-    readonly_fields = ('creado',)
-    ordering = ('-fecha_aplicacion',)
-    
-    fieldsets = (
-        ('Información General', {
-            'fields': ('titulo', 'descripcion', 'tipo_examen', 'curso', 'asignatura', 'profesor')
-        }),
-        ('Programación', {
-            'fields': ('tipo_periodo', 'fecha_aplicacion', 'hora_inicio', 'duracion_minutos', 'sala')
-        }),
-        ('Detalles del Examen', {
-            'fields': ('instrucciones', 'material_permitido', 'ponderacion', 'activo')
-        }),
-        ('Metadatos', {
-            'fields': ('creado',),
-            'classes': ('collapse',)
-        }),
-    )
-
-@admin.register(PreguntaExamen)
-class PreguntaExamenAdmin(admin.ModelAdmin):
-    list_display = ('examen', 'numero', 'tipo_pregunta', 'puntos', 'orden')
-    list_filter = ('tipo_pregunta',)
-    search_fields = ('examen__titulo', 'enunciado')
-    ordering = ('examen', 'orden', 'numero')
 
 @admin.register(ComunicadoPadres)
 class ComunicadoPadresAdmin(admin.ModelAdmin):

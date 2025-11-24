@@ -11,13 +11,14 @@ from datetime import datetime, date, time, timedelta
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 django.setup()
 
 from django.contrib.auth.models import User
 from usuarios.models import PerfilUsuario
 from comunicacion.models import Noticia
-from academico.models import Asignatura, Curso, InscripcionCurso
-from documentos.models import CategoriaDocumento, TipoExamen, Examen, ComunicadoPadres
+from academico.models import Asignatura, Curso, InscripcionCurso, TipoExamen, Examen
+from documentos.models import CategoriaDocumento, ComunicadoPadres
 
 def crear_usuarios():
     """Crea usuarios de prueba"""

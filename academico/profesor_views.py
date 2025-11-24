@@ -134,6 +134,13 @@ def mis_estudiantes_profesor(request):
     
     return render(request, 'academico/profesor_mis_estudiantes.html', context)
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Configuración de evaluaciones
+NUMERO_EVALUACIONES = 4
+
 @login_required
 def gestionar_calificaciones(request, estudiante_id):
     """Gestionar calificaciones de un estudiante específico"""
@@ -169,7 +176,7 @@ def gestionar_calificaciones(request, estudiante_id):
     if request.method == 'POST':
         try:
             for asignatura in asignaturas_profesor:
-                for i in range(1, 4):
+                for i in range(1, NUMERO_EVALUACIONES + 1):
                     campo_nota = f'nota_{asignatura.id}_{i}'
                     campo_desc = f'desc_{asignatura.id}_{i}'
                     
@@ -202,6 +209,7 @@ def gestionar_calificaciones(request, estudiante_id):
             return redirect('academico:gestionar_calificaciones', estudiante_id=estudiante_id)
             
         except Exception as e:
+            logger.error(f"Error al actualizar calificaciones: {str(e)}")
             messages.error(request, f'Error al actualizar calificaciones: {str(e)}')
     
     calificaciones = Calificacion.objects.filter(
@@ -222,6 +230,8 @@ def gestionar_calificaciones(request, estudiante_id):
         'asignaturas_profesor': asignaturas_profesor,
         'calificaciones_dict': calificaciones_dict,
         'perfil_estudiante': perfil_estudiante,
+        'rango_evaluaciones': range(1, NUMERO_EVALUACIONES + 1),
+        'numero_evaluaciones': NUMERO_EVALUACIONES,
     }
     
     return render(request, 'academico/profesor_gestionar_calificaciones.html', context)
@@ -278,7 +288,7 @@ def enviar_correos(request):
                     
                 except Exception as e:
                     correos_fallidos += 1
-                    print(f"Error enviando correo a {estudiante.email}: {e}")
+                    logger.error(f"Error enviando correo a {estudiante.email}: {e}")
             
             # Mensaje de resultado
             if correos_enviados > 0:
@@ -353,7 +363,8 @@ def registro_asistencias(request, curso_id):
                         fecha=fecha_asistencia,
                         defaults={
                             'estado': estado,
-                            'observacion': obs_individual or observacion_general
+                            'observacion': obs_individual or observacion_general,
+                            'registrado_por': user
                         }
                     )
                     estudiantes_procesados += 1
@@ -384,7 +395,7 @@ def registro_asistencias(request, curso_id):
         'fecha_hoy': fecha_hoy,
     }
     
-    return render(request, 'academico/profesor_panel.html', context)
+    return render(request, 'academico/profesor_registro_asistencias.html', context)
 
 @login_required
 def estadisticas_profesor(request):
@@ -396,35 +407,60 @@ def estadisticas_profesor(request):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
+    # Cursos donde el profesor enseña o es jefe
     cursos_profesor = Curso.objects.filter(
         Q(profesor_jefe=user) | Q(horario__profesor=user)
     ).distinct()
     
+    # Total de estudiantes únicos en esos cursos
     total_estudiantes = InscripcionCurso.objects.filter(
         curso__in=cursos_profesor
     ).values('estudiante').distinct().count()
     
+    # Asignaturas que dicta el profesor
     asignaturas_profesor = Asignatura.objects.filter(
         horarioclases__profesor=user
     ).distinct()
     
+    # Todas las calificaciones puestas por este profesor
     calificaciones = Calificacion.objects.filter(
         profesor=user
     )
     
+    # Promedio general de las notas puestas por el profesor
     promedio_general = calificaciones.aggregate(
         promedio=Avg('nota')
     )['promedio'] or 0
     
-    estudiantes_bajo_rendimiento = []
-    for estudiante in User.objects.filter(perfil__tipo_usuario='estudiante'):
-        promedio_estudiante = Calificacion.objects.filter(
-            estudiante=estudiante,
-            profesor=user
-        ).aggregate(promedio=Avg('nota'))['promedio']
-        
-        if promedio_estudiante and promedio_estudiante < 4.0:
-            estudiantes_bajo_rendimiento.append((estudiante, promedio_estudiante))
+    # Estudiantes con bajo rendimiento (promedio < 4.0) SOLO en asignaturas de este profesor
+    # Optimizacion: Calcular promedios en la DB y filtrar
+    estudiantes_bajo_rendimiento = Calificacion.objects.filter(
+        profesor=user
+    ).values(
+        'estudiante__id', 
+        'estudiante__first_name', 
+        'estudiante__last_name', 
+        'estudiante__username'
+    ).annotate(
+        promedio=Avg('nota')
+    ).filter(
+        promedio__lt=4.0
+    ).order_by('promedio')[:10]
+    
+    # Formatear lista para el template (manteniendo compatibilidad)
+    lista_bajo_rendimiento = []
+    for item in estudiantes_bajo_rendimiento:
+        # Creamos un objeto dummy o diccionario que el template pueda leer
+        # El template espera (estudiante_obj, promedio)
+        estudiante_dummy = type('User', (), {
+            'first_name': item['estudiante__first_name'],
+            'last_name': item['estudiante__last_name'],
+            'username': item['estudiante__username'],
+            'id': item['estudiante__id'],
+            'get_full_name': lambda self: f"{self.first_name} {self.last_name}".strip() or self.username
+        })()
+
+        lista_bajo_rendimiento.append((estudiante_dummy, item['promedio']))
     
     context = {
         'total_estudiantes': total_estudiantes,
@@ -432,7 +468,7 @@ def estadisticas_profesor(request):
         'total_asignaturas': asignaturas_profesor.count(),
         'promedio_general': round(promedio_general, 2),
         'total_calificaciones': calificaciones.count(),
-        'estudiantes_bajo_rendimiento': estudiantes_bajo_rendimiento[:10],  # Top 10
+        'estudiantes_bajo_rendimiento': lista_bajo_rendimiento,
     }
     
     return render(request, 'academico/profesor_estadisticas.html', context)

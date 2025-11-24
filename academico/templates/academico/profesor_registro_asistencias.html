@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registro de Asistencia - {{ curso.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabecera -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">Registro de Asistencia</h2>
+                            <p class="mb-0 opacity-75">
+                                <i class="bi bi-mortarboard-fill me-2"></i>
+                                {{ curso.nombre }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">{{ fecha_hoy|date:"d" }}</h3>
+                            <small class="text-uppercase">{{ fecha_hoy|date:"F Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Asistencia -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Lista de Estudiantes
+                        </h5>
+                        <a href="{% url 'academico:panel_profesor' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i> Volver al Panel
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Fecha de Asistencia</label>
+                                <input type="date" name="fecha_asistencia" class="form-control"
+                                    value="{{ fecha_hoy|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Observación General (Opcional)</label>
+                                <input type="text" name="observaciones" class="form-control"
+                                    placeholder="Ej: Clase normal, actividad especial...">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th style="width: 35%">Estudiante</th>
+                                        <th style="width: 30%">Estado</th>
+                                        <th style="width: 30%">Observación Individual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for estudiante in estudiantes %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-secondary bg-opacity-10 d-flex justify-content-center align-items-center me-3"
+                                                    style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person text-secondary"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{
+                                                        estudiante.get_full_name|default:estudiante.username }}</div>
+                                                    <small class="text-muted">{{ estudiante.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group w-100" role="group">
+                                                <input type="radio" class="btn-check" name="estado_{{ estudiante.id }}"
+                                                    id="presente_{{ estudiante.id }}" value="presente" checked>
+                                                <label class="btn btn-outline-success"
+                                                    for="presente_{{ estudiante.id }}">Presente</label>
+
+                                                <input type="radio" class="btn-check" name="estado_{{ estudiante.id }}"
+                                                    id="ausente_{{ estudiante.id }}" value="ausente">
+                                                <label class="btn btn-outline-danger"
+                                                    for="ausente_{{ estudiante.id }}">Ausente</label>
+
+                                                <input type="radio" class="btn-check" name="estado_{{ estudiante.id }}"
+                                                    id="justificado_{{ estudiante.id }}" value="justificado">
+                                                <label class="btn btn-outline-warning"
+                                                    for="justificado_{{ estudiante.id }}">Justificado</label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="observaciones_{{ estudiante.id }}"
+                                                class="form-control form-control-sm" placeholder="Observación...">
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="bi bi-save me-2"></i>
+                                Guardar Asistencia
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

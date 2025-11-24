@@ -48,6 +48,8 @@ class Noticia(models.Model):
         return f"{self.titulo} - {self.get_categoria_display()}"
 
     def increment_visits(self):
-        """Incrementa el contador de visitas"""
-        self.visitas += 1
+        """Incrementa el contador de visitas de forma atómica"""
+        from django.db.models import F
+        self.visitas = F('visitas') + 1
         self.save(update_fields=['visitas'])
+        self.refresh_from_db()
