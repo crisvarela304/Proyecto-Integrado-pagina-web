@@ -134,6 +134,56 @@ def mis_estudiantes_profesor(request):
     
     return render(request, 'academico/profesor_mis_estudiantes.html', context)
 
+@login_required
+def lista_calificaciones_profesor(request):
+    """Lista estudiantes para calificar"""
+    user = request.user
+    perfil = getattr(user, 'perfil', None)
+    
+    if not perfil or perfil.tipo_usuario != 'profesor':
+        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        return redirect('usuarios:panel')
+    
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
+    
+    curso_seleccionado = request.GET.get('curso', '')
+    busqueda = request.GET.get('busqueda', '').strip()
+    
+    estudiantes_query = InscripcionCurso.objects.filter(
+        curso__in=cursos_profesor
+    ).select_related('estudiante', 'estudiante__perfil', 'curso')
+    
+    if curso_seleccionado:
+        estudiantes_query = estudiantes_query.filter(curso_id=curso_seleccionado)
+    
+    if busqueda:
+        estudiantes_query = estudiantes_query.filter(
+            Q(estudiante__first_name__icontains=busqueda) |
+            Q(estudiante__last_name__icontains=busqueda) |
+            Q(estudiante__perfil__rut__icontains=busqueda) |
+            Q(estudiante__username__icontains=busqueda)
+        )
+    
+    paginator = Paginator(estudiantes_query, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    estudiantes_ids = [inscripcion.estudiante_id for inscripcion in page_obj.object_list]
+    perfiles_estudiantes = PerfilUsuario.objects.filter(user_id__in=estudiantes_ids).in_bulk(field_name='user_id')
+    
+    context = {
+        'page_obj': page_obj,
+        'cursos_profesor': cursos_profesor,
+        'curso_seleccionado': curso_seleccionado,
+        'busqueda': busqueda,
+        'perfiles_estudiantes': perfiles_estudiantes,
+        'modo_calificaciones': True,
+    }
+    
+    return render(request, 'academico/profesor_mis_estudiantes.html', context)
+
 import logging
 
 logger = logging.getLogger(__name__)

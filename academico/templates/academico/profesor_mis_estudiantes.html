@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load dict_extras %}
-{% block title %}Mis Estudiantes{% endblock %}
+{% block title %}{% if modo_calificaciones %}Calificar Estudiantes{% else %}Mis Estudiantes{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,8 +9,8 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body">
-                    <h4 class="mb-0">Estudiantes a Cargo</h4>
-                    <p class="text-muted mb-0">Listado filtrable por curso y búsqueda.</p>
+                    <h4 class="mb-0">{% if modo_calificaciones %}Calificar Estudiantes{% else %}Estudiantes a Cargo{% endif %}</h4>
+                    <p class="text-muted mb-0">{% if modo_calificaciones %}Selecciona un estudiante para registrar sus notas.{% else %}Listado filtrable por curso y búsqueda.{% endif %}</p>
                 </div>
             </div>
         </div>
@@ -24,7 +24,7 @@
                     <select name="curso" class="form-select">
                         <option value="">Todos</option>
                         {% for curso in cursos_profesor %}
-                            <option value="{{ curso.id }}" {% if curso_seleccionado  ==  curso.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ curso.id }}" {% if curso_seleccionado == curso.id|stringformat:"s" %}selected{% endif %}>
                                 {{ curso }}
                             </option>
                         {% endfor %}
@@ -38,7 +38,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-search"></i> Buscar
                     </button>
-                    <a href="{% url 'academico:mis_estudiantes_profesor' %}" class="btn btn-outline-secondary">
+                    <a href="{% if modo_calificaciones %}{% url 'academico:lista_calificaciones_profesor' %}{% else %}{% url 'academico:mis_estudiantes_profesor' %}{% endif %}" class="btn btn-outline-secondary">
                         Limpiar
                     </a>
                 </div>
@@ -93,9 +93,15 @@
                                 <span class="badge bg-success">{{ inscripcion.get_estado_display }}</span>
                             </td>
                             <td class="text-end">
-                                <a href="{% url 'academico:gestionar_calificaciones' inscripcion.estudiante.id %}" class="btn btn-sm btn-outline-primary">
-                                    Ver calificaciones
+                                {% if modo_calificaciones %}
+                                <a href="{% url 'academico:gestionar_calificaciones' inscripcion.estudiante.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil-square me-1"></i> Calificar
                                 </a>
+                                {% else %}
+                                <button class="btn btn-sm btn-outline-secondary" disabled>
+                                    <i class="bi bi-person-badge me-1"></i> Ver Perfil
+                                </button>
+                                {% endif %}
                             </td>
                             {% endwith %}
                         </tr>

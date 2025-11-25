@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 from .profesor_views import (
     panel_profesor, mis_estudiantes_profesor, gestionar_calificaciones,
-    enviar_correos, registro_asistencias, estadisticas_profesor
+    enviar_correos, registro_asistencias, estadisticas_profesor,
+    lista_calificaciones_profesor
 )
 
 app_name = 'academico'
@@ -21,6 +22,7 @@ urlpatterns = [
     # Vistas específicas para profesores
     path('profesor/', panel_profesor, name='panel_profesor'),
     path('profesor/estudiantes/', mis_estudiantes_profesor, name='mis_estudiantes_profesor'),
+    path('profesor/calificaciones/', lista_calificaciones_profesor, name='lista_calificaciones_profesor'),
     path('profesor/calificaciones/<int:estudiante_id>/', gestionar_calificaciones, name='gestionar_calificaciones'),
     path('profesor/correos/', enviar_correos, name='enviar_correos'),
     path('profesor/asistencias/<int:curso_id>/', registro_asistencias, name='registro_asistencias'),
