@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}Conversación con {{ otro_participante.get_full_name|default:otro_participante.username }} -
+Mensajería{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 200px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .message {
+        margin-bottom: 1rem;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.mine {
+        text-align: right;
+    }
+
+    .message-content {
+        display: inline-block;
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message.mine .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.other .message-content {
+        background: white;
+        color: #333;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 4px;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        opacity: 0.7;
+    }
+
+    .message.attachment .message-content {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        text-align: left;
+    }
+
+    .attachment-link {
+        color: #007bff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .attachment-link:hover {
+        text-decoration: underline;
+    }
+
+    .participant-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .participant-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .message-form {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .attachment-preview {
+        display: none;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+
+    .attachment-preview.show {
+        display: block;
+    }
+
+    .unread-indicator {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: #dc3545;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+        z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+        .message-content {
+            max-width: 85%;
+        }
+
+        .participant-avatar {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Encabezado del participante -->
+    <div class="participant-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="participant-avatar">
+                    {{ otro_participante.first_name.0|default:otro_participante.username.0 }}
+                </div>
+            </div>
+            <div class="col">
+                <h4 class="mb-1">
+                    {% if es_alumno %}
+                    Prof. {{ otro_participante.get_full_name|default:otro_participante.username }}
+                    {% else %}
+                    {{ otro_participante.get_full_name|default:otro_participante.username }}
+                    {% endif %}
+                </h4>
+                <small>
+                    <i class="bi bi-calendar"></i>
+                    Conversación iniciada: {{ conversacion.creado_en|date:"d/m/Y H:i" }}
+                </small>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'mensajeria:conversaciones_list' %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                    {% if es_alumno %}
+                    <a href="{% url 'mensajeria:eliminar_conversacion' conversacion.pk %}"
+                        class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'mensajeria:marcar_leido' conversacion.pk %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-check-all"></i> Marcar leído
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor del chat -->
+    <div class="chat-container">
+        <!-- Lista de mensajes -->
+        <div class="chat-messages" id="chat-messages">
+            {% for mensaje in page_obj.object_list %}
+            <div
+                class="message {% if mensaje.autor == request.user %}mine{% else %}other{% endif %} {% if mensaje.adjunto %}attachment{% endif %}">
+                <div class="message-content">
+                    {% if mensaje.adjunto %}
+                    <div class="attachment-info mb-2">
+                        <i class="bi bi-paperclip"></i>
+                        <strong>Archivo adjunto:</strong>
+                    </div>
+                    <a href="{{ mensaje.adjunto.url }}" target="_blank" class="attachment-link">
+                        <i
+                            class="bi bi-{% if mensaje.adjunto.name|lower|slice:'-4:' == '.pdf' %}file-pdf{% elif mensaje.adjunto.name|lower|slice:'-4:' in '.jpg' or mensaje.adjunto.name|lower|slice:'-5:' in '.jpeg' or mensaje.adjunto.name|lower|slice:'-4:' == '.png' %}file-image{% else %}file-earmark{% endif %}"></i>
+                        {{ mensaje.adjunto.name|truncatechars:50 }}
+                        <small class="text-muted">
+                            ({{ mensaje.adjunto.size|filesizeformat }})
+                        </small>
+                    </a>
+                    {% if mensaje.contenido %}
+                    <hr class="my-2">
+                    {% endif %}
+                    {% endif %}
+
+                    {% if mensaje.contenido %}
+                    <div class="message-text">{{ mensaje.contenido|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+                <div class="message-time">
+                    {{ mensaje.fecha_creacion|date:"d/m/Y H:i" }}
+                    {% if mensaje.autor == request.user %}
+                    {% if mensaje.leido %}
+                    <i class="bi bi-check2-all text-success" title="Leído"></i>
+                    {% else %}
+                    <i class="bi bi-check2" title="Enviado"></i>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted">
+                <i class="bi bi-chat-square-text display-4"></i>
+                <h5 class="mt-2">No hay mensajes aún</h5>
+                <p>¡Sé el primero en enviar un mensaje!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación de mensajes -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Mensajes anteriores" class="mb-3">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="bi bi-chevron-left"></i> Mensajes anteriores
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Mensajes anteriores</span>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        Mensajes más recientes <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Mensajes más recientes</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        <!-- Formulario para nuevo mensaje -->
+        <div class="message-form">
+            <form method="post" enctype="multipart/form-data" id="messageForm">
+                {% csrf_token %}
+                {{ mensaje_form.non_field_errors }}
+
+                <div class="mb-3">
+                    {{ mensaje_form.contenido }}
+                    {% if mensaje_form.contenido.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ mensaje_form.contenido.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <div class="input-group">
+                        {{ mensaje_form.adjunto }}
+                        <label class="input-group-text" for="{{ mensaje_form.adjunto.id_for_label }}">
+                            <i class="bi bi-paperclip"></i>
+                        </label>
+                    </div>
+                    {% if mensaje_form.adjunto.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ mensaje_form.adjunto.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Archivos permitidos: PDF, JPG, PNG, DOC, DOCX (máx. 5MB)
+                    </div>
+
+                    <!-- Vista previa del archivo -->
+                    <div class="attachment-preview" id="attachmentPreview">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="bi bi-file-earmark"></i>
+                                <span id="attachmentName"></span>
+                                <small class="text-muted" id="attachmentSize"></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="removeAttachment">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i>
+                        Los mensajes se envían automáticamente
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" id="clearForm">
+                            <i class="bi bi-arrow-clockwise"></i> Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Enviar mensaje
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Indicador de nuevos mensajes -->
+{% if conversacion.get_contador_no_leidos > 0 %}
+<div class="unread-indicator" id="unreadIndicator">
+    <i class="bi bi-bell"></i>
+    {{ conversacion.get_contador_no_leidos }} mensaje{{ conversacion.get_contador_no_leidos|pluralize }} nuevo{{
+    conversacion.get_contador_no_leidos|pluralize }}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Scroll automático al último mensaje
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Vista previa del archivo adjunto
+        const attachmentInput = document.getElementById('{{ mensaje_form.adjunto.id_for_label }}');
+        const attachmentPreview = document.getElementById('attachmentPreview');
+        const attachmentName = document.getElementById('attachmentName');
+        const attachmentSize = document.getElementById('attachmentSize');
+        const removeAttachment = document.getElementById('removeAttachment');
+
+        if (attachmentInput) {
+            attachmentInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    attachmentName.textContent = file.name;
+                    attachmentSize.textContent = `(${formatFileSize(file.size)})`;
+                    attachmentPreview.classList.add('show');
+                } else {
+                    attachmentPreview.classList.remove('show');
+                }
+            });
+        }
+
+        if (removeAttachment) {
+            removeAttachment.addEventListener('click', function () {
+                attachmentInput.value = '';
+                attachmentPreview.classList.remove('show');
+            });
+        }
+
+        // Limpiar formulario
+        const clearForm = document.getElementById('clearForm');
+        if (clearForm) {
+            clearForm.addEventListener('click', function () {
+                document.getElementById('messageForm').reset();
+                attachmentPreview.classList.remove('show');
+            });
+        }
+
+        // Auto-resize del textarea
+        const messageTextarea = document.getElementById('{{ mensaje_form.contenido.id_for_label }}');
+        if (messageTextarea) {
+            messageTextarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+
+        // Ocultar indicador de no leídos
+        const unreadIndicator = document.getElementById('unreadIndicator');
+        if (unreadIndicator) {
+            setTimeout(() => {
+                unreadIndicator.style.display = 'none';
+            }, 5000);
+        }
+
+        // Actualización automática cada 30 segundos
+        setInterval(function () {
+            fetch(window.location.href, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.text())
+                .then(html => {
+                    // Parsear respuesta y actualizar solo si hay cambios
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(html, 'text/html');
+                    const newMessages = newDoc.querySelectorAll('.message');
+                    const currentMessages = document.querySelectorAll('.message');
+
+                    if (newMessages.length > currentMessages.length) {
+                        location.reload(); // Recargar si hay nuevos mensajes
+                    }
+                })
+                .catch(error => console.log('Error al verificar mensajes:', error));
+        }, 30000);
+
+        // Función auxiliar para formatear tamaños de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Animación de entrada para mensajes
+        const messages = document.querySelectorAll('.message');
+        messages.forEach((message, index) => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                message.style.transition = 'all 0.3s ease';
+                message.style.opacity = '1';
+                message.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

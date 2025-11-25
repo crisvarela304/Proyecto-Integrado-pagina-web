@@ -1,0 +1,3 @@
+Iniciando validación...
+
+Resumen: 42 templates verificados. 0 errores encontrados.

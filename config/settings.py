@@ -10,11 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import sys
 from pathlib import Path
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "apps"))
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,10 +30,19 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
+# Leemos la variable del archivo .env.
+# Si no existe (porque se te olvidó), usa localhost por defecto para que no falle en tu PC.
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
+if DEBUG: ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
+
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost:8000,http://127.0.0.1:8000').split(',')
+
+if DEBUG: CSRF_TRUSTED_ORIGINS.extend([ 'http://localhost:8000', 'http://127.0.0.1:8000', 'https://localhost:8000', 'https://127.0.0.1:8000', ])
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -183,14 +194,75 @@ INSTITUCION_INFO = {
     'anno_fundacion': 1985,
 }
 
-# Admin Configuration
-ADMIN_SITE_HEADER = "Administración - Liceo Juan Bautista de Hualqui"
-ADMIN_SITE_TITLE = "Administración del Liceo"
-ADMIN_INDEX_TITLE = "Panel de Administración"
-
 # Pagination Settings
 PAGINACION_POR_PAGINA = 10
 
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Jazzmin Settings
+JAZZMIN_SETTINGS = {
+    "site_title": "Liceo Juan Bautista",
+    "site_header": "Liceo Juan Bautista",
+    "site_brand": "Liceo Juan Bautista",
+    "welcome_sign": "Bienvenido al Panel de Administración",
+    "copyright": "Liceo Juan Bautista de Hualqui",
+    "search_model": ["usuarios.User", "academico.Curso"],
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Inicio", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Ver Sitio", "url": "/", "new_window": True},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": ["auth.User", "auth.Group"],
+    "order_with_respect_to": ["usuarios", "academico", "comunicacion", "mensajeria"],
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "usuarios.User": "fas fa-user",
+        "usuarios.PerfilUsuario": "fas fa-id-card",
+        "academico.Curso": "fas fa-chalkboard",
+        "academico.Asignatura": "fas fa-book",
+        "academico.Calificacion": "fas fa-star",
+        "academico.Asistencia": "fas fa-calendar-check",
+        "comunicacion.Noticia": "fas fa-newspaper",
+        "mensajeria.Mensaje": "fas fa-envelope",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": False,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": True,
+    "show_ui_builder": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
+

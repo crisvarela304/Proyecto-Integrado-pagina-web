@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard Profesor{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center mb-5" style="background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);">
+    <div class="container">
+        <div class="d-inline-flex justify-content-center align-items-center bg-white text-primary rounded-circle shadow-lg mb-3"
+            style="width: 80px; height: 80px;">
+            <i class="bi bi-person-workspace fs-1"></i>
+        </div>
+        <h1 class="display-5 fw-bold mb-2 text-white">Panel Docente</h1>
+        <p class="lead opacity-75 mb-0 text-white">Bienvenido, Profesor {{ user.get_full_name|default:user.username }}</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Resumen -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-primary-subtle text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-people fs-4"></i>
+                    </div>
+                    <h6 class="text-muted mb-1">Alumnos Totales</h6>
+                    <h3 class="fw-bold mb-0 text-primary">{{ total_alumnos_real }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-success-subtle text-success rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-book fs-4"></i>
+                    </div>
+                    <h6 class="text-muted mb-1">Cursos Asignados</h6>
+                    <h3 class="fw-bold mb-0 text-success">{{ cursos_unicos.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-calendar-check fs-4"></i>
+                    </div>
+                    <h6 class="text-muted mb-1">Clases Hoy</h6>
+                    <h3 class="fw-bold mb-0 text-warning">{{ horario_hoy.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="icon-box bg-danger-subtle text-danger rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-megaphone fs-4"></i>
+                    </div>
+                    <h6 class="text-muted mb-1">Consejos Pendientes</h6>
+                    <h3 class="fw-bold mb-0 text-danger">{{ consejos.count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cursos Asignados (Grid con Scroll) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-journal-richtext me-2"></i>
+                        Resumen de Cursos
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    {% if cursos_unicos %}
+                    <div class="table-responsive overflow-auto" style="max-height: 400px;">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Curso</th>
+                                    <th class="text-center">Alumnos</th>
+                                    <th>Última Evaluación</th>
+                                    <th class="text-center">Promedio</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curso in cursos_unicos %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ curso.nombre }}</span>
+                                            <small class="text-muted">{{ curso.get_nivel_display }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">
+                                            {{ curso.cantidad_alumnos_real }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="d-block text-truncate" style="max-width: 150px;">
+                                            {{ curso.nombre_ultima_eval }}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if curso.promedio_ultima_nota %}
+                                            <span class="fw-bold {% if curso.promedio_ultima_nota < 4.0 %}text-danger{% else %}text-success{% endif %}">
+                                                {{ curso.promedio_ultima_nota }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="#" class="btn btn-outline-primary" title="Ver Curso">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-journal-x display-1 text-muted opacity-25"></i>
+                        <h5 class="text-muted fw-light mt-3">Sin cursos asignados</h5>
+                        <p class="text-muted mb-0">No tienes cursos asignados en este periodo.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="col-lg-4">
+            
+            <!-- Consejo de Profesores -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-secondary">
+                        <i class="bi bi-people-fill me-2"></i>Consejo de Profesores
+                    </h6>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="overflow-auto" style="max-height: 300px;">
+                        {% if consejos %}
+                            <div class="list-group list-group-flush">
+                                {% for consejo in consejos %}
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-3">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 text-primary fw-bold">{{ consejo.titulo }}</h6>
+                                        <small class="text-muted">{{ consejo.creado|date:"d/m" }}</small>
+                                    </div>
+                                    <p class="mb-1 small text-muted line-clamp-2">{{ consejo.bajada|default:consejo.cuerpo|truncatechars:60 }}</p>
+                                    {% if consejo.urgente %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle mt-1">Urgente</span>
+                                    {% endif %}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 bg-light rounded">
+                                <i class="bi bi-chat-square-quote text-muted fs-2 mb-2"></i>
+                                <p class="text-muted small mb-0">No hay consejos por el momento.</p>
+                                <small class="text-muted" style="font-size: 0.7rem;">Información gestionada por administración</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horario Hoy -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0 fw-bold text-secondary">
+                        <i class="bi bi-clock me-2"></i>Horario Hoy
+                    </h6>
+                </div>
+                <div class="card-body pt-0">
+                    {% if horario_hoy %}
+                    <div class="timeline">
+                        {% for clase in horario_hoy %}
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-center" style="min-width: 50px;">
+                                <span class="d-block fw-bold text-dark small">{{ clase.get_hora_display }}</span>
+                            </div>
+                            <div class="flex-grow-1 p-2 rounded bg-light border-start border-4 border-primary">
+                                <div class="fw-bold small text-primary">{{ clase.asignatura.nombre }}</div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>{{ clase.curso.nombre }}</span>
+                                    <span><i class="bi bi-geo-alt"></i> {{ clase.sala }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 small">No tienes clases hoy.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .sticky-top {
+        z-index: 1;
+    }
+    
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* Scrollbar styling */
+    .overflow-auto::-webkit-scrollbar {
+        width: 6px;
+    }
+    .overflow-auto::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .overflow-auto::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
