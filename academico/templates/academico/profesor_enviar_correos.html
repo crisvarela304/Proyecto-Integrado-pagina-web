@@ -1,246 +1,262 @@
-</h5>
-</div>
-<div class="card-body">
-    <form method="post" id="enviarCorreoForm">
-        {% csrf_token %}
+{% extends "base.html" %}
+{% load static %}
+{% load dict_extras %}
 
-        <!-- Selección de destinatarios -->
-        <div class="mb-4">
-            <label class="form-label fw-semibold">
-                <i class="bi bi-people me-1"></i>
-                Destinatarios
-            </label>
+{% block title %}Enviar Correos{% endblock %}
 
-            <!-- Filtros de destinatarios -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-4">
-                    <label class="form-label small text-muted">Filtrar por curso</label>
-                    <select class="form-select form-select-sm" id="filtroCurso">
-                        <option value="">Todos los cursos</option>
-                        {% for curso in cursos_profesor %}
-                        <option value="curso-{{ curso.id }}">{{ curso.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label small text-muted">Buscar estudiante</label>
-                    <input type="text" class="form-control form-control-sm" id="buscarEstudiante"
-                        placeholder="Buscar por nombre o RUT...">
-                </div>
-            </div>
-
-            <!-- Lista de estudiantes -->
-            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
-                <div class="row g-2" id="listaEstudiantes">
-                    {% for estudiante in estudiantes %}
-                    <div class="col-12 col-sm-6 col-lg-4 estudiante-item"
-                        data-curso="curso-{{ estudiante.inscripcion_curso.first.curso.id|default_if_none:'' }}">
-                        <div class="form-check border rounded p-2 h-100">
-                            <input class="form-check-input destinatario-checkbox" type="checkbox" name="destinatarios"
-                                value="{{ estudiante.id }}" id="estudiante_{{ estudiante.id }}">
-                            {% with perfil=perfiles_estudiantes|get_item:estudiante.id %}
-                            <label class="form-check-label w-100" for="estudiante_{{ estudiante.id }}">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="text-primary">
-                                        <i class="bi bi-person fs-5"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <strong>{{ estudiante.get_full_name|default:estudiante.username
-                                            }}</strong>
-                                        <br>
-                                        <small class="text-muted">
-                                            {{ estudiante.inscripcion_curso.first.curso.nombre|default:"Sin
-                                            curso" }}
-                                        </small>
-                                        <br>
-                                        <small class="text-muted">
-                                            RUT:
-                                            {% if perfil %}
-                                            {{ perfil.rut }}
-                                            {% else %}
-                                            Sin registro
-                                            {% endif %}
-                                        </small>
-                                        <br>
-                                        <small class="text-muted d-block">
-                                            Tel. estudiante:
-                                            {% if perfil and perfil.telefono_estudiante %}
-                                            {{ perfil.telefono_estudiante }}
-                                            {% else %}
-                                            Sin registro
-                                            {% endif %}
-                                        </small>
-                                        <small class="text-muted d-block">
-                                            Tel. apoderado:
-                                            {% if perfil and perfil.telefono_apoderado %}
-                                            {{ perfil.telefono_apoderado }}
-                                            {% else %}
-                                            Sin registro
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                </div>
-                            </label>
-                            {% endwith %}
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            No hay estudiantes disponibles. Verifica que tengas cursos asignados.
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Botones de selección -->
-            <div class="mt-2 d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarTodos()">
-                    <i class="bi bi-check-square me-1"></i>
-                    Seleccionar Todos
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deseleccionarTodos()">
-                    <i class="bi bi-square me-1"></i>
-                    Deseleccionar Todos
-                </button>
-                <span class="text-muted small align-self-center">
-                    <span id="destinatariosSeleccionados">0</span> destinatarios seleccionados
-                </span>
-            </div>
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-primary">
+                <i class="bi bi-envelope-plus me-2"></i>
+                Enviar Correos a Estudiantes
+            </h5>
+            <a href="{% url 'usuarios:panel' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Volver
+            </a>
         </div>
+        <div class="card-body">
+            <form method="post" id="enviarCorreoForm">
+                {% csrf_token %}
 
-        <!-- Asunto y contenido -->
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="mb-3">
-                    <label for="asunto" class="form-label fw-semibold">
-                        <i class="bi bi-envelope-open me-1"></i>
-                        Asunto
-                    </label>
-                    <input type="text" class="form-control" id="asunto" name="asunto"
-                        placeholder="Asunto del mensaje..." required>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="mb-3">
-                    <label for="mensaje" class="form-label fw-semibold">
-                        <i class="bi bi-chat-text me-1"></i>
-                        Mensaje
-                    </label>
-                    <textarea class="form-control" id="mensaje" name="mensaje" rows="8"
-                        placeholder="Escribe tu mensaje aquí..." required></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Opciones adicionales -->
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="incluirApoderados" name="incluir_apoderados">
-                    <label class="form-check-label" for="incluirApoderados">
+                <!-- Selección de destinatarios -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
                         <i class="bi bi-people me-1"></i>
-                        Incluir también a los apoderados de los estudiantes seleccionados
-                        <small class="text-muted d-block">
-                            (Funcionalidad en desarrollo)
-                        </small>
+                        Destinatarios
                     </label>
+
+                    <!-- Filtros de destinatarios -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Filtrar por curso</label>
+                            <select class="form-select form-select-sm" id="filtroCurso">
+                                <option value="">Todos los cursos</option>
+                                {% for curso in cursos_profesor %}
+                                <option value="curso-{{ curso.id }}">{{ curso.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label small text-muted">Buscar estudiante</label>
+                            <input type="text" class="form-control form-control-sm" id="buscarEstudiante"
+                                placeholder="Buscar por nombre o RUT...">
+                        </div>
+                    </div>
+
+                    <!-- Lista de estudiantes -->
+                    <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                        <div class="row g-2" id="listaEstudiantes">
+                            {% for estudiante in estudiantes %}
+                            <div class="col-12 col-sm-6 col-lg-4 estudiante-item"
+                                data-curso="curso-{{ estudiante.cursos_inscrito.first.curso.id|default_if_none:'' }}">
+                                <div class="form-check border rounded p-2 h-100">
+                                    <input class="form-check-input destinatario-checkbox" type="checkbox"
+                                        name="destinatarios" value="{{ estudiante.id }}"
+                                        id="estudiante_{{ estudiante.id }}">
+                                    {% with perfil=perfiles_estudiantes|get_item:estudiante.id %}
+                                    <label class="form-check-label w-100" for="estudiante_{{ estudiante.id }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="text-primary">
+                                                <i class="bi bi-person fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <strong>{{ estudiante.get_full_name|default:estudiante.username
+                                                    }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ estudiante.cursos_inscrito.first.curso.nombre|default:"Sin curso"
+                                                    }}
+                                                </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    RUT:
+                                                    {% if perfil %}
+                                                    {{ perfil.rut }}
+                                                    {% else %}
+                                                    Sin registro
+                                                    {% endif %}
+                                                </small>
+                                                <br>
+                                                <small class="text-muted d-block">
+                                                    Tel. estudiante:
+                                                    {% if perfil and perfil.telefono_estudiante %}
+                                                    {{ perfil.telefono_estudiante }}
+                                                    {% else %}
+                                                    Sin registro
+                                                    {% endif %}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    Tel. apoderado:
+                                                    {% if perfil and perfil.telefono_apoderado %}
+                                                    {{ perfil.telefono_apoderado }}
+                                                    {% else %}
+                                                    Sin registro
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No hay estudiantes disponibles. Verifica que tengas cursos asignados.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Botones de selección -->
+                    <div class="mt-2 d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarTodos()">
+                            <i class="bi bi-check-square me-1"></i>
+                            Seleccionar Todos
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deseleccionarTodos()">
+                            <i class="bi bi-square me-1"></i>
+                            Deseleccionar Todos
+                        </button>
+                        <span class="text-muted small align-self-center">
+                            <span id="destinatariosSeleccionados">0</span> destinatarios seleccionados
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Asunto y contenido -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="asunto" class="form-label fw-semibold">
+                                <i class="bi bi-envelope-open me-1"></i>
+                                Asunto
+                            </label>
+                            <input type="text" class="form-control" id="asunto" name="asunto"
+                                placeholder="Asunto del mensaje..." required>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="mensaje" class="form-label fw-semibold">
+                                <i class="bi bi-chat-text me-1"></i>
+                                Mensaje
+                            </label>
+                            <textarea class="form-control" id="mensaje" name="mensaje" rows="8"
+                                placeholder="Escribe tu mensaje aquí..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones adicionales -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="incluirApoderados"
+                                name="incluir_apoderados">
+                            <label class="form-check-label" for="incluirApoderados">
+                                <i class="bi bi-people me-1"></i>
+                                Incluir también a los apoderados de los estudiantes seleccionados
+                                <small class="text-muted d-block">
+                                    (Funcionalidad en desarrollo)
+                                </small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex gap-3 justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Limpiar
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="vistaPrevia()">
+                                <i class="bi bi-eye me-1"></i>
+                                Vista Previa
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="btnEnviar">
+                                <i class="bi bi-send me-1"></i>
+                                Enviar Correos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Información Importante
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Los correos se enviarán a los estudiantes seleccionados
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Se registrará el envío en el sistema
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                            Verifica los destinatarios antes de enviar
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                            Los correos enviados no se pueden deshacer
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Botones de acción -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="d-flex gap-3 justify-content-end">
-                    <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Limpiar
-                    </button>
-                    <button type="button" class="btn btn-info" onclick="vistaPrevia()">
-                        <i class="bi bi-eye me-1"></i>
-                        Vista Previa
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="btnEnviar">
-                        <i class="bi bi-send me-1"></i>
-                        Enviar Correos
-                    </button>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Consejos para el Envío
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-1-circle text-primary me-2"></i>
+                            Usa un asunto claro y descriptivo
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-2-circle text-primary me-2"></i>
+                            Mantén el mensaje conciso y profesional
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-3-circle text-primary me-2"></i>
+                            Incluye toda la información necesaria
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-4-circle text-primary me-2"></i>
+                            Revisa la ortografía antes de enviar
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
-    </form>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Información adicional -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Información Importante
-                </h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Los correos se enviarán a los estudiantes seleccionados
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Se registrará el envío en el sistema
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                        Verifica los destinatarios antes de enviar
-                    </li>
-                    <li class="mb-0">
-                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
-                        Los correos enviados no se pueden deshacer
-                    </li>
-                </ul>
-            </div>
-        </div>
     </div>
-
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">
-                    <i class="bi bi-lightbulb me-2"></i>
-                    Consejos para el Envío
-                </h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <i class="bi bi-1-circle text-primary me-2"></i>
-                        Usa un asunto claro y descriptivo
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-2-circle text-primary me-2"></i>
-                        Mantén el mensaje conciso y profesional
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-3-circle text-primary me-2"></i>
-                        Incluye toda la información necesaria
-                    </li>
-                    <li class="mb-0">
-                        <i class="bi bi-4-circle text-primary me-2"></i>
-                        Revisa la ortografía antes de enviar
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 </div>
 
 <style>
