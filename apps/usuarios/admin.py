@@ -3,85 +3,16 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django import forms
 from django.core.exceptions import ValidationError
+from django.urls import path
+from django.shortcuts import render, redirect
+from django.contrib import messages
+import csv
+import io
 from .models import PerfilUsuario
+from .forms import QuickStudentCreationForm, CSVImportForm
+from academico.models import InscripcionCurso
 
-class QuickStudentCreationForm(forms.ModelForm):
-    """Formulario para creación rápida de usuarios"""
-    first_name = forms.CharField(label='Nombre', max_length=150, required=True)
-    last_name = forms.CharField(label='Apellidos', max_length=150, required=True)
-    email = forms.EmailField(label='Email', required=False, help_text='Opcional. Si no se especifica, se generará automáticamente.')
-    password1 = forms.CharField(
-        label='Contraseña',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Ingrese contraseña'}),
-        required=True,
-        help_text='Contraseña para que el usuario inicie sesión.'
-    )
-    password2 = forms.CharField(
-        label='Confirmar Contraseña',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Confirme contraseña'}),
-        required=True,
-        help_text='Ingrese la misma contraseña para verificación.'
-    )
-    
-    class Meta:
-        model = PerfilUsuario
-        fields = ('rut', 'tipo_usuario', 'telefono', 'direccion', 'fecha_nacimiento', 'activo')
 
-    def clean(self):
-        cleaned_data = super().clean()
-        rut = cleaned_data.get('rut')
-        password1 = cleaned_data.get('password1')
-        password2 = cleaned_data.get('password2')
-        
-        # Si no hay usuario seleccionado (es creación nueva)
-        if not self.instance.pk and not self.initial.get('user'):
-            if not rut:
-                raise ValidationError("El RUT es obligatorio para nuevos usuarios.")
-            
-            # Verificar si ya existe usuario con ese RUT
-            if User.objects.filter(username=rut).exists():
-                raise ValidationError(f"Ya existe un usuario con el RUT {rut}")
-            
-            # Validar que las contraseñas coincidan
-            if password1 and password2 and password1 != password2:
-                raise ValidationError("Las contraseñas no coinciden.")
-            
-            # Validar longitud mínima de contraseña
-            if password1 and len(password1) < 6:
-                raise ValidationError("La contraseña debe tener al menos 6 caracteres.")
-                
-        return cleaned_data
-
-    def save(self, commit=True):
-        perfil = super().save(commit=False)
-        
-        # Si es un perfil nuevo y no tiene usuario asignado
-        if not perfil.user_id:
-            rut = self.cleaned_data.get('rut')
-            first_name = self.cleaned_data.get('first_name', '')
-            last_name = self.cleaned_data.get('last_name', '')
-            email = self.cleaned_data.get('email', '')
-            password = self.cleaned_data.get('password1')
-            
-            # Si no hay email, generar uno automáticamente
-            if not email:
-                email = f"{rut}@liceo.cl"
-            
-            # Crear el usuario automáticamente (usuarios NORMALES, sin permisos de staff)
-            user = User.objects.create_user(
-                username=rut,
-                password=password,  # Usar la contraseña especificada
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                is_staff=False,  # NO dar permisos de staff
-                is_superuser=False  # NO dar permisos de superusuario
-            )
-            perfil.user = user
-            
-        if commit:
-            perfil.save()
-        return perfil
 
 class PerfilUsuarioInline(admin.StackedInline):
     model = PerfilUsuario
@@ -98,6 +29,128 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     list_per_page = 25
     
+    change_list_template = "admin/usuarios/perfilusuario/change_list.html"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('import-csv/', self.admin_site.admin_view(self.import_csv), name='usuarios_perfilusuario_import_csv'),
+        ]
+        return my_urls + urls
+
+    def import_csv(self, request):
+        if request.method == "POST":
+            form = CSVImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                csv_file = request.FILES["csv_file"]
+                curso = form.cleaned_data['curso'] # Obtener el curso seleccionado
+                
+                # Intentar decodificar con diferentes encodings
+                decoded_file = None
+                encodings = ['utf-8-sig', 'latin-1', 'cp1252']
+                
+                file_data = csv_file.read()
+                
+                for encoding in encodings:
+                    try:
+                        decoded_file = file_data.decode(encoding)
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                
+                if not decoded_file:
+                    messages.error(request, "No se pudo decodificar el archivo. Asegúrese de que sea un CSV válido (UTF-8 o Latin-1).")
+                    return redirect("admin:usuarios_perfilusuario_changelist")
+
+                io_string = io.StringIO(decoded_file)
+                reader = csv.DictReader(io_string, delimiter=';') # Try semicolon first
+                
+                # Check if headers are correct, if not try comma
+                if 'RUT' not in reader.fieldnames:
+                    io_string.seek(0)
+                    reader = csv.DictReader(io_string, delimiter=',')
+                
+                created_count = 0
+                errors = []
+                
+                for row in reader:
+                    try:
+                        rut = row.get('RUT', '').strip()
+                        nombres = row.get('Nombres', '').strip()
+                        apellidos = row.get('Apellidos', '').strip()
+                        email = row.get('Email', '').strip()
+                        
+                        if not rut or not nombres or not apellidos:
+                            continue
+                            
+                        # Check if user exists
+                        if User.objects.filter(username=rut).exists():
+                            errors.append(f"El usuario con RUT {rut} ya existe.")
+                            continue
+                            
+                        # Check if profile with RUT exists (to avoid unique constraint failed)
+                        if PerfilUsuario.objects.filter(rut=rut).exists():
+                            errors.append(f"El RUT {rut} ya está registrado en un perfil existente.")
+                            continue
+                            
+                        # Create User
+                        # Password: First 6 digits of RUT (without dots)
+                        rut_limpio = rut.replace('.', '')
+                        password = rut_limpio[:6] 
+                        
+                        if not email:
+                            email = f"{rut}@liceo.cl"
+                            
+                        user = User.objects.create_user(
+                            username=rut,
+                            password=password,
+                            first_name=nombres,
+                            last_name=apellidos,
+                            email=email,
+                            is_staff=False
+                        )
+                        
+                        # Create Perfil
+                        PerfilUsuario.objects.create(
+                            user=user,
+                            rut=rut,
+                            tipo_usuario='estudiante',
+                            activo=True
+                        )
+                        
+                        # Inscribir en el curso seleccionado
+                        InscripcionCurso.objects.create(
+                            estudiante=user,
+                            curso=curso,
+                            año=2024, # Podríamos hacerlo dinámico, pero por ahora 2024
+                            estado='activo'
+                        )
+                        
+                        created_count += 1
+                        
+                    except Exception as e:
+                        errors.append(f"Error en fila {row}: {str(e)}")
+                
+                if created_count > 0:
+                    messages.success(request, f"Se importaron {created_count} estudiantes al curso {curso} exitosamente.")
+                
+                if errors:
+                    messages.warning(request, f"Hubo errores en {len(errors)} registros: " + "; ".join(errors[:5]))
+                    
+                return redirect("admin:usuarios_perfilusuario_changelist")
+        else:
+            form = CSVImportForm()
+            
+        context = {
+            'form': form,
+            'opts': self.model._meta,
+            'title': 'Importar Alumnos (CSV)',
+            'site_title': self.admin_site.site_title,
+            'site_header': self.admin_site.site_header,
+            'has_permission': True,
+        }
+        return render(request, "admin/usuarios/perfilusuario/import_csv.html", context)
+
     fieldsets = (
         ('Información Personal', {
             'fields': ('rut', 'first_name', 'last_name', 'tipo_usuario', 'fecha_nacimiento')
@@ -114,23 +167,36 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return self.fieldsets
+        
+        return (
+            ('Información Personal', {
+                'fields': ('rut', 'tipo_usuario', 'fecha_nacimiento')
+            }),
+            ('Contacto', {
+                'fields': ('telefono', 'direccion')
+            }),
+            ('Estado', {
+                'fields': ('activo',)
+            }),
+        )
+
     def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # Si es edición, ocultar campos que solo se usan en creación
+        Form = super().get_form(request, obj, **kwargs)
+        # Si es edición, usar un formulario modificado que no requiera los campos de creación
         if obj:
-            # Eliminar campos de contraseña en edición
-            if 'password1' in form.base_fields:
-                del form.base_fields['password1']
-            if 'password2' in form.base_fields:
-                del form.base_fields['password2']
-            # También ocultar nombre/apellido/email ya que se editan en User
-            if 'first_name' in form.base_fields:
-                del form.base_fields['first_name']
-            if 'last_name' in form.base_fields:
-                del form.base_fields['last_name']
-            if 'email' in form.base_fields:
-                del form.base_fields['email']
-        return form
+            class PerfilChangeForm(Form):
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    # Eliminar campos que solo son para creación
+                    fields_to_remove = ['first_name', 'last_name', 'email', 'password1', 'password2']
+                    for field in fields_to_remove:
+                        if field in self.fields:
+                            del self.fields[field]
+            return PerfilChangeForm
+        return Form
 
     def nombre_completo(self, obj):
         return obj.nombre_completo

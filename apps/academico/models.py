@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 from comunicacion.models import CategoriaNoticia
+from core.models import ConfiguracionAcademica
+
+def obtener_año_actual():
+    """Retorna el año académico actual configurado"""
+    try:
+        return ConfiguracionAcademica.get_actual().año_actual
+    except Exception:
+        return 2024
 
 class Asignatura(models.Model):
     """Asignaturas/materias del liceo"""
@@ -31,7 +39,7 @@ class Curso(models.Model):
     nombre = models.CharField(max_length=50)  # "1° Medio A"
     nivel = models.CharField(max_length=1, choices=NIVEL_CHOICES)
     letra = models.CharField(max_length=1)  # A, B, C, etc.
-    año = models.IntegerField(default=2024)
+    año = models.IntegerField(default=obtener_año_actual)
     profesor_jefe = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     total_alumnos = models.IntegerField(default=0)
     activo = models.BooleanField(default=True)
@@ -56,8 +64,9 @@ class InscripcionCurso(models.Model):
     
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cursos_inscrito')
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='estudiantes')
-    año = models.IntegerField(default=2024)
+    año = models.IntegerField(default=obtener_año_actual)
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
+    promedio = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, help_text="Promedio calculado automáticamente")
     fecha_inscripcion = models.DateTimeField(auto_now_add=True)
 
     class Meta:

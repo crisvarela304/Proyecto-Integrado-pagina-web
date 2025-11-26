@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ConfiguracionSistema
+from .models import ConfiguracionSistema, ConfiguracionAcademica
 
 @admin.register(ConfiguracionSistema)
 class ConfiguracionSistemaAdmin(admin.ModelAdmin):
@@ -12,3 +12,12 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
     def valor_preview(self, obj):
         return obj.valor[:50] + '...' if len(obj.valor) > 50 else obj.valor
     valor_preview.short_description = 'Valor'
+
+@admin.register(ConfiguracionAcademica)
+class ConfiguracionAcademicaAdmin(admin.ModelAdmin):
+    """Configuración del Año Académico"""
+    list_display = ('año_actual', 'get_semestre_actual_display')
+    
+    def has_add_permission(self, request):
+        # Solo permitir crear si no existe ninguna configuración
+        return not ConfiguracionAcademica.objects.exists()

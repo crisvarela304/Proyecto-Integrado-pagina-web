@@ -21,6 +21,7 @@ class PerfilUsuario(models.Model):
     foto_perfil = models.ImageField(upload_to="perfiles/", blank=True, null=True)
     direccion = models.TextField(blank=True)
     fecha_nacimiento = models.DateField(null=True, blank=True)
+    promedio_general = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, help_text="Promedio general calculado automáticamente")
     activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

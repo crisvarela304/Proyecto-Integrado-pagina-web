@@ -5,8 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Avg, Count, Q
-from datetime import datetime
 from .models import PerfilUsuario
 from .forms import (
     UserRegistrationForm,
@@ -20,7 +18,6 @@ from mensajeria.forms import ContactoColegioForm
 from core.utils import limpiar_rut, validar_rut
 
 # Importaciones de modelos académicos y comunicación
-from academico.models import Curso, InscripcionCurso, Calificacion, Asistencia, HorarioClases, Asignatura
 from comunicacion.models import Noticia
 
 def autenticar_con_rut(request, rut, password):
@@ -205,7 +202,7 @@ def panel(request):
     es_profesor = rol_codigo in ['profesor', 'administrativo', 'directivo'] or user.is_staff
     es_estudiante = rol_codigo in ['estudiante', 'apoderado']
     
-    # Contexto extendido
+    # Contexto base
     ctx = {
         "user_profile": perfil,
         "perfil": perfil,
@@ -216,84 +213,16 @@ def panel(request):
         "es_estudiante": es_estudiante,
     }
 
-    # --- Lógica para Estudiantes ---
+    # --- Lógica delegada al servicio ---
+    from .services import PanelService
+
     if es_estudiante:
-        # Promedio General
-        promedio_data = Calificacion.objects.filter(estudiante=user).aggregate(promedio=Avg('nota'))
-        promedio_general = round(promedio_data['promedio'], 1) if promedio_data['promedio'] else None
-        
-        # Asistencia Global (Total)
-        total_asistencias = Asistencia.objects.filter(estudiante=user).count()
-        asistencias_presente = Asistencia.objects.filter(estudiante=user, estado='presente').count()
-        asistencia_porcentaje = round((asistencias_presente / total_asistencias * 100), 0) if total_asistencias > 0 else 0
-        
-        # Cursos inscritos y cálculo de promedios por curso
-        cursos_inscritos = InscripcionCurso.objects.filter(estudiante=user, estado='activo').select_related('curso')
-        
-        # Pre-calcular promedios por curso
-        calificaciones_all = Calificacion.objects.filter(estudiante=user).values('curso').annotate(promedio=Avg('nota'))
-        promedios_map = {item['curso']: item['promedio'] for item in calificaciones_all}
-        
-        # Asistencia por curso
-        asistencias_por_curso = Asistencia.objects.filter(estudiante=user).values('curso').annotate(
-            total=Count('id'),
-            presentes=Count('id', filter=Q(estado='presente'))
-        )
-        asistencia_map = {}
-        for item in asistencias_por_curso:
-            if item['total'] > 0:
-                porcentaje = (item['presentes'] / item['total']) * 100
-                asistencia_map[item['curso']] = round(porcentaje, 0)
-            else:
-                asistencia_map[item['curso']] = 0
+        student_stats = PanelService.get_student_stats(user)
+        ctx.update(student_stats)
 
-        for inscripcion in cursos_inscritos:
-            promedio = promedios_map.get(inscripcion.curso.id)
-            inscripcion.promedio_calculado = round(promedio, 1) if promedio else None
-            inscripcion.asistencia_porcentaje = asistencia_map.get(inscripcion.curso.id, 0)
-
-        ctx.update({
-            'promedio_general': promedio_general,
-            'asistencia_porcentaje': asistencia_porcentaje,
-            'cursos_inscritos': cursos_inscritos,
-        })
-
-    # --- Lógica para Profesores ---
     if es_profesor:
-        # Cursos asignados
-        horarios = HorarioClases.objects.filter(profesor=user).select_related('curso', 'asignatura')
-        cursos_ids = horarios.values_list('curso_id', flat=True).distinct()
-        cursos_unicos = Curso.objects.filter(id__in=cursos_ids)
-        
-        # Total alumnos reales y promedios por curso
-        total_alumnos_real = 0
-        for curso in cursos_unicos:
-            cantidad = InscripcionCurso.objects.filter(curso=curso, estado='activo').count()
-            curso.cantidad_alumnos_real = cantidad
-            total_alumnos_real += cantidad
-            
-            # Promedio última nota
-            ultima_eval = Calificacion.objects.filter(curso=curso, profesor=user).order_by('-fecha_evaluacion').first()
-            if ultima_eval:
-                promedio_eval = Calificacion.objects.filter(
-                    curso=curso, 
-                    asignatura=ultima_eval.asignatura, 
-                    numero_evaluacion=ultima_eval.numero_evaluacion
-                ).aggregate(Avg('nota'))['nota__avg']
-                curso.promedio_ultima_nota = round(promedio_eval, 1) if promedio_eval else None
-                curso.nombre_ultima_eval = f"{ultima_eval.asignatura.nombre} - Nota {ultima_eval.numero_evaluacion}"
-            else:
-                curso.promedio_ultima_nota = None
-                curso.nombre_ultima_eval = "Sin evaluaciones"
-
-        # Consejos de profesores
-        consejos = Noticia.objects.filter(categoria='consejo', es_publica=True).order_by('-creado')[:5]
-        
-        ctx.update({
-            'cursos_unicos': cursos_unicos,
-            'total_alumnos_real': total_alumnos_real,
-            'consejos': consejos,
-        })
+        professor_stats = PanelService.get_professor_stats(user)
+        ctx.update(professor_stats)
     
     # Enlaces rápidos comunes (se mantienen igual que antes)
     quick_links = [
@@ -307,7 +236,7 @@ def panel(request):
     if es_estudiante:
         quick_links.extend([
              {"icon": "bi-calendar-date",  "title": "Mi horario",    "desc": "Horarios y asignaturas",
-             "url": reverse("academico:mi_horario"),                  "color": "info"},
+              "url": reverse("academico:mi_horario"),                  "color": "info"},
             {"icon": "bi-file-earmark-text", "title": "Certificados", "desc": "Descargar certificados",
              "url": reverse("documentos:documentos_list"),                  "color": "success"},
         ])

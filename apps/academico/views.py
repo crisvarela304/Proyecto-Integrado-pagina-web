@@ -82,11 +82,11 @@ def dashboard_estudiante(request, context):
         fecha__gte=inicio_mes
     )
     
-    # Calcular promedio general acumulado
-    promedio_data = Calificacion.objects.filter(estudiante=user).aggregate(
-        promedio=Avg('nota')
-    )
-    promedio_general = round(promedio_data['promedio'], 1) if promedio_data['promedio'] else None
+    # Calcular promedio general acumulado (Desde caché)
+    try:
+        promedio_general = user.perfil.promedio_general
+    except:
+        promedio_general = None
     
     # Horario de hoy - Optimizado
     dias_semana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
@@ -233,8 +233,10 @@ def mis_calificaciones(request):
     calificaciones = calificaciones.order_by('-fecha_evaluacion')
     
     # Calcular promedios
-    promedio_data = calificaciones.aggregate(promedio=Avg('nota'))
-    promedio_general = round(promedio_data['promedio'], 1) if promedio_data['promedio'] else None
+    try:
+        promedio_general = user.perfil.promedio_general
+    except:
+        promedio_general = None
     
     # Promedios por semestre
     promedios_semestre = {}
