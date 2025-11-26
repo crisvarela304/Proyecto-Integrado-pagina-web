@@ -9,8 +9,7 @@ from .models import (
     Conversacion, 
     Mensaje, 
     ConfiguracionMensajeria, 
-    RateLimit,
-
+    RateLimit
 )
 
 @admin.register(Conversacion)
