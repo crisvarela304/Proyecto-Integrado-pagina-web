@@ -84,9 +84,7 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold text-dark">{{ recurso.titulo }}</div>
-                                                <small class="text-muted">{% if recurso.archivo %}{{
-                                                    recurso.archivo.name|default:"Sin archivo" }}{% else %}Sin archivo{%
-                                                    endif %}</small>
+                                                <small class="text-muted">{{ recurso.titulo }}</small>
                                             </div>
                                         </div>
                                     </td>
