@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% load dict_extras %}
-{% block title %}{% if modo_calificaciones %}Calificar Estudiantes{% else %}Mis Estudiantes{% endif %}{% endblock %}
+
+{% block title %}
+{% if modo_calificaciones %}
+Calificar Estudiantes
+{% else %}
+Mis Estudiantes
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,38 +16,68 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body">
-                    <h4 class="mb-0">{% if modo_calificaciones %}Calificar Estudiantes{% else %}Estudiantes a Cargo{% endif %}</h4>
-                    <p class="text-muted mb-0">{% if modo_calificaciones %}Selecciona un estudiante para registrar sus notas.{% else %}Listado filtrable por curso y búsqueda.{% endif %}</p>
+                    <h4 class="mb-0">
+                        {% if modo_calificaciones %}
+                        Calificar Estudiantes
+                        {% else %}
+                        Estudiantes a Cargo
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">
+                        {% if modo_calificaciones %}
+                        Selecciona un estudiante para registrar sus notas.
+                        {% else %}
+                        Listado filtrable por curso y búsqueda.
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Filtros y Acciones -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form class="row g-3">
+            <form method="get" action="." id="filterForm" class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Curso</label>
-                    <select name="curso" class="form-select">
+                    <select name="curso" class="form-select" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for curso in cursos_profesor %}
-                            <option value="{{ curso.id }}" {% if curso_seleccionado == curso.id|stringformat:"s" %}selected{% endif %}>
-                                {{ curso }}
-                            </option>
+                        <option value="{{ curso.id }}" {% if curso.is_selected %}selected{% endif %}>
+                            {{ curso }} {% if curso.asignaturas_display %}({{ curso.asignaturas_display }}){% endif %}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Buscar</label>
-                    <input type="text" name="busqueda" class="form-control" placeholder="Nombre, apellido o RUT" value="{{ busqueda }}">
+                    <input type="text" name="busqueda" class="form-control" placeholder="Nombre, apellido o RUT"
+                        value="{{ busqueda }}">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-search"></i> Buscar
                     </button>
-                    <a href="{% if modo_calificaciones %}{% url 'academico:lista_calificaciones_profesor' %}{% else %}{% url 'academico:mis_estudiantes_profesor' %}{% endif %}" class="btn btn-outline-secondary">
+                    <a href="{% if modo_calificaciones %}{% url 'academico:lista_calificaciones_profesor' %}{% else %}{% url 'academico:mis_estudiantes_profesor' %}{% endif %}"
+                        class="btn btn-outline-secondary">
                         Limpiar
                     </a>
+
+                    <!-- BOTON ASISTENCIA -->
+                    {% if curso_seleccionado %}
+                    <a href="{% url 'academico:registro_asistencias' curso_seleccionado %}"
+                        class="btn btn-success ms-2">
+                        <i class="bi bi-calendar-check"></i> Asistencia
+                    </a>
+                    {% else %}
+                    <button type="button" class="btn btn-secondary ms-2"
+                        onclick="alert('⚠️ Por favor, selecciona un CURSO en el menú desplegable (izquierda) para habilitar la planilla.'); document.querySelector('select[name=curso]').focus();">
+                        <i class="bi bi-calendar-check"></i> Asistencia
+                    </button>
+                    {% endif %}
+                    <!-- FIN BOTON ASISTENCIA -->
+
                 </div>
             </form>
         </div>
@@ -48,6 +85,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
+            {% if curso_seleccionado or busqueda %}
             {% if page_obj %}
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -67,40 +105,28 @@
                         <tr>
                             {% with perfil=perfiles_estudiantes|get_item:inscripcion.estudiante.id %}
                             <td>{{ inscripcion.estudiante.get_full_name|default:inscripcion.estudiante.username }}</td>
-                            <td>
-                                {% if perfil %}
-                                    {{ perfil.rut }}
-                                {% else %}
-                                    Sin registro
-                                {% endif %}
-                            </td>
+                            <td>{{ perfil.rut|default:"Sin registro" }}</td>
                             <td>{{ inscripcion.curso }}</td>
-                            <td>
-                                {% if perfil and perfil.telefono_estudiante %}
-                                    {{ perfil.telefono_estudiante }}
-                                {% else %}
-                                    Sin registro
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if perfil and perfil.telefono_apoderado %}
-                                    {{ perfil.telefono_apoderado }}
-                                {% else %}
-                                    Sin registro
-                                {% endif %}
-                            </td>
+                            <td>{{ perfil.telefono_estudiante|default:"Sin registro" }}</td>
+                            <td>{{ perfil.telefono_apoderado|default:"Sin registro" }}</td>
                             <td>
                                 <span class="badge bg-success">{{ inscripcion.get_estado_display }}</span>
                             </td>
                             <td class="text-end">
                                 {% if modo_calificaciones %}
-                                <a href="{% url 'academico:gestionar_calificaciones' inscripcion.estudiante.id %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'academico:gestionar_calificaciones' inscripcion.estudiante.id %}"
+                                    class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil-square me-1"></i> Calificar
                                 </a>
                                 {% else %}
-                                <button class="btn btn-sm btn-outline-secondary" disabled>
-                                    <i class="bi bi-person-badge me-1"></i> Ver Perfil
-                                </button>
+                                <a href="{% url 'academico:detalle_estudiante' inscripcion.estudiante.id %}"
+                                    class="btn btn-sm btn-outline-info" title="Ver Perfil">
+                                    <i class="bi bi-person-badge"></i>
+                                </a>
+                                <a href="{% url 'academico:crear_anotacion' inscripcion.estudiante.id %}"
+                                    class="btn btn-sm btn-outline-warning" title="Crear Anotación">
+                                    <i class="bi bi-journal-plus"></i>
+                                </a>
                                 {% endif %}
                             </td>
                             {% endwith %}
@@ -116,18 +142,33 @@
                 </div>
                 <div>
                     {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&busqueda={{ busqueda }}&curso={{ curso_seleccionado }}" class="btn btn-outline-secondary btn-sm">Anterior</a>
+                    <a href="?page={{ page_obj.previous_page_number }}&busqueda={{ busqueda }}&curso={{ curso_seleccionado }}"
+                        class="btn btn-outline-secondary btn-sm">Anterior</a>
                     {% endif %}
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&busqueda={{ busqueda }}&curso={{ curso_seleccionado }}" class="btn btn-outline-secondary btn-sm">Siguiente</a>
+                    <a href="?page={{ page_obj.next_page_number }}&busqueda={{ busqueda }}&curso={{ curso_seleccionado }}"
+                        class="btn btn-outline-secondary btn-sm">Siguiente</a>
                     {% endif %}
                 </div>
             </div>
             {% else %}
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-people fs-1"></i>
-                    <p class="mb-0">No se encontraron estudiantes</p>
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-people fs-1"></i>
+                <p class="mb-0">No se encontraron estudiantes para los filtros seleccionados.</p>
+            </div>
+            {% endif %}
+            {% else %}
+            <!-- ESTADO INICIAL / VACIO -->
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-arrow-up-circle fs-1 text-primary opacity-50"></i>
                 </div>
+                <h4 class="text-muted">Comienza seleccionando un Curso</h4>
+                <p class="text-muted mb-0">
+                    Utiliza el filtro de <b>Curso</b> arriba 👆 para cargar la lista de estudiantes<br>
+                    o usa el buscador para encontrar a alguien específico.
+                </p>
+            </div>
             {% endif %}
         </div>
     </div>

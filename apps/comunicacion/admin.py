@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import Noticia, CategoriaNoticia
 
 @admin.register(CategoriaNoticia)
+
 class CategoriaNoticiaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'color_preview', 'activa', 'created_at')
     list_filter = ('activa',)
@@ -27,6 +28,7 @@ class NoticiaAdmin(admin.ModelAdmin):
     list_per_page = 25
     date_hierarchy = 'creado'
     ordering = ('-destacado', '-urgente', '-creado')
+    list_editable = ('es_publica', 'destacado', 'urgente')
     
     # Campos del formulario
     fieldsets = (

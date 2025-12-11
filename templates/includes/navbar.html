@@ -2,22 +2,23 @@
   <div class="container">
     <a class="navbar-brand" href="{% url 'home' %}">Liceo</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav"
+      aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div id="nav" class="collapse navbar-collapse">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Inicio</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'noticias' %}">Noticias</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'comunicacion:noticias' %}">Noticias</a></li>
         <li class="nav-item"><a class="nav-link" href="#">Reglamentos</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Admin</a></li>
 
         {% if request.user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:panel' %}">Panel</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:logout' %}">Salir</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:panel' %}">Panel</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:logout' %}">Salir</a></li>
         {% else %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:login' %}">Iniciar sesión</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:login' %}">Iniciar sesión</a></li>
         {% endif %}
       </ul>
     </div>

@@ -1,0 +1,132 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ingreso Masivo de Notas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="mb-1">Ingreso Masivo de Notas</h2>
+                            <p class="text-muted mb-0">Curso: <strong>{{ curso }}</strong></p>
+                        </div>
+                        <div>
+                            <a href="{% url 'academico:gestion_cursos' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver al Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Configuración de la Evaluación -->
+                        <div class="row g-3 mb-4 p-3 bg-light rounded">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Asignatura</label>
+                                <select name="asignatura" class="form-select" required>
+                                    <option value="">Seleccione Asignatura...</option>
+                                    {% for asignatura in asignaturas %}
+                                    <option value="{{ asignatura.id }}" {% if asignatura.id|slugify == request.POST.asignatura %}selected{% endif %}>
+                                        {{ asignatura.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Tipo de Evaluación</label>
+                                <select name="tipo_evaluacion" class="form-select" required>
+                                    <option value="nota">Nota</option>
+                                    <option value="examen">Examen</option>
+                                    <option value="tarea">Tarea</option>
+                                    <option value="proyecto">Proyecto</option>
+                                    <option value="participacion">Participación</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">N° Evaluación</label>
+                                <input type="number" name="numero_evaluacion" class="form-control" value="1" min="1"
+                                    required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Fecha</label>
+                                <input type="date" name="fecha_evaluacion" class="form-control"
+                                    value="{% now 'Y-m-d' %}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Descripción (Opcional)</label>
+                                <input type="text" name="descripcion" class="form-control"
+                                    placeholder="Ej: Prueba de Álgebra">
+                            </div>
+                        </div>
+
+                        <!-- Lista de Estudiantes -->
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th style="width: 40%">Estudiante</th>
+                                        <th style="width: 20%">RUT</th>
+                                        <th style="width: 15%">Nota (1.0 - 7.0)</th>
+                                        <th style="width: 20%">Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for estudiante in estudiantes %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ estudiante.get_full_name }}</div>
+                                            <small class="text-muted">{{ estudiante.email }}</small>
+                                        </td>
+                                        <td>{{ estudiante.username }}</td>
+                                        <td>
+                                            <input type="number" name="nota_{{ estudiante.id }}" class="form-control"
+                                                step="0.1" min="1.0" max="7.0" placeholder="-" style="width: 100px;">
+                                        </td>
+                                        <td>
+                                            <input type="text" name="obs_{{ estudiante.id }}"
+                                                class="form-control form-control-sm" placeholder="Opcional">
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="bi bi-people text-muted fs-1"></i>
+                                            <p class="text-muted mt-2">No hay estudiantes activos en este curso.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if estudiantes %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'academico:gestion_cursos' %}"
+                                class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="bi bi-save me-2"></i> Guardar Notas
+                            </button>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

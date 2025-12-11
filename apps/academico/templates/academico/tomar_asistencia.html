@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Tomar Asistencia</h1>
+            <p class="text-muted mb-0">{{ curso.nombre }} - {{ fecha_hoy|date:"l d/m/Y" }}</p>
+        </div>
+        <a href="{% url 'academico:dashboard_academico' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%">Estudiante</th>
+                                <th class="text-center">Presente</th>
+                                <th class="text-center">Ausente</th>
+                                <th class="text-center">Tardanza</th>
+                                <th class="text-center">Justificado</th>
+                                <th style="width: 20%">Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for estudiante in estudiantes %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ estudiante.last_name }}, {{ estudiante.first_name }}</div>
+                                    <small class="text-muted">{{ estudiante.username }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" name="estado_{{ estudiante.id }}" value="presente"
+                                        class="form-check-input" checked>
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" name="estado_{{ estudiante.id }}" value="ausente"
+                                        class="form-check-input">
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" name="estado_{{ estudiante.id }}" value="tardanza"
+                                        class="form-check-input">
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" name="estado_{{ estudiante.id }}" value="justificado"
+                                        class="form-check-input">
+                                </td>
+                                <td>
+                                    <input type="text" name="obs_{{ estudiante.id }}"
+                                        class="form-control form-control-sm" placeholder="Opcional">
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">No hay estudiantes activos en este curso.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save"></i> Guardar Asistencia
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

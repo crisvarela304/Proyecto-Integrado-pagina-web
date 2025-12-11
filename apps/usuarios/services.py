@@ -35,8 +35,8 @@ class PanelService:
 
         # Enriquecer objetos de inscripción
         for inscripcion in cursos_inscritos:
-            # Usar el promedio guardado en la inscripción
-            inscripcion.promedio_calculado = inscripcion.promedio
+            # Usar el promedio calculado por la propiedad del modelo
+            inscripcion.promedio_calculado = inscripcion.promedio_actual
             inscripcion.asistencia_porcentaje = asistencia_map.get(inscripcion.curso.id, 0)
             
         stats['cursos_inscritos'] = cursos_inscritos

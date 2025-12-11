@@ -9,6 +9,17 @@ def limpiar_rut(rut):
         return ""
     return rut.strip().replace('.', '').replace('-', '').upper()
 
+def formatear_rut(rut):
+    """
+    Formatea un RUT para que tenga el formato XXXXXXXX-X.
+    Elimina puntos y asegura que exista el guion.
+    """
+    rut_limpio = limpiar_rut(rut)
+    if len(rut_limpio) < 2:
+        return rut_limpio
+    
+    return f"{rut_limpio[:-1]}-{rut_limpio[-1]}"
+
 def validar_rut(rut):
     """
     Valida un RUT chileno.

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Perfil de Estudiante - {{ estudiante.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Perfil del Estudiante</h1>
+            <p class="text-muted">Información académica y personal</p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Tarjeta de Información Personal -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4 position-relative d-inline-block">
+                        {% if perfil_estudiante.foto_perfil %}
+                        <img src="{{ perfil_estudiante.foto_perfil.url }}"
+                            class="rounded-circle img-thumbnail shadow-sm"
+                            style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm"
+                            style="width: 150px; height: 150px;">
+                            <i class="bi bi-person display-1 text-secondary opacity-50"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ estudiante.get_full_name }}</h4>
+                    <p class="text-muted mb-3">{{ perfil_estudiante.rut }}</p>
+
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ estudiante.email }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-envelope me-2"></i>Enviar Correo
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4">
+                    <h6 class="fw-bold text-uppercase text-muted small mb-3">Datos de Contacto</h6>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box bg-white text-primary rounded-circle shadow-sm me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div class="text-start">
+                            <small class="d-block text-muted">Email</small>
+                            <span class="text-dark">{{ estudiante.email|default:"No registrado" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box bg-white text-success rounded-circle shadow-sm me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <div class="text-start">
+                            <small class="d-block text-muted">Teléfono</small>
+                            <span class="text-dark">{{ perfil_estudiante.telefono|default:"No registrado" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-white text-info rounded-circle shadow-sm me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <div class="text-start">
+                            <small class="d-block text-muted">Dirección</small>
+                            <span class="text-dark">{{ perfil_estudiante.direccion|default:"No registrada" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Académica -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-journal-check me-2"></i>Resumen Académico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if resumen_academico %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Curso</th>
+                                    <th class="text-center">Promedio</th>
+                                    <th class="text-center">Asistencia</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in resumen_academico %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold">{{ item.curso.nombre }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ item.curso.get_nivel_display }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.promedio %}
+                                        <span
+                                            class="badge {% if item.promedio < 4.0 %}bg-danger{% else %}bg-success{% endif %} rounded-pill px-3">
+                                            {{ item.promedio }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
+                                                <div class="progress-bar {% if item.asistencia < 85 %}bg-danger{% else %}bg-success{% endif %}"
+                                                    role="progressbar" style="width: {{ item.asistencia }}%"></div>
+                                            </div>
+                                            <small>{{ item.asistencia }}%</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge bg-primary-subtle text-primary border border-primary-subtle">Activo</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No hay información académica disponible.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 bg-primary bg-opacity-10">
+                        <div class="card-body d-flex align-items-center p-4">
+                            <div class="me-3 bg-white p-3 rounded-circle text-primary shadow-sm">
+                                <i class="bi bi-chat-dots fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Enviar Mensaje</h6>
+                                <p class="small text-muted mb-0">Contactar vía mensajería interna</p>
+                                <a href="{% url 'mensajeria:profesor_redactar' %}?destinatario={{ estudiante.id }}"
+                                    class="stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 bg-success bg-opacity-10">
+                        <div class="card-body d-flex align-items-center p-4">
+                            <div class="me-3 bg-white p-3 rounded-circle text-success shadow-sm">
+                                <i class="bi bi-file-earmark-text fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Hoja de Vida</h6>
+                                <p class="small text-muted mb-0">Ver anotaciones y observaciones</p>
+                                <a href="{% url 'academico:historial_anotaciones' estudiante.id %}"
+                                    class="stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

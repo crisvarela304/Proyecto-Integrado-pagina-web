@@ -14,27 +14,7 @@
                 </a>
                 {% endif %}
             </div>
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <form method="get" class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Buscar documentos</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="q" value="{{ query }}"
-                                    placeholder="Buscar por título, descripción o tags...">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-funnel"></i> Filtrar
-                                </button>
-                            </div>
-                    </form>
-                </div>
-            </div>
+            <!-- Filtros eliminados por solicitud del usuario -->
         </div>
     </div>
 
@@ -167,8 +147,7 @@
                                 <i class="bi bi-download"></i> {{ documento.descargar_count }}
                             </div>
                             <div class="col-6 text-end">
-                                <i class="bi bi-person"></i> {{
-                                documento.creado_por.first_name|default:documento.creado_por.username }}
+                                <i class="bi bi-person"></i> {{ documento.creado_por.get_full_name|default:documento.creado_por.username }}
                             </div>
                         </div>
                     </div>

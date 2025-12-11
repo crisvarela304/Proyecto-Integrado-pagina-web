@@ -1,0 +1,8 @@
+Total de usuarios encontrados: 4
+
+NOMBRE COMPLETO                          | USUARIO         | RUT             | TIPO
+------------------------------------------------------------------------------------------
+José González Sepúlveda                  | estudiante1     | 33.333.333-3    | Estudiante
+Jose Quiroz                              | 21.620.517-0    | 21.620.517-0    | Estudiante
+Cristobal Varela                         | 21.847.699-6    | 21.847.699-6    | Profesor
+Felipe arroba                            | 15.614.578-5    | 15.614.578-5    | Estudiante

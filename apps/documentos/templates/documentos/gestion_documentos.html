@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión Documental{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'includes/admin_sidebar.html' %}
+
+        <!-- Contenido -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-file-earmark-text me-2"></i>Gestión Documental</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
+                        <i class="bi bi-cloud-upload"></i> Subir Documento
+                    </button>
+                    <a href="{% url 'documentos:gestion_categorias_doc' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-tags"></i> Categorías
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tabla de Documentos -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Documento</th>
+                                    <th>Categoría</th>
+                                    <th>Subido por</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documentos %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3 fs-4 text-secondary">
+                                                {% if doc.tipo == 'pdf' %}<i class="bi bi-file-pdf text-danger"></i>
+                                                {% elif doc.tipo == 'doc' %}<i class="bi bi-file-word text-primary"></i>
+                                                {% elif doc.tipo == 'xls' %}<i
+                                                    class="bi bi-file-earmark-excel text-success"></i>
+                                                {% elif doc.tipo == 'ppt' %}<i
+                                                    class="bi bi-file-earmark-slides text-warning"></i>
+                                                {% elif doc.tipo == 'img' %}<i class="bi bi-file-image text-info"></i>
+                                                {% elif doc.tipo == 'zip' %}<i
+                                                    class="bi bi-file-zip text-secondary"></i>
+                                                {% else %}<i class="bi bi-file-earmark"></i>{% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ doc.titulo }}</div>
+                                                <small class="text-muted">{{ doc.tamaño_formateado }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ doc.categoria.nombre }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ doc.creado_por.get_full_name }}</small>
+                                    </td>
+                                    <td><small class="text-muted">{{ doc.fecha_creacion|date:"d/m/Y" }}</small></td>
+                                    <td class="text-end">
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Subir Documento -->
+            <div class="modal fade" id="modalSubirDoc" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Subir Nuevo Documento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Título</label>
+                                    <input type="text" name="titulo" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Categoría</label>
+                                    <select name="categoria" class="form-select" required>
+                                        <option value="">Seleccione una categoría</option>
+                                        {% for cat in categorias %}
+                                        <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Archivo</label>
+                                    <input type="file" name="archivo" class="form-control" required>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary">Subir</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Informe de Notas</title>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Informe de Notas</h1>
+        <p><strong>Estudiante:</strong> {{ estudiante.get_full_name }}</p>
+        <p><strong>RUT:</strong> {{ estudiante.perfil.rut }}</p>
+        <p><strong>Fecha:</strong> {% now "d/m/Y" %}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Curso</th>
+                <th>Promedio</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inscripcion in cursos %}
+            <tr>
+                <td>{{ inscripcion.curso.nombre }}</td>
+                <td>
+                    {% if inscripcion.promedio_calculado %}
+                    {{ inscripcion.promedio_calculado }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Liceo Juan Bautista de Hualqui</p>
+        <p>Este documento es un informe parcial y no constituye un certificado oficial.</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+﻿{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Editar Curso - {{ curso.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Editar Curso</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del Curso (Auto-generado)</label>
+                            <input type="text" class="form-control" value="{{ curso.nombre }}" disabled readonly>
+                            <div class="form-text">El nombre se genera automáticamente con el Nivel y Letra.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nivel</label>
+                                <select name="nivel" class="form-select" required>
+                                    {% for i in "123456789"|make_list %}
+                                    <option value="{{ i }}" {% if curso.nivel|slugify == i %}selected{% endif %}>{{ i }}°
+                                        Básico/Medio</option>
+                                    {% endfor %}
+                                    <!-- Soporte hasta 12 (4 medio) -->
+                                    <option value="10" {% if curso.nivel == 10 %}selected{% endif %}>10° (2 Medio)
+                                    </option>
+                                    <option value="11" {% if curso.nivel == 11 %}selected{% endif %}>11° (3 Medio)
+                                    </option>
+                                    <option value="12" {% if curso.nivel == 12 %}selected{% endif %}>12° (4 Medio)
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Letra</label>
+                                <input type="text" name="letra" class="form-control text-uppercase"
+                                    value="{{ curso.letra }}" maxlength="1" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Año Académico</label>
+                            <input type="number" name="anio" class="form-control" value="{{ curso.año }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Profesor Jefe</label>
+                            <select name="profesor_jefe" class="form-select">
+                                <option value="">-- Sin asignar --</option>
+                                {% for profe in profesores %}
+                                <option value="{{ profe.id }}" {% if curso.profesor_jefe_id == profe.id %}selected{% endif %}>
+                                    {{ profe.get_full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'academico:gestion_cursos' %}"
+                                class="btn btn-outline-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

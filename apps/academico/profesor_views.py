@@ -2,88 +2,28 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Avg
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.core.files.storage import default_storage
 import datetime
+import os
 
 from usuarios.models import PerfilUsuario
 from academico.models import (
     Asignatura, Curso, InscripcionCurso, Calificacion, 
-    Asistencia, HorarioClases
+    Asistencia, HorarioClases, RecursoAcademico
 )
 from .forms import SeleccionCursoAsignaturaForm, CalificacionForm
 from documentos.models import ComunicadoPadres
 
 @login_required
 def panel_profesor(request):
-    """Panel principal del profesor"""
-    user = request.user
-    perfil = getattr(user, 'perfil', None)
-    
-    # Verificar que sea profesor
-    if not perfil or perfil.tipo_usuario != 'profesor':
-        messages.error(request, 'No tienes permisos para acceder a esta sección.')
-        return redirect('usuarios:panel')
-    
-    # Obtener cursos del profesor (como jefe o docente)
-    cursos_profesor = Curso.objects.filter(
-        Q(profesor_jefe=user) | Q(horario__profesor=user)
-    ).distinct()
-    
-    # Obtener asignaturas que enseña
-    asignaturas_ids = HorarioClases.objects.filter(
-        profesor=user
-    ).values_list('asignatura_id', flat=True)
-    asignaturas_profesor = Asignatura.objects.filter(
-        id__in=asignaturas_ids
-    ).distinct()
-    
-    # Estadísticas
-    total_cursos = cursos_profesor.count()
-    total_asignaturas = asignaturas_profesor.count()
-    
-    # Estudiantes en sus cursos
-    estudiantes_curso = InscripcionCurso.objects.filter(
-        curso__in=cursos_profesor
-    ).values('estudiante').distinct().count()
-    
-    # Últimas calificaciones registradas
-    ultimas_calificaciones = Calificacion.objects.filter(
-        profesor=user
-    ).order_by('-fecha_evaluacion')[:5]
-    
-    # Próximas clases (próximos 5 horarios)
-    dias_map = {
-        0: 'lunes',
-        1: 'martes',
-        2: 'miercoles',
-        3: 'jueves',
-        4: 'viernes',
-        5: 'sabado',
-        6: 'domingo'
-    }
-    dia_actual = dias_map.get(datetime.datetime.now().weekday(), 'lunes')
-    
-    proximas_clases = HorarioClases.objects.filter(
-        profesor=user,
-        dia=dia_actual
-    ).order_by('hora')[:5]
-    
-    context = {
-        'cursos_profesor': cursos_profesor,
-        'asignaturas_profesor': asignaturas_profesor,
-        'total_cursos': total_cursos,
-        'total_asignaturas': total_asignaturas,
-        'total_estudiantes': estudiantes_curso,
-        'ultimas_calificaciones': ultimas_calificaciones,
-        'proximas_clases': proximas_clases,
-    }
-    
-    return render(request, 'academico/profesor_panel.html', context)
+    """Redirecciona al panel principal consolidado"""
+    return redirect('usuarios:panel')
 
 @login_required
 def mis_estudiantes_profesor(request):
@@ -124,9 +64,39 @@ def mis_estudiantes_profesor(request):
     estudiantes_ids = [inscripcion.estudiante_id for inscripcion in page_obj.object_list]
     perfiles_estudiantes = PerfilUsuario.objects.filter(user_id__in=estudiantes_ids).in_bulk(field_name='user_id')
     
+    # Logic for curso is_selected and Subject Annotation
+    cursos_list = []
+    target_curso_id = int(curso_seleccionado) if curso_seleccionado.isdigit() else None
+    
+    # Importar HorarioClases localmente para evitar dependencias circulares si es necesario, O asegúrate que está importado arriba.
+    # Check imports later. For now assume it is available or use apps.get_model if unsure, but better to check imports.
+    # Actually, let's just assume simple access first.
+    from .models import HorarioClases 
+
+    for c in cursos_profesor:
+        c.is_selected = (c.id == target_curso_id)
+        
+        # Obtener asignaturas que el profesor dicta en este curso
+        asignaturas = HorarioClases.objects.filter(
+            curso=c, 
+            profesor=user
+        ).values_list('asignatura__nombre', flat=True).distinct()
+        
+        subjects_str = ", ".join(asignaturas)
+        
+        # Agregar etiqueta si es Profesor Jefe
+        if c.profesor_jefe == user:
+            if subjects_str:
+                subjects_str += ", Jefatura"
+            else:
+                subjects_str = "Jefatura"
+                
+        c.asignaturas_display = subjects_str
+        cursos_list.append(c)
+
     context = {
         'page_obj': page_obj,
-        'cursos_profesor': cursos_profesor,
+        'cursos_profesor': cursos_list,
         'curso_seleccionado': curso_seleccionado,
         'busqueda': busqueda,
         'perfiles_estudiantes': perfiles_estudiantes,
@@ -173,9 +143,18 @@ def lista_calificaciones_profesor(request):
     estudiantes_ids = [inscripcion.estudiante_id for inscripcion in page_obj.object_list]
     perfiles_estudiantes = PerfilUsuario.objects.filter(user_id__in=estudiantes_ids).in_bulk(field_name='user_id')
     
+    # Logic for curso is_selected (reuse var name for template compatibility or new one)
+    # The view shares the template, so we must use the same structure
+    cursos_list = []
+    target_curso_id = int(curso_seleccionado) if curso_seleccionado.isdigit() else None
+    
+    for c in cursos_profesor:
+        c.is_selected = (c.id == target_curso_id)
+        cursos_list.append(c)
+    
     context = {
         'page_obj': page_obj,
-        'cursos_profesor': cursos_profesor,
+        'cursos_profesor': cursos_list,
         'curso_seleccionado': curso_seleccionado,
         'busqueda': busqueda,
         'perfiles_estudiantes': perfiles_estudiantes,
@@ -189,7 +168,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Configuración de evaluaciones
-NUMERO_EVALUACIONES = 4
+NUMERO_EVALUACIONES = 10  # Aumentado de 4 a 10
 
 @login_required
 def gestionar_calificaciones(request, estudiante_id):
@@ -255,6 +234,20 @@ def gestionar_calificaciones(request, estudiante_id):
                             except ValueError:
                                 messages.warning(request, f'Nota inválida para {asignatura.nombre} - Evaluación {i}')
             
+            # --- LOGGING ---
+            try:
+                from administrativo.services import LiceoOSService
+                LiceoOSService.registrar_evento(
+                    usuario=request.user,
+                    tipo_accion='nota',
+                    descripcion=f"Actualizó calificaciones de {estudiante}",
+                    detalles=f"Curso: {inscripcion.curso}, Asignaturas: {[a.nombre for a in asignaturas_profesor]}",
+                    request=request
+                )
+            except Exception:
+                pass
+            # ----------------
+
             messages.success(request, 'Calificaciones actualizadas exitosamente.')
             return redirect('academico:gestionar_calificaciones', estudiante_id=estudiante_id)
             
@@ -342,6 +335,19 @@ def enviar_correos(request):
             
             # Mensaje de resultado
             if correos_enviados > 0:
+                # --- LOGGING ---
+                try:
+                    from administrativo.services import LiceoOSService
+                    LiceoOSService.registrar_evento(
+                        usuario=request.user,
+                        tipo_accion='otro',
+                        descripcion=f"Envió {correos_enviados} correos a estudiantes",
+                        detalles=f"Asunto: {asunto}",
+                        request=request
+                    )
+                except Exception:
+                    pass
+                # ----------------
                 messages.success(request, f'Correos enviados exitosamente: {correos_enviados}')
             if correos_fallidos > 0:
                 messages.warning(request, f'Correos fallidos: {correos_fallidos}')
@@ -382,8 +388,14 @@ def registro_asistencias(request, curso_id):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('usuarios:panel')
     
-    # Obtener curso
-    curso = get_object_or_404(Curso, id=curso_id, profesor_jefe=user)
+    # Obtener curso (Profesor Jefe O Profesor de Asignatura)
+    curso = Curso.objects.filter(
+        Q(pk=curso_id) & (Q(profesor_jefe=user) | Q(horario__profesor=user))
+    ).distinct().first()
+    
+    if not curso:
+        messages.error(request, 'No tienes permisos para pasar asistencia en este curso.')
+        return redirect('usuarios:panel')
     
     if request.method == 'POST':
         try:
@@ -522,3 +534,93 @@ def estadisticas_profesor(request):
     }
     
     return render(request, 'academico/profesor_estadisticas.html', context)
+
+# --- RECURSOS ACADÉMICOS ---
+
+@login_required
+def gestionar_recursos(request):
+    """Lista y gestiona recursos académicos"""
+    user = request.user
+    perfil = getattr(user, 'perfil', None)
+    
+    if not perfil or perfil.tipo_usuario != 'profesor':
+        messages.error(request, 'No tienes permisos.')
+        return redirect('usuarios:panel')
+
+    # Cursos del profesor
+    cursos_profesor = Curso.objects.filter(
+        Q(profesor_jefe=user) | Q(horario__profesor=user)
+    ).distinct()
+    
+    recursos = RecursoAcademico.objects.filter(profesor=user).select_related('curso', 'asignatura')
+    
+    context = {
+        'cursos': cursos_profesor,
+        'recursos': recursos
+    }
+    return render(request, 'academico/recursos/gestionar_recursos.html', context)
+
+@login_required
+def subir_recurso(request):
+    """Procesa la subida de recursos"""
+    if request.method == 'POST':
+        try:
+            titulo = request.POST.get('titulo')
+            curso_id = request.POST.get('curso')
+            archivo = request.FILES.get('archivo')
+            
+            # Crear recurso
+            RecursoAcademico.objects.create(
+                titulo=titulo,
+                curso_id=curso_id,
+                archivo=archivo,
+                profesor=request.user
+            )
+            # --- LOGGING ---
+            try:
+                from administrativo.services import LiceoOSService
+                LiceoOSService.registrar_evento(
+                    usuario=request.user,
+                    tipo_accion='recurso',
+                    descripcion=f"Subió material: {titulo}",
+                    detalles=f"Curso ID: {curso_id}",
+                    request=request
+                )
+            except Exception:
+                pass
+            # ----------------
+            messages.success(request, 'Recurso subido exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Error al subir: {str(e)}')
+            
+    return redirect('academico:gestionar_recursos')
+
+@login_required
+def eliminar_recurso(request, pk):
+    """Elimina un recurso propio"""
+    recurso = get_object_or_404(RecursoAcademico, pk=pk, profesor=request.user)
+    recurso.delete()
+    messages.success(request, 'Recurso eliminado.')
+    return redirect('academico:gestionar_recursos')
+
+@login_required
+def descargar_recurso(request, pk):
+    """Descarga segura de recursos"""
+    recurso = get_object_or_404(RecursoAcademico, pk=pk)
+    
+    # Validar permisos: es el profe dueño O el estudiante del curso
+    user = request.user
+    es_profe_dueno = (recurso.profesor == user)
+    es_estudiante_curso = InscripcionCurso.objects.filter(estudiante=user, curso=recurso.curso).exists()
+    
+    if not (es_profe_dueno or es_estudiante_curso or user.is_staff):
+         messages.error(request, 'No tienes permiso para descargar este recurso.')
+         return redirect('usuarios:panel')
+
+    try:
+        return FileResponse(open(recurso.archivo.path, 'rb'), as_attachment=True)
+    except FileNotFoundError:
+         messages.error(request, 'El archivo no se encuentra en el servidor.')
+         return redirect('usuarios:panel')
+
+

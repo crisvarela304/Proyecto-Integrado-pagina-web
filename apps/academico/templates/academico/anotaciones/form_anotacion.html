@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Registrar Anotación{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-primary text-white border-0 py-3 rounded-top-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-person me-2"></i>Nueva Anotación</h5>
+                    <small class="opacity-75">Estudiante: {{ estudiante.get_full_name }}</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary rounded-pill fw-bold">
+                                <i class="bi bi-save me-2"></i>Guardar Anotación
+                            </button>
+                            <a href="javascript:history.back()"
+                                class="btn btn-outline-secondary rounded-pill">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

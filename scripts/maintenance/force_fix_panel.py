@@ -1,0 +1,383 @@
+import os
+
+file_path = r'C:/Users/crist/Proyecto integrado corregido/Proyecto Integrado pagina web/apps/usuarios/templates/usuarios/panel_profesor.html'
+
+content = """{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Panel Docente - LiceoOS{% endblock %}
+
+{% block content %}
+<div class="container-fluid bg-light min-vh-100 py-4">
+    <div class="container">
+
+        <!-- Header Premium -->
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill fw-bold">
+                    <i class="bi bi-person-badge-fill me-2"></i>Portal Docente
+                </span>
+                <h1 class="display-5 fw-bold text-dark mb-1">Bienvenido, {{ user.first_name }}</h1>
+                <p class="text-muted lead">Resumen de actividad académica y gestión.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="card border-0 shadow-sm bg-white rounded-4 p-2">
+                    <div class="d-flex align-items-center justify-content-end p-2">
+                        <div class="text-end me-3">
+                            <small class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Fecha Actual</small>
+                            <span class="fw-bold text-dark">{% now "l d F, Y" %}</span>
+                        </div>
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm"
+                            style="width: 50px; height: 50px;">
+                            <i class="bi bi-calendar-check fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards (Tuneado) -->
+        <div class="row g-4 mb-5">
+            <!-- Card 1: Cursos -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 hover-lift bg-white">
+                    <div class="card-body p-4 position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                            <i class="bi bi-collection-fill display-1 text-primary"></i>
+                        </div>
+                        <h6 class="text-uppercase text-muted fw-bold mb-2 small">Cursos Asignados</h6>
+                        <h2 class="display-4 fw-bold text-dark mb-0 ml-1">{{ cursos_unicos.count|default:"0" }}</h2>
+                        <div class="mt-3">
+                            <a href="{% url 'academico:panel_profesor' %}"
+                                class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-primary stretched-link">
+                                Ver Mis Cursos <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 70%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Alumnos -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 hover-lift bg-white">
+                    <div class="card-body p-4 position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                            <i class="bi bi-people-fill display-1 text-success"></i>
+                        </div>
+                        <h6 class="text-uppercase text-muted fw-bold mb-2 small">Total Estudiantes</h6>
+                        <h2 class="display-4 fw-bold text-dark mb-0">{{ total_alumnos_real|default:"0" }}</h2>
+                        <div class="mt-3">
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill">
+                                <i class="bi bi-graph-up me-1"></i> Activos
+                            </span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Pendientes (Simulado para Tuning) -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 hover-lift bg-white">
+                    <div class="card-body p-4 position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                            <i class="bi bi-bell-fill display-1 text-warning"></i>
+                        </div>
+                        <h6 class="text-uppercase text-muted fw-bold mb-2 small">Mensajes Nuevos</h6>
+                        <h2 class="display-4 fw-bold text-dark mb-0">3</h2>
+                        <div class="mt-3">
+                            <a href="{% url 'mensajeria:bandeja_entrada' %}"
+                                class="btn btn-sm btn-light rounded-pill px-3 fw-bold text-warning stretched-link">
+                                Ir a Mensajería <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Columna Izquierda: Acciones (Grande) -->
+            <div class="col-lg-8">
+                <!-- Panel de Gestión -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                    <div class="card-header bg-white border-0 py-4 px-4">
+                        <h5 class="fw-bold m-0"><i class="bi bi-grid-fill me-2 text-primary"></i>Centro de Comandos</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <!-- Botón Grande 1 -->
+                            <div class="col-md-6">
+                                <a href="{% url 'academico:panel_profesor' %}"
+                                    class="card card-link h-100 border-0 bg-light-primary hover-scale text-decoration-none">
+                                    <div class="card-body p-4 d-flex align-items-center">
+                                        <div class="rounded-4 bg-primary text-white p-3 me-3 icon-box shadow-sm">
+                                            <i class="bi bi-journal-check fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">Notas y Asistencia</h5>
+                                            <p class="text-muted small mb-0">Gestionar libro de clases digital.</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Botón Grande 2 -->
+                            <div class="col-md-6">
+                                <a href="{% url 'comunicacion:noticias' %}"
+                                    class="card card-link h-100 border-0 bg-light-info hover-scale text-decoration-none">
+                                    <div class="card-body p-4 d-flex align-items-center">
+                                        <div class="rounded-4 bg-info text-white p-3 me-3 icon-box shadow-sm">
+                                            <i class="bi bi-newspaper fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">Noticias y Avisos</h5>
+                                            <p class="text-muted small mb-0">Publicar información para estudiantes.</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Botón Grande 3 -->
+                            <div class="col-md-6">
+                                <a href="{% url 'academico:estadisticas_profesor' %}"
+                                    class="card card-link h-100 border-0 bg-light-success hover-scale text-decoration-none">
+                                    <div class="card-body p-4 d-flex align-items-center">
+                                        <div class="rounded-4 bg-success text-white p-3 me-3 icon-box shadow-sm">
+                                            <i class="bi bi-file-earmark-bar-graph fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">Reportes y Estadísticas</h5>
+                                            <p class="text-muted small mb-0">Rendimiento por curso.</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Botón Grande 4 (Perfil) -->
+                            <div class="col-md-6">
+                                <a href="{% url 'usuarios:mi_perfil' %}"
+                                    class="card card-link h-100 border-0 bg-light-secondary hover-scale text-decoration-none">
+                                    <div class="card-body p-4 d-flex align-items-center">
+                                        <div class="rounded-4 bg-secondary text-white p-3 me-3 icon-box shadow-sm">
+                                            <i class="bi bi-gear-fill fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">Mi Configuración</h5>
+                                            <p class="text-muted small mb-0">Datos personales y contraseña.</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla Ultimos Cursos -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold m-0">Estado de Cursos</h5>
+                        <a href="{% url 'academico:panel_profesor' %}" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Curso</th>
+                                        <th class="text-center">Matrícula</th>
+                                        <th>Última Actividad</th>
+                                        <th class="text-center">Promedio</th>
+                                        <th class="text-end pe-4">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for curso in cursos_unicos|slice:":5" %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary me-2 d-flex align-items-center justify-content-center fw-bold"
+                                                    style="width:35px;height:35px">
+                                                    {{ curso.nombre|slice:":1" }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ curso.nombre }}</div>
+                                                    <small class="text-muted">Jefe: {{ curso.profesor_jefe.last_name|default:"--" }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border">{{ curso.cantidad_alumnos_real }} est.</span>
+                                        </td>
+                                        <td>
+                                            {% if curso.nombre_ultima_eval %}
+                                            <small class="text-primary fw-bold"><i class="bi bi-pencil-square me-1"></i>{{ curso.nombre_ultima_eval|truncatechars:15 }}</small>
+                                            {% else %}
+                                            <small class="text-muted">Sin evaluaciones</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if curso.promedio_ultima_nota %}
+                                            <span class="fw-bold {% if curso.promedio_ultima_nota < 4.0 %}text-danger{% else %}text-success{% endif %}">
+                                                {{ curso.promedio_ultima_nota }}
+                                            </span>
+                                            {% else %}
+                                            <span class="text-muted">--</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a href="{% url 'academico:registrar_notas_curso' curso.id %}"
+                                                class="btn btn-sm btn-light text-primary hover-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No hay cursos asignados.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Información Lateral -->
+            <div class="col-lg-4">
+
+                <!-- Perfil Card Mini -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 text-center overflow-hidden">
+                    <div class="card-body p-4 bg-primary bg-gradient text-white position-relative">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10"
+                            style="background-image: radial-gradient(circle, #ffffff 10%, transparent 10%); background-size: 10px 10px;">
+                        </div>
+                        <div class="position-relative z-1">
+                            <div class="mb-3">
+                                <div class="mx-auto rounded-circle bg-white p-1 d-inline-block">
+                                    <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|urlencode }}&background=0D6EFD&color=fff&size=128"
+                                        class="rounded-circle" width="80" height="80" alt="Avatar">
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-0 text-white">{{ user.get_full_name }}</h5>
+                            <p class="mb-0 opacity-75 small">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white p-3 border-0">
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <h6 class="fw-bold mb-0 text-dark">{{ cursos_unicos.count }}</h6>
+                                <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Cursos</small>
+                            </div>
+                            <div class="col-6">
+                                <h6 class="fw-bold mb-0 text-dark">{{ total_alumnos_real }}</h6>
+                                <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Estudiantes</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consejos Técnicos -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center">
+                        <div class="bg-danger text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center"
+                            style="width:32px;height:32px">
+                            <i class="bi bi- megaphone-fill" style="font-size: 0.8rem;"></i>
+                        </div>
+                        <h6 class="fw-bold m-0">Consejo de Profesores</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for consejo in consejos|slice:":3" %}
+                            <div class="list-group-item border-0 px-4 py-3">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <small class="fw-bold text-muted">{{ consejo.creado|date:"d M" }}</small>
+                                    {% if consejo.urgente %}
+                                    <small class="text-danger fw-bold">URGENTE</small>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1 text-dark fw-bold small">{{ consejo.titulo }}</p>
+                                <small class="text-muted line-clamp-2" style="font-size: 0.8rem;">{{ consejo.cuerpo|truncatechars:60 }}</small>
+                            </div>
+                            {% empty %}
+                            <div class="p-4 text-center">
+                                <small class="text-muted">No hay anuncios recientes.</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .hover-lift {
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+            }
+
+            .hover-lift:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .hover-scale {
+                transition: transform 0.2s ease;
+            }
+
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+
+            .bg-light-primary {
+                background-color: #f0f7ff;
+            }
+
+            .bg-light-info {
+                background-color: #f0fcff;
+            }
+
+            .bg-light-success {
+                background-color: #f0fff4;
+            }
+
+            .bg-light-secondary {
+                background-color: #f8f9fa;
+            }
+
+            .icon-box {
+                width: 60px;
+                height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .card-link {
+                color: inherit;
+            }
+        </style>
+
+        {% endblock %}
+"""
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"Successfully rewrote {file_path}")
+print("Checking specific line...")
+with open(file_path, 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+    for i, line in enumerate(lines):
+        if 'Jefe: {{' in line:
+            print(f"Line {i+1}: {line.strip()}")

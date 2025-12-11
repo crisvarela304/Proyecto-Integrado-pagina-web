@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block title %}Mis Calificaciones{% endblock %}
 
@@ -18,7 +18,7 @@
                             <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-primary rounded-pill px-4">
                                 <i class="bi bi-arrow-left me-2"></i>Volver al Panel
                             </a>
-                            <form method="get" class="d-flex align-items-center">
+                            <form method="get" action="." id="filterForm" class="d-flex align-items-center">
                                 <select name="semestre" class="form-select w-auto" onchange="this.form.submit()">
                                     <option value="">Todos los semestres</option>
                                     <option value="1" {% if request.GET.semestre == '1' %}selected{% endif %}>1° Semestre
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-white bg-info h-100">
+            <div class="card text-white bg-info h-100 {% if request.GET.semestre == '2' %}opacity-50{% endif %}">
                 <div class="card-body text-center d-flex flex-column justify-content-center">
                     <i class="bi bi-1-circle fs-1 mb-2"></i>
                     <h4 class="mb-0">{{ promedios.1|default:"--" }}</h4>
@@ -55,7 +55,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-white bg-warning h-100">
+            <div class="card text-white bg-warning h-100 {% if request.GET.semestre == '1' %}opacity-50{% endif %}">
                 <div class="card-body text-center d-flex flex-column justify-content-center">
                     <i class="bi bi-2-circle fs-1 mb-2"></i>
                     <h4 class="mb-0">{{ promedios.2|default:"--" }}</h4>
@@ -98,8 +98,7 @@
                                     </td>
                                     <td>{{ calificacion.curso }}</td>
                                     <td>
-                                        <span class="badge bg-light text-dark border">{{
-                                            calificacion.get_tipo_evaluacion_display }}</span>
+                                        <span class="badge bg-light text-dark border">{{ calificacion.get_tipo_evaluacion_display }}</span>
                                     </td>
                                     <td>
                                         <span

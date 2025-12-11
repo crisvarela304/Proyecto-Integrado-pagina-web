@@ -30,15 +30,45 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
-# Leemos la variable del archivo .env.
-# Si no existe (porque se te olvidó), usa localhost por defecto para que no falle en tu PC.
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
-
 if DEBUG: ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost:8000,http://127.0.0.1:8000').split(',')
 
-if DEBUG: CSRF_TRUSTED_ORIGINS.extend([ 'http://localhost:8000', 'http://127.0.0.1:8000', 'https://localhost:8000', 'https://127.0.0.1:8000', ])
+if DEBUG: 
+    # Add specific local origins
+    CSRF_TRUSTED_ORIGINS.extend([ 
+        'http://localhost:8000', 'http://127.0.0.1:8000', 
+        'https://localhost:8000', 'https://127.0.0.1:8000',
+    ])
+    
+    # Try to automatically detect local IP
+    try:
+        import socket
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        CSRF_TRUSTED_ORIGINS.extend([
+            f'http://{local_ip}:8000',
+            f'https://{local_ip}:8000',
+        ])
+    except ImportError:
+        # socket module is standard, but safety first
+        pass
+
+    # Dynamically trust all ALLOWED_HOSTS (if explicit IPs are defined)
+    for host in ALLOWED_HOSTS:
+        if '*' in host: continue
+        host_clean = host.strip()
+        if not host_clean: continue
+            
+        origins_to_add = [
+            f'http://{host_clean}',
+            f'https://{host_clean}',
+            f'http://{host_clean}:8000',
+            f'https://{host_clean}:8000',
+        ]
+        for origin in origins_to_add:
+            if origin not in CSRF_TRUSTED_ORIGINS:
+                CSRF_TRUSTED_ORIGINS.append(origin)
 # Application definition
 
 INSTALLED_APPS = [
@@ -59,11 +89,15 @@ INSTALLED_APPS = [
     'documentos',
     'talleres',
     'mensajeria',
+    'django_htmx',
+    'administrativo',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,6 +174,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files
 MEDIA_URL = "/media/"
@@ -169,12 +204,65 @@ LOGIN_REDIRECT_URL = "/usuarios/panel/"
 LOGOUT_REDIRECT_URL = "/usuarios/login/"
 
 # Security Settings (Development)
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
-SECURE_HSTS_SECONDS = 0
-X_FRAME_OPTIONS = "DENY"
+# Security Settings
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = "DENY"
+
+if not DEBUG:
+    # Production Security Hardening
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    
+    # Content Security Policy (Basic)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+    
+    # CSP settings suitable for Bootstrap/Google Fonts
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com")
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com")
+    CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com")
+    CSP_IMG_SRC = ("'self'", "data:")
+else:
+    # Development Settings
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_SSL_REDIRECT = False
+     
+    # FORCE NEW COOKIES (Fix for stuck CSRF issues)
+    CSRF_COOKIE_NAME = "csrftoken_v2"
+    SESSION_COOKIE_NAME = "sessionid_v2"
+    
+    # Relaxed CSP for Dev
+    X_FRAME_OPTIONS = "SAMEORIGIN"
+
+# SAFETY NET: If running on localhost/127.0.0.1, FORCE insecure cookies to avoid CSRF issues
+# This handles cases where DEBUG might be accidentally False but we are locally testing
+import socket
+try:
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+except:
+    local_ip = ""
+
+# Hardcoded trust for local development to ensure it works
+CSRF_TRUSTED_ORIGINS.extend([
+    'http://localhost:8000', 
+    'http://127.0.0.1:8000',
+    'http://0.0.0.0:8000',
+])
+
+if 'localhost' in ALLOWED_HOSTS or '127.0.0.1' in ALLOWED_HOSTS or any(ip in str(ALLOWED_HOSTS) for ip in ['192.168.', '10.0.', '172.']):
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
 
 # Email Configuration (for contact form)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -217,7 +305,16 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     "hide_apps": [],
-    "hide_models": ["auth.User", "auth.Group"],
+    "hide_models": [
+        "auth.User", 
+        "auth.Group",
+        "academico.InscripcionCurso",
+        "academico.HorarioClases",
+        "academico.PreguntaExamen",
+        "academico.TipoExamen",
+        "documentos.HistorialDescargas",
+        "mensajeria.Mensaje"
+    ],
     "order_with_respect_to": ["usuarios", "academico", "comunicacion", "mensajeria"],
     "icons": {
         "auth": "fas fa-users-cog",
@@ -229,6 +326,11 @@ JAZZMIN_SETTINGS = {
         "academico.Asistencia": "fas fa-calendar-check",
         "comunicacion.Noticia": "fas fa-newspaper",
         "mensajeria.Mensaje": "fas fa-envelope",
+        "academico.Examen": "fas fa-file-alt",
+        "academico.TipoExamen": "fas fa-tags",
+        "academico.PreguntaExamen": "fas fa-question-circle",
+        "core.ConfiguracionSistema": "fas fa-cogs",
+        "core.ConfiguracionAcademica": "fas fa-calendar-alt",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",

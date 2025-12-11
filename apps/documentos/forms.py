@@ -34,6 +34,51 @@ class DocumentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.initial.get('fecha_publicacion'):
             self.initial['fecha_publicacion'] = timezone.now().date()
+        
+        # Filtrado de categorías según rol
+        if self.usuario:
+            from django.db.models import Q
+            from .models import CategoriaDocumento
+            
+            perfil = getattr(self.usuario, 'perfil', None)
+            es_profesor = perfil and perfil.tipo_usuario == 'profesor'
+            es_admin = self.usuario.is_staff or (perfil and perfil.tipo_usuario in ['administrativo', 'directivo'])
+            
+            if es_profesor and not es_admin:
+                # Profesores BLOQUEADOS a solo Material de Estudio
+                self.fields['categoria'].queryset = CategoriaDocumento.objects.filter(
+                    Q(nombre__icontains='estudio') | 
+                    Q(nombre__icontains='guía') | 
+                    Q(nombre__icontains='asignatura') | 
+                    Q(nombre__icontains='material')
+                )
+                # El curso lo debo filtrar también para que solo vea SUS cursos
+                from academico.models import Curso
+                self.fields['curso'].queryset = Curso.objects.filter(
+                    Q(profesor_jefe=self.usuario) | Q(horario__profesor=self.usuario)
+                ).distinct()
+                self.fields['curso'].required = True # Exigir curso para ordenar el material
+                
+                # Visibilidad: Restringir a publico o solo estudiantes
+                self.fields['visibilidad'].choices = [
+                    ('publico', 'Público'),
+                    ('solo_estudiantes', 'Solo Estudiantes'),
+                ]
+                
+            elif es_admin:
+                # Administrativos: Solo Certificados y documentos oficiales
+                self.fields['categoria'].queryset = CategoriaDocumento.objects.filter(
+                    Q(nombre__icontains='certificado') | 
+                    Q(nombre__icontains='acta') | 
+                    Q(nombre__icontains='resolución') | 
+                    Q(nombre__icontains='circular') |
+                    Q(nombre__icontains='administrativo') |
+                    Q(nombre__icontains='institucional') |
+                    Q(nombre__icontains='reglamento')
+                )
+                # Admins pueden ver todos los cursos o ninguno (global)
+                # No restringimos curso, pero lo hacemos opcional
+                self.fields['curso'].required = False
 
     def clean_archivo(self):
         archivo = self.cleaned_data.get('archivo')

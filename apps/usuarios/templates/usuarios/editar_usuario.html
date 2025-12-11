@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Editar Usuario - {{ usuario_editar.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Editar Usuario</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-3">Información Personal</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" name="first_name" class="form-control"
+                                        value="{{ usuario_editar.first_name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Apellido</label>
+                                    <input type="text" name="last_name" class="form-control"
+                                        value="{{ usuario_editar.last_name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control"
+                                        value="{{ usuario_editar.email }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">RUT</label>
+                                    <input type="text" name="rut" class="form-control" value="{{ perfil_editar.rut }}"
+                                        readonly disabled>
+                                    <div class="form-text">El RUT no se puede modificar.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="text" name="telefono" class="form-control"
+                                        value="{{ perfil_editar.telefono|default:'' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" name="direccion" class="form-control"
+                                        value="{{ perfil_editar.direccion|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-3"><i class="bi bi-key me-2"></i>Seguridad (Opcional)</h5>
+                            <div class="alert alert-warning small">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Dejar en blanco si no desea cambiar la
+                                contraseña.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nueva Contraseña</label>
+                                    <input type="password" name="new_password1" class="form-control"
+                                        placeholder="Nueva contraseña">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Confirmar Contraseña</label>
+                                    <input type="password" name="new_password2" class="form-control"
+                                        placeholder="Confirmar contraseña">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'usuarios:gestion_usuarios' %}?tipo={{ perfil_editar.tipo_usuario }}"
+                                class="btn btn-outline-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

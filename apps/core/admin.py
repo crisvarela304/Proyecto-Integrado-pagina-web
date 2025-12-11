@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import ConfiguracionSistema, ConfiguracionAcademica
 
 @admin.register(ConfiguracionSistema)
+
 class ConfiguracionSistemaAdmin(admin.ModelAdmin):
     """Panel de administración para configuraciones del sistema"""
     list_display = ('clave', 'valor_preview', 'descripcion', 'activo', 'created_at')

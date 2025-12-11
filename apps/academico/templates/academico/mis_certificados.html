@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mis Certificados{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-award me-2"></i>Mis Certificados
+            </h2>
+            <p class="text-muted mb-0">Descarga certificados oficiales en formato PDF.</p>
+        </div>
+        <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Volver al Panel
+        </a>
+    </div>
+
+    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+        <div>
+            Los documentos generados aquí son válidos para trámites simples. Para documentos legales o con firma física,
+            por favor acude a secretaría.
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for cert in certificados %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-{{ cert.color|default:'primary' }} bg-opacity-10 d-inline-flex justify-content-center align-items-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="bi {{ cert.icono }} fs-1 text-{{ cert.color|default:'primary' }}"></i>
+                    </div>
+
+                    <h5 class="fw-bold mb-2">{{ cert.nombre }}</h5>
+                    <p class="text-muted small mb-4">
+                        {{ cert.descripcion }}
+                    </p>
+
+                    <a href="{% url 'academico:descargar_certificado_pdf' cert.tipo %}"
+                        class="btn btn-outline-{{ cert.color|default:'primary' }} rounded-pill px-4 w-100">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+</style>
+{% endblock %}

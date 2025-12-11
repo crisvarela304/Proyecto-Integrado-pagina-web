@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Material de Estudio{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0 shadow overflow-hidden">
+                <div class="card-body p-4 p-md-5 position-relative">
+                    <div class="position-absolute top-0 end-0 opacity-10 p-4">
+                        <i class="bi bi-folder2-open display-1"></i>
+                    </div>
+                    <div class="position-relative" style="z-index: 2;">
+                        <h1 class="display-5 fw-bold mb-2">Material de Estudio</h1>
+                        <p class="lead opacity-90 mb-0">Recursos, guías y documentos para tus clases.</p>
+                        <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-light rounded-pill mt-3">
+                            <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Materiales -->
+    <div class="row">
+        <div class="col-12">
+            {% if documentos %}
+            <div class="row g-4">
+                {% for doc in documentos %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="me-3">
+                                    {% with ext=doc.tipo|lower %}
+                                    {# Lógica de Iconos #}
+                                    {% if 'pdf' in ext %}
+                                    <div class="icon-box bg-danger bg-opacity-10 text-danger rounded p-3">
+                                        <i class="bi bi-file-earmark-pdf fs-3"></i>
+                                    </div>
+                                    {% elif 'doc' in ext or 'word' in ext %}
+                                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded p-3">
+                                        <i class="bi bi-file-earmark-word fs-3"></i>
+                                    </div>
+                                    {% elif 'xls' in ext or 'sheet' in ext or 'excel' in ext %}
+                                    <div class="icon-box bg-success bg-opacity-10 text-success rounded p-3">
+                                        <i class="bi bi-file-earmark-excel fs-3"></i>
+                                    </div>
+                                    {% elif 'ppt' in ext or 'presentation' in ext or 'powerpoint' in ext %}
+                                    <div class="icon-box bg-warning bg-opacity-10 text-warning rounded p-3">
+                                        <i class="bi bi-file-earmark-ppt fs-3"></i>
+                                    </div>
+                                    {% elif 'zip' in ext or 'rar' in ext %}
+                                    <div class="icon-box bg-secondary bg-opacity-10 text-secondary rounded p-3">
+                                        <i class="bi bi-file-earmark-zip fs-3"></i>
+                                    </div>
+                                    {% elif 'image' in ext or 'jpg' in ext or 'png' in ext %}
+                                    <div class="icon-box bg-info bg-opacity-10 text-info rounded p-3">
+                                        <i class="bi bi-file-earmark-image fs-3"></i>
+                                    </div>
+                                    {% else %}
+                                    <div class="icon-box bg-light text-dark rounded p-3">
+                                        <i class="bi bi-file-earmark-text fs-3"></i>
+                                    </div>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="badge bg-light text-dark mb-2 border">
+                                        {{ doc.categoria|default:"General" }}
+                                    </div>
+                                    <h5 class="card-title fw-bold text-dark mb-1">
+                                        {{ doc.titulo }}
+                                    </h5>
+                                    {% if doc.asignatura %}
+                                    <small class="text-primary d-block mb-1">
+                                        <i class="bi bi-journal-bookmark me-1"></i>{{ doc.asignatura.nombre }}
+                                    </small>
+                                    {% elif doc.curso %}
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="bi bi-people me-1"></i>{{ doc.curso.nombre }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <p class="card-text text-muted small mb-4 line-clamp-2">
+                                {{ doc.descripcion|default:"Sin descripción" }}
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    {{ doc.fecha|date:"d/m/Y" }}
+                                </div>
+                                <a href="{{ doc.url_descarga }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                    <!-- Icono de descarga según tipo -->
+                                    <i class="bi bi-download me-1"></i> Descargar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light border-0 py-2">
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-muted">
+                                    <i class="bi bi-person me-1"></i>{{ doc.autor }}
+                                </span>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    {{ doc.tamaño|default:"N/A" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-folder-x display-1 text-muted opacity-25"></i>
+                </div>
+                <h3 class="fw-bold text-muted">No hay material disponible</h3>
+                <p class="text-muted">No se han encontrado guías ni documentos asignados a ti por el momento.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

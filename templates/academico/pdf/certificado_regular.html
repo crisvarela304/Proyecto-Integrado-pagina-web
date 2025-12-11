@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>Certificado de Alumno Regular</title>
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 2.5cm;
+        }
+
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 16pt;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .header h2 {
+            font-size: 12pt;
+            font-weight: normal;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            margin-top: 50px;
+            text-align: justify;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            font-weight: bold;
+        }
+
+        .signature-section {
+            margin-top: 100px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 50%;
+            margin: 0 auto 10px auto;
+        }
+
+        .signature-name {
+            font-weight: bold;
+        }
+
+        .signature-title {
+            font-style: italic;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            right: 0px;
+            height: 50px;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .verification-code {
+            text-align: right;
+            font-size: 8pt;
+            color: #999;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Liceo Juan Bautista de Hualqui</h1>
+        <h2>Certificado de Alumno Regular</h2>
+    </div>
+
+    <div class="content">
+        <p>
+            La Dirección del <strong>Liceo Juan Bautista de Hualqui</strong> certifica que:
+        </p>
+
+        <p style="text-align: center; font-size: 14pt; margin: 30px 0;">
+            <strong>{{ estudiante.get_full_name|upper }}</strong>
+        </p>
+
+        <p>
+            RUT: <strong>{{ estudiante.perfil.rut }}</strong>
+        </p>
+
+        <p>
+            Es alumno(a) regular de este establecimiento educacional para el año escolar <strong>{{ anio }}</strong>,
+            encontrándose matriculado(a) en el curso <strong>{{ curso.nombre }}</strong>.
+        </p>
+
+        <p>
+            Se extiende el presente certificado a petición del interesado(a) para los fines que estime conveniente, sin
+            ser válido para trámites notariales que requieran un formato específico distinto al presente.
+        </p>
+
+        <p style="margin-top: 50px;">
+            Hualqui, {{ fecha|date:"d" }} de {{ fecha|date:"F" }} de {{ fecha|date:"Y" }}.
+        </p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div class="signature-name">Dirección / Secretaría Académica</div>
+        <div class="signature-title">Liceo Juan Bautista de Hualqui</div>
+    </div>
+
+    <div class="verification-code">
+        Folio: {{ numero_matricula }} | Generado el: {{ fecha|date:"d/m/Y H:i:s" }}
+    </div>
+
+    <div class="footer">
+        Dirección: Calle Principal 123, Hualqui - Teléfono: (41) 278 1234<br>
+        www.liceojuanbautista.cl
+    </div>
+</body>
+
+</html>

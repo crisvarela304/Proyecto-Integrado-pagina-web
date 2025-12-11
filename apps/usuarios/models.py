@@ -27,6 +27,7 @@ class PerfilUsuario(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = 'usuarios'
         verbose_name = "Usuario"
         verbose_name_plural = "Usuarios"
         ordering = ['user__last_name', 'user__first_name']

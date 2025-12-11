@@ -1,8 +1,11 @@
 from django.contrib import admin
+from django import forms
 from django.utils.html import format_html
 from .models import (
     CategoriaDocumento, Documento, HistorialDescargas, ComunicadoPadres
 )
+from academico.models import Curso
+from django.contrib.auth.models import User
 
 @admin.register(CategoriaDocumento)
 class CategoriaDocumentoAdmin(admin.ModelAdmin):
@@ -19,16 +22,17 @@ class CategoriaDocumentoAdmin(admin.ModelAdmin):
     color_display.short_description = 'Color'
 
 @admin.register(Documento)
+
 class DocumentoAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'categoria', 'tipo', 'visibilidad', 'es_oficial', 'publicado', 'creado_por', 'fecha_creacion')
-    list_filter = ('categoria', 'tipo', 'visibilidad', 'es_oficial', 'publicado', 'fecha_creacion')
+    list_display = ('titulo', 'categoria', 'tipo', 'visibilidad', 'curso', 'es_oficial', 'publicado', 'creado_por', 'fecha_creacion')
+    list_filter = ('categoria', 'tipo', 'visibilidad', 'curso', 'es_oficial', 'publicado', 'fecha_creacion')
     search_fields = ('titulo', 'descripcion', 'tags')
     readonly_fields = ('tamaño', 'descargar_count', 'fecha_creacion', 'fecha_actualizacion')
     ordering = ('-fecha_creacion',)
     
     fieldsets = (
         ('Información Básica', {
-            'fields': ('titulo', 'descripcion', 'archivo', 'categoria')
+            'fields': ('titulo', 'descripcion', 'archivo', 'categoria', 'curso')
         }),
         ('Configuración', {
             'fields': ('tipo', 'visibilidad', 'tags', 'version', 'es_oficial', 'publicado')
@@ -38,6 +42,37 @@ class DocumentoAdmin(admin.ModelAdmin):
         }),
     )
     
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(creado_por=request.user)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if 'creado_por' in form.base_fields:
+                form.base_fields['creado_por'].disabled = True
+                form.base_fields['creado_por'].widget = forms.HiddenInput()
+        return form
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "curso":
+            # Si no es superusuario, filtrar cursos asignados al profesor
+            if not request.user.is_superuser:
+                # Filtrar cursos donde el usuario tiene clases asignadas (HorarioClases)
+                # o es profesor jefe.
+                from academico.models import HorarioClases
+                cursos_ids = HorarioClases.objects.filter(profesor=request.user).values_list('curso', flat=True).distinct()
+                kwargs["queryset"] = Curso.objects.filter(id__in=cursos_ids)
+        
+        if db_field.name == "creado_por":
+            # Filtrar para mostrar solo usuarios tipo 'profesor' o 'administrativo'
+            # Esto limpia la lista para el superusuario
+            kwargs["queryset"] = User.objects.filter(perfil__tipo_usuario__in=['profesor', 'administrativo', 'directivo'])
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     def save_model(self, request, obj, form, change):
         if not change:  # Solo al crear
             obj.creado_por = request.user

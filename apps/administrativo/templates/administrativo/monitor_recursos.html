@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Monitor de Recursos - LiceoOS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-1">
+                <i class="bi bi-folder2-open me-2"></i>Monitor de Recursos
+            </h1>
+            <p class="text-muted mb-0">Supervisión de material educativo subido por profesores</p>
+        </div>
+        <div>
+            <a href="{% url 'administrativo:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="." id="filterForm" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Filtrar por Profesor</label>
+                    <select name="profesor" class="form-select">
+                        <option value="">Todos los profesores</option>
+                        {% for p in profesores %}
+                        <option value="{{ p.user.id }}" {% if p.is_selected %}selected{% endif %}>
+                            {{ p.user.last_name }} {{ p.user.first_name }} ({{ p.rut }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Filtrar por Curso</label>
+                    <select name="curso" class="form-select">
+                        <option value="">Todos los cursos</option>
+                        {% for c in cursos %}
+                        <option value="{{ c.id }}" {% if c.is_selected %}selected{% endif %}>
+                            {{ c.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100"><i
+                            class="bi bi-filter me-2"></i>Filtrar</button>
+                    <a href="{% url 'administrativo:monitor_recursos' %}" class="btn btn-light border"
+                        title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card border-0 shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Fecha</th>
+                            <th>Profesor</th>
+                            <th>Curso / Asignatura</th>
+                            <th>Título</th>
+                            <th class="text-end pe-4">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recurso in page_obj %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">{{ recurso.creado|date:"d M Y" }}</div>
+                                <small class="text-muted">{{ recurso.creado|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-2 rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width:32px;height:32px;font-size:0.8rem;">
+                                        {{ recurso.profesor.first_name|first }}{{ recurso.profesor.last_name|first }}
+                                    </div>
+                                    <div class="lh-1">
+                                        <div class="fw-bold small">{{ recurso.profesor.get_full_name }}</div>
+                                        <small class="text-muted" style="font-size:0.75rem">Profesor</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div><span class="badge bg-light text-dark border">{{ recurso.curso.nombre }}</span>
+                                </div>
+                                <small class="text-muted">{{ recurso.asignatura.nombre|default:"General" }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-truncate" style="max-width: 300px;"
+                                    title="{{ recurso.titulo }}">
+                                    {{ recurso.titulo }}
+                                </div>
+                                {% if recurso.descripcion %}
+                                <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{
+                                    recurso.descripcion }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                {% if recurso.archivo %}
+                                <a href="{{ recurso.archivo.url }}" class="btn btn-sm btn-outline-primary"
+                                    target="_blank" download>
+                                    <i class="bi bi-download me-1"></i>Descargar
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">Sin archivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="bi bi-folder-x fs-1 text-muted mb-2 d-block opacity-25"></i>
+                                <span class="text-muted">No se encontraron archivos subidos con estos filtros.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link border-0"
+                                href="?page={{ page_obj.previous_page_number }}&profesor={{ filtros.profesor }}&curso={{ filtros.curso }}">&laquo;
+                                Anterior</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item disabled"><span class="page-link border-0 text-muted">Página {{
+                                page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link border-0"
+                                href="?page={{ page_obj.next_page_number }}&profesor={{ filtros.profesor }}&curso={{ filtros.curso }}">Siguiente
+                                &raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

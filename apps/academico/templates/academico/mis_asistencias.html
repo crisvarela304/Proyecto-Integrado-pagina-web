@@ -30,11 +30,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <form method="get" class="row g-3 align-items-end">
-                        <div class="col-md-4">
+                    <form method="get" action="." id="filterForm" class="row g-3 align-items-end">
+                        <div class="col-md-5">
                             <label class="form-label">Filtrar por mes</label>
                             <input type="month" name="mes" class="form-control"
                                 value="{{ mes_seleccionado|default:'' }}">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Filtrar por Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for estado in estados_filtro %}
+                                <option value="{{ estado.valor }}" {% if estado.is_selected %}selected{% endif %}>
+                                    {{ estado.texto }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-primary w-100">
@@ -97,30 +108,60 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <div class="progress mx-auto" style="width: 80px; height: 80px;">
-                                    <div class="progress-bar bg-success" role="progressbar"
-                                        style="width: {% if estadisticas.presentes %}{{ estadisticas.presentes|floatformat:0 }}%{% else %}0%{% endif %}">
-                                    </div>
-                                </div>
-                            </div>
-                            <h5 class="text-success">{{ estadisticas.presentes }}</h5>
-                            <small>Presentes</small>
+                    <h6 class="small text-muted mb-3">Resumen Visual</h6>
+
+                    <!-- Barras de Progreso Lineales -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-success"><i class="bi bi-check-circle me-1"></i>Presentes</span>
+                            <span class="fw-bold">{{ estadisticas.presentes }}</span>
                         </div>
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <div class="progress mx-auto" style="width: 80px; height: 80px;">
-                                    <div class="progress-bar bg-danger" role="progressbar"
-                                        style="width: {% if estadisticas.ausentes %}{{ estadisticas.ausentes|floatformat:0 }}%{% else %}0%{% endif %}">
-                                    </div>
-                                </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                style="width: {% if estadisticas.presentes %}{{ estadisticas.presentes }}{% else %}0{% endif %}%"
+                                aria-valuenow="{{ estadisticas.presentes }}" aria-valuemin="0" aria-valuemax="100">
                             </div>
-                            <h5 class="text-danger">{{ estadisticas.ausentes }}</h5>
-                            <small>Ausentes</small>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Ausentes</span>
+                            <span class="fw-bold">{{ estadisticas.ausentes }}</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-danger" role="progressbar"
+                                style="width: {% if estadisticas.ausentes %}{{ estadisticas.ausentes }}{% else %}0{% endif %}%"
+                                aria-valuenow="{{ estadisticas.ausentes }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-warning"><i class="bi bi-clock me-1"></i>Tardanzas</span>
+                            <span class="fw-bold">{{ estadisticas.tardanzas }}</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                style="width: {% if estadisticas.tardanzas %}{{ estadisticas.tardanzas }}{% else %}0{% endif %}%"
+                                aria-valuenow="{{ estadisticas.tardanzas }}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-info"><i class="bi bi-shield-check me-1"></i>Justificadas</span>
+                            <span class="fw-bold">{{ estadisticas.justificadas }}</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-info" role="progressbar"
+                                style="width: {% if estadisticas.justificadas %}{{ estadisticas.justificadas }}{% else %}0{% endif %}%"
+                                aria-valuenow="{{ estadisticas.justificadas }}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -201,10 +242,14 @@
                                         </span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ asistencia.observacion|default:"Sin observaciones" }}</td>
-                                    <td>{{
-                                        asistencia.registrado_por.get_full_name|default:asistencia.registrado_por.username
-                                        }}</td>
+                                    <td class="text-muted small">
+                                        {% if asistencia.observacion %}
+                                        {{ asistencia.observacion }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ asistencia.registrado_por.get_full_name|default:asistencia.registrado_por.username }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

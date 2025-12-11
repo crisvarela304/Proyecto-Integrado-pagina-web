@@ -156,13 +156,13 @@ class ConfiguracionMensajeriaAdmin(admin.ModelAdmin):
 @admin.register(RateLimit)
 class RateLimitAdmin(admin.ModelAdmin):
     """Panel de administración para rate limiting"""
-    list_display = [
+    list_display = (
         'usuario',
         'tipo_accion',
         'timestamp',
         'ip_address',
         'es_activo'
-    ]
+    )
     list_filter = [
         'tipo_accion', 
         'timestamp'

@@ -40,7 +40,7 @@ class Curso(models.Model):
     nivel = models.CharField(max_length=1, choices=NIVEL_CHOICES)
     letra = models.CharField(max_length=1)  # A, B, C, etc.
     año = models.IntegerField(default=obtener_año_actual)
-    profesor_jefe = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    profesor_jefe = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     total_alumnos = models.IntegerField(default=0)
     activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,7 +62,7 @@ class InscripcionCurso(models.Model):
         ('egresado', 'Egresado'),
     ]
     
-    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cursos_inscrito')
+    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cursos_inscrito', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='estudiantes')
     año = models.IntegerField(default=obtener_año_actual)
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
@@ -102,10 +102,10 @@ class Calificacion(models.Model):
         ('2', 'Segundo Semestre'),
     ]
     
-    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calificaciones')
+    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calificaciones', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, related_name='calificaciones')
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='calificaciones')
-    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='evaluaciones')
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='evaluaciones', limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     tipo_evaluacion = models.CharField(max_length=15, choices=TIPO_EVALUACION)
     semestre = models.CharField(max_length=1, choices=SEMESTRE_CHOICES)
     fecha_evaluacion = models.DateField()
@@ -149,7 +149,7 @@ class HorarioClases(models.Model):
     
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='horario')
     asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
-    profesor = models.ForeignKey(User, on_delete=models.CASCADE)
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     dia = models.CharField(max_length=10, choices=DIA_CHOICES)
     hora = models.CharField(max_length=1, choices=HORA_CHOICES)
     sala = models.CharField(max_length=20, blank=True)
@@ -173,12 +173,12 @@ class Asistencia(models.Model):
         ('justificado', 'Justificado'),
     ]
     
-    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='asistencias')
+    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='asistencias', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='asistencias')
     fecha = models.DateField()
     estado = models.CharField(max_length=12, choices=ESTADO_CHOICES)
     observacion = models.TextField(blank=True)
-    registrado_por = models.ForeignKey(User, on_delete=models.CASCADE)
+    registrado_por = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     creado = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -219,7 +219,7 @@ class Examen(models.Model):
     tipo_examen = models.ForeignKey(TipoExamen, on_delete=models.CASCADE, related_name='examenes')
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='examenes')
     asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, related_name='examenes')
-    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='examenes_creados')
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='examenes_creados', limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     tipo_periodo = models.CharField(max_length=15, choices=TIPO_PERIODO, default='prueba')
     fecha_aplicacion = models.DateField()
     hora_inicio = models.TimeField()
@@ -263,5 +263,53 @@ class PreguntaExamen(models.Model):
         ordering = ['orden', 'numero']
         unique_together = ('examen', 'numero')
 
+
+class Anotacion(models.Model):
+    """Registro de hoja de vida del estudiante (Anotaciones)"""
+    TIPO_CHOICES = [
+        ('positiva', 'Positiva (Mérito)'),
+        ('negativa', 'Negativa (Falta)'),
+    ]
+    
+    CATEGORIA_CHOICES = [
+        ('responsabilidad', 'Responsabilidad'),
+        ('respeto', 'Respeto y Convivencia'),
+        ('presentacion', 'Presentación Personal'),
+        ('participacion', 'Participación en Clases'),
+        ('honradez', 'Honradez'),
+        ('otro', 'Otro'),
+    ]
+
+    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anotaciones_recibidas', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anotaciones_creadas', limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, null=True, blank=True)
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='otro')
+    observacion = models.TextField("Observación")
+    fecha = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Anotación"
+        verbose_name_plural = "Anotaciones"
+        ordering = ['-fecha']
+
     def __str__(self):
-        return f"Pregunta {self.numero} - {self.examen.titulo}"
+        return f"{self.get_tipo_display()} - {self.estudiante.get_full_name()}"
+
+class RecursoAcademico(models.Model):
+    """Recursos académicos subidos por profesores"""
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    archivo = models.FileField(upload_to='recursos_academicos/%Y/%m/')
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='recursos')
+    profesor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, null=True, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Recurso Académico"
+        verbose_name_plural = "Recursos Académicos"
+        ordering = ['-creado']
+
+    def __str__(self):
+        return f"{self.titulo} ({self.curso})"

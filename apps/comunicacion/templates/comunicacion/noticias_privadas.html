@@ -5,7 +5,7 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Noticias privadas</h3>
-        <a href="{% url 'noticias' %}" class="btn btn-outline-secondary btn-sm">
+        <a href="{% url 'comunicacion:noticias' %}" class="btn btn-outline-secondary btn-sm">
             Volver al sitio público
         </a>
     </div>
@@ -23,24 +23,24 @@
                     </thead>
                     <tbody>
                         {% for noticia in noticias %}
-                            <tr>
-                                <td>{{ noticia.titulo }}</td>
-                                <td>{{ noticia.get_categoria_display }}</td>
-                                <td>
-                                    {% if noticia.es_publica %}
-                                        <span class="badge bg-success">Pública</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Privada</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ noticia.creado|date:"d/m/Y H:i" }}</td>
-                            </tr>
+                        <tr>
+                            <td>{{ noticia.titulo }}</td>
+                            <td>{{ noticia.get_categoria_display }}</td>
+                            <td>
+                                {% if noticia.es_publica %}
+                                <span class="badge bg-success">Pública</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Privada</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ noticia.creado|date:"d/m/Y H:i" }}</td>
+                        </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    No hay noticias disponibles.
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                No hay noticias disponibles.
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

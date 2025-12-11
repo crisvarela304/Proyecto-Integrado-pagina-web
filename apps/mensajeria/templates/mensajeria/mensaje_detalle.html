@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Mensaje{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Detalle del Mensaje</h5>
+                    <a href="{% url 'mensajeria:conversacion_detail' conversacion.id %}"
+                        class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="bi bi-chat-text me-2"></i>Ver Conversación Completa
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">De:</small>
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2"
+                                style="width: 32px; height: 32px;">
+                                {{ mensaje.autor.first_name|slice:":1" }}
+                            </div>
+                            <span class="fw-bold">{{ mensaje.autor.get_full_name }}</span>
+                            <span class="text-muted small ms-2">({{ mensaje.autor.email }})</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Para:</small>
+                        <div class="mt-1">{{ mensaje.receptor.get_full_name }}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Enviado:</small>
+                        <div class="mt-1">{{ mensaje.fecha_creacion|date:"d M Y, H:i" }}</div>
+                    </div>
+
+                    <hr class="opacity-10 my-4">
+
+                    <div class="mb-4">
+                        <h4 class="fw-bold text-dark">{{ mensaje.asunto|default:"Sin asunto" }}</h4>
+                    </div>
+
+                    <div class="p-4 bg-light rounded-3">
+                        <p class="mb-0 text-dark" style="white-space: pre-wrap;">{{ mensaje.contenido }}</p>
+                    </div>
+
+                    {% if mensaje.adjunto %}
+                    <div class="mt-4">
+                        <a href="{{ mensaje.adjunto.url }}"
+                            class="btn btn-light border d-inline-flex align-items-center" target="_blank">
+                            <i class="bi bi-paperclip me-2 text-danger"></i>
+                            Archivo Adjunto
+                        </a>
+                    </div>
+                    {% endif %}
+
+                </div>
+                <div class="card-footer bg-white border-0 p-4">
+                    <a href="{% url 'mensajeria:bandeja_entrada' %}" class="btn btn-light"><i
+                            class="bi bi-arrow-left me-2"></i>Volver a la Bandeja</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

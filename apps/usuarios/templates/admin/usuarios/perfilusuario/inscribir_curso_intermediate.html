@@ -1,0 +1,85 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n admin_urls static %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ media }}
+<script src="{% static 'admin/js/cancel.js' %}" async></script>
+<style>
+    /* Force dark text for visibility against light backgrounds */
+    .content-wrapper h1,
+    .content-wrapper p,
+    .content-wrapper ul li,
+    .content-wrapper label,
+    /* Specific overrides for common admin themes */
+    #content h1,
+    #content p,
+    #content ul li,
+    #content label,
+    form h1,
+    form p,
+    form ul li {
+        color: #333 !important;
+    }
+
+    #content ul {
+        margin-left: 20px;
+        list-style-type: disc;
+    }
+
+    /* Ensure the form row label is visible */
+    .form-row label {
+        color: #333 !important;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation
+delete-selected-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate 'Inscribir en Curso' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="post">{% csrf_token %}
+    <div>
+        {% for obj in profiles %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="inscribir_en_curso">
+        <input type="hidden" name="post" value="yes">
+
+        <h1>Inscribir estudiantes seleccionados</h1>
+        <p>Ha seleccionado los siguientes estudiantes para inscribir:</p>
+        <ul>
+            {% for profile in profiles %}
+            <li>{{ profile }} ({{ profile.rut }})</li>
+            {% endfor %}
+        </ul>
+
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <label for="id_curso" class="required">Seleccione el Curso:</label>
+                <select name="curso" id="id_curso" required>
+                    <option value="">-- Seleccione --</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.pk }}">{{ curso }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" name="apply" value="Inscribir" class="default">
+            <a href="#" class="button cancel-link">Cancelar</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

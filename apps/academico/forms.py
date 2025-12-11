@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Asignatura, Curso, Calificacion, HorarioClases
+from .models import Asignatura, Curso, Calificacion, HorarioClases, Anotacion
 
 
 class SeleccionCursoAsignaturaForm(forms.Form):
@@ -48,4 +48,16 @@ class CalificacionForm(forms.ModelForm):
             'descripcion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Descripción de la evaluación'}),
             'nota': forms.NumberInput(attrs={'step': '0.1', 'class': 'form-control', 'min': 1, 'max': 7}),
             'numero_evaluacion': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+
+class AnotacionForm(forms.ModelForm):
+    """Formulario para registro de anotaciones."""
+    class Meta:
+        model = Anotacion
+        fields = ['tipo', 'categoria', 'observacion']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'categoria': forms.Select(attrs={'class': 'form-select'}),
+            'observacion': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Describe el motivo de la anotación...'}),
         }

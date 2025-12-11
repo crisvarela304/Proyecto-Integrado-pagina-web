@@ -1,28 +1,23 @@
-"""
-Vistas seguras para mensajería interna
-Con validaciones de autorización, concurrencia y prevención de IDOR
-"""
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponseBadRequest, JsonResponse
+from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.db import transaction
-from django.db.models import Q, Count, F
-from django.utils import timezone
 from django.contrib.auth.models import User
-from django.db.models import OuterRef
+
+from django.utils import timezone
 from academico.models import HorarioClases, InscripcionCurso
 from .models import Conversacion, Mensaje, ConfiguracionMensajeria
 from .forms import (
-    BusquedaConversacionForm,
-    NuevaConversacionForm,
     MensajeForm,
     PaginacionForm,
     ProfesorMensajeForm,
     ContactoColegioForm,
+    BusquedaConversacionForm,
+    NuevaConversacionForm,
 )
-
 
 def verificar_rol_mensajeria(user):
     """Decorator interno para verificar roles permitidos"""
@@ -544,9 +539,27 @@ def contacto_colegio(request):
 # Error handlers personalizados
 def handler404(request, exception):
     """Manejador de errores 404 personalizado"""
-    return render(request, 'core/error_404.html', status=404)
+    return render(request, 'core/404.html', status=404)
 
 
 def handler500(request):
     """Manejador de errores 500 personalizado"""
     return render(request, 'core/error_500.html', status=500)
+
+@login_required
+def gestion_mensajeria(request):
+    """Vista administrativa para monitorear el sistema de mensajería"""
+    if not request.user.is_staff:
+        messages.error(request, "Acceso denegado.")
+        return redirect('usuarios:panel')
+        
+    total_mensajes = Mensaje.objects.count()
+    total_conversaciones = Conversacion.objects.count()
+    mensajes_hoy = Mensaje.objects.filter(fecha_creacion__date=timezone.now().date()).count()
+    
+    context = {
+        'total_mensajes': total_mensajes,
+        'total_conversaciones': total_conversaciones,
+        'mensajes_hoy': mensajes_hoy
+    }
+    return render(request, 'mensajeria/gestion_mensajeria.html', context)

@@ -1,0 +1,165 @@
+
+import os
+
+path = r"apps/administrativo/templates/administrativo/historial_actividad.html"
+content = """{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Historial de Actividad - LiceoOS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-1">
+                <i class="bi bi-clock-history me-2"></i>Historial de Cambios
+            </h1>
+            <p class="text-muted mb-0">Registro completo de auditoría y acciones del sistema</p>
+        </div>
+        <div>
+            <a href="{% url 'administrativo:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Tipo de Acción</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todas las acciones</option>
+                        {% for valor, texto in tipos_accion %}
+                        <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ texto }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Profesor / Usuario</label>
+                    <select name="usuario" class="form-select">
+                        <option value="">Todos los usuarios</option>
+                        {% for profesor in profesores %}
+                        <option value="{{ profesor.user.id }}" {% if filtros.usuario == profesor.user.id %}selected{% endif %}>
+                            {{ profesor.user.last_name }} {{ profesor.user.first_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Desde Fecha</label>
+                    <input type="date" name="fecha_inicio" class="form-control" value="{{ filtros.fecha_inicio }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter me-2"></i>Filtrar</button>
+                    <a href="{% url 'administrativo:historial_actividad' %}" class="btn btn-light border" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card border-0 shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Fecha / Hora</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Descripción</th>
+                            <th>Detalles Técnicos</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td class="ps-4 text-nowrap">
+                                <div class="fw-bold">{{ log.fecha|date:"d M Y" }}</div>
+                                <small class="text-muted">{{ log.fecha|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if log.usuario %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-light text-primary me-2 border" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:0.8rem;">
+                                        {{ log.usuario.first_name|first|default:"U" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small">{{ log.usuario.get_full_name }}</div>
+                                        <small class="text-muted" style="font-size:0.75rem">{{ log.usuario.username }}</small>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-secondary">Sistema</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.tipo_accion == 'nota' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Notas</span>
+                                {% elif log.tipo_accion == 'asistencia' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Asistencia</span>
+                                {% elif log.tipo_accion == 'recurso' %}
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info">Recurso</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">{{ log.get_tipo_accion_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.descripcion }}</td>
+                            <td>
+                                <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ log.detalles }}">
+                                    {{ log.detalles|default:"-" }}
+                                </small>
+                            </td>
+                            <td><small class="font-monospace text-muted">{{ log.ip_address|default:"-" }}</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-search fs-1 mb-2"></i>
+                                    <p>No se encontraron registros de actividad con estos filtros.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link border-0" href="?page={{ page_obj.previous_page_number }}&tipo={{ filtros.tipo }}&usuario={{ filtros.usuario }}">&laquo; Anterior</a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item disabled"><span class="page-link border-0 text-muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link border-0" href="?page={{ page_obj.next_page_number }}&tipo={{ filtros.tipo }}&usuario={{ filtros.usuario }}">Siguiente &raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}"""
+
+try:
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print("FATAL SUCCESS: Archivo sobrescrito correctamente.")
+except Exception as e:
+    print(f"FATAL ERROR: {e}")

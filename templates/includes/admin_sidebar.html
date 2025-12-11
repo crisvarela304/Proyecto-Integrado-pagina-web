@@ -1,0 +1,100 @@
+<div class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse shadow-sm" style="min-height: 100vh;">
+    <div class="position-sticky pt-3">
+        <h6
+            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+            <span>Gestión Institución</span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.view_name == 'administrativo:dashboard' %}active text-primary fw-bold{% else %}text-secondary{% endif %}"
+                    href="{% url 'administrativo:dashboard' %}">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <!-- Usuarios -->
+            <li class="nav-item mt-3">
+                <span class="px-3 text-muted small fw-bold text-uppercase">Usuarios</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="#usuariosSubmenu" data-bs-toggle="collapse">
+                    <i class="bi bi-people me-2"></i>
+                    Comunidad
+                    <i class="bi bi-chevron-down ms-auto small"></i>
+                </a>
+                <div class="collapse" id="usuariosSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link py-1 text-secondary"
+                                href="{% url 'usuarios:gestion_usuarios' %}?tipo=estudiante">Estudiantes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-1 text-secondary"
+                                href="{% url 'usuarios:gestion_usuarios' %}?tipo=profesor">Profesores</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-1 text-secondary"
+                                href="{% url 'usuarios:gestion_usuarios' %}?tipo=administrativo">Staff</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-1 text-secondary"
+                                href="{% url 'usuarios:matricular_alumno' %}">Matrícula Rápida</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Académico -->
+            <li class="nav-item mt-3">
+                <span class="px-3 text-muted small fw-bold text-uppercase">Académico</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'academico:gestion_cursos' %}">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>
+                    Cursos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'academico:gestion_asignaturas' %}">
+                    <i class="bi bi-book me-2"></i>
+                    Asignaturas
+                </a>
+            </li>
+
+            <!-- Comunicación & Documentos -->
+            <li class="nav-item mt-3">
+                <span class="px-3 text-muted small fw-bold text-uppercase">Contenidos</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'comunicacion:gestion_noticias' %}">
+                    <i class="bi bi-newspaper me-2"></i>
+                    Noticias
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'documentos:gestion_documentos' %}">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Gestor Documental
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'administrativo:monitor_recursos' %}">
+                    <i class="bi bi-folder2-open me-2"></i>
+                    Monitor de Recursos
+                </a>
+            </li>
+
+            <!-- Sistema -->
+            <li class="nav-item mt-3">
+                <span class="px-3 text-muted small fw-bold text-uppercase">Sistema</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="{% url 'configuracion_sistema' %}">
+                    <i class="bi bi-gear me-2"></i>
+                    Configuración
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

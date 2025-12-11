@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .models import PerfilUsuario
 from django.contrib.auth.forms import PasswordChangeForm as AuthPasswordChangeForm
 
@@ -43,16 +43,16 @@ class PasswordChangeForm(AuthPasswordChangeForm):
 
 from academico.models import Curso
 
-class CSVImportForm(forms.Form):
+class ImportacionMasivaForm(forms.Form):
     curso = forms.ModelChoiceField(
         queryset=Curso.objects.filter(activo=True),
         label='Curso',
         required=True,
         help_text='Seleccione el curso al que se inscribirán los estudiantes.'
     )
-    csv_file = forms.FileField(
-        label='Archivo CSV',
-        help_text='El archivo debe tener las columnas: RUT, Nombres, Apellidos, Email (opcional). Separado por comas o punto y coma.'
+    archivo = forms.FileField(
+        label='Archivo de Estudiantes',
+        help_text='Formatos soportados: .csv o .xlsx (Excel). Columnas requeridas: RUT, Nombres, Apellidos. Opcional: Email.'
     )
 
 class QuickStudentCreationForm(forms.ModelForm):
@@ -117,18 +117,70 @@ class QuickStudentCreationForm(forms.ModelForm):
             if not email:
                 email = f"{rut}@liceo.cl"
             
-            # Crear el usuario automáticamente (usuarios NORMALES, sin permisos de staff)
+            # Crear el usuario automáticamente
+            is_profesor = (perfil.tipo_usuario == 'profesor')
+            
             user = User.objects.create_user(
                 username=rut,
                 password=password,  # Usar la contraseña especificada
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
-                is_staff=False,  # NO dar permisos de staff
-                is_superuser=False  # NO dar permisos de superusuario
+                is_staff=False,  # Dar permisos de staff si es profesor
+                is_superuser=False
             )
+            
+            # Si es profesor, agregar al grupo Profesores
+            if is_profesor:
+                try:
+                    group = Group.objects.get(name='Profesores')
+                    user.groups.add(group)
+                except Group.DoesNotExist:
+                    pass
+                    
             perfil.user = user
             
         if commit:
             perfil.save()
         return perfil
+
+class MatriculaForm(forms.Form):
+    """Formulario unificado para matrícula rápida"""
+    # Estudiante
+    rut_estudiante = forms.CharField(label='RUT Estudiante', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '12.345.678-9'}))
+    nombres = forms.CharField(label='Nombres', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    apellidos = forms.CharField(label='Apellidos', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(label='Email (Opcional)', required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    
+    # Curso
+    curso = forms.ModelChoiceField(
+        queryset=Curso.objects.filter(activo=True).order_by('nivel', 'letra'),
+        label='Curso a inscribir',
+        required=False,
+        empty_label="-- Solo registrar (sin matricular) --",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    # Apoderado
+    tiene_apoderado = forms.BooleanField(label='Registrar Apoderado', required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'onchange': 'toggleApoderado(this)'}))
+    rut_apoderado = forms.CharField(label='RUT Apoderado', required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    nombre_apoderado = forms.CharField(label='Nombre Completo Apoderado', required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email_apoderado = forms.EmailField(label='Email Apoderado', required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        rut = cleaned_data.get('rut_estudiante')
+        
+        # Validar duplicados estudiante
+        if rut and PerfilUsuario.objects.filter(rut=rut).exists():
+            raise forms.ValidationError("Ya existe un estudiante con este RUT.")
+            
+        # Validar apoderado si se marca
+        if cleaned_data.get('tiene_apoderado'):
+            if not cleaned_data.get('rut_apoderado'):
+                self.add_error('rut_apoderado', 'El RUT del apoderado es obligatorio si se marca la opción.')
+            if not cleaned_data.get('nombre_apoderado'):
+                self.add_error('nombre_apoderado', 'El nombre del apoderado es obligatorio.')
+        
+        return cleaned_data
+

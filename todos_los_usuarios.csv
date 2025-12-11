@@ -1,0 +1,7 @@
+ID,Username,Nombre Completo,Email,Rol / Tipo,Password (Hash),Estado
+74,15.614.578-5,Felipe arroba,15.614.578-5@liceo.cl,Estudiante,pbkdf2_sha256$1000000$4Q0wKDXq9LBkTfILMYDflk$rMcgIwBhJ6aVE0blmh0/Kh5ea+zATpd7wbaLIAP1FQw=,Activo
+73,21.620.517-0,Jose Quiroz,21.620.517-0@liceo.cl,Estudiante,pbkdf2_sha256$1000000$e6QEyovdPbTlGv4siLSKYl$sz8BMHW5WYlemPT6VzIAQlk/sMsTNBjJBT7eIi5nE8E=,Activo
+71,21.847.699-6,Cristobal Varela,21.847.699-6@liceo.cl,Profesor,pbkdf2_sha256$1000000$PiwX9sw9SRvj4ptcZ9uPrs$K2r7Qp3D1mCL6TG4yOVl1Al2mIYF4emSsZHwZNxVOCo=,Activo
+69,admin,,admin@liceo.cl,Super Admin,pbkdf2_sha256$1000000$FktW3E2x2lzsorK3BxPkby$fHXbPJN2FywNh5a2NtDJUzXW+q0//SdGY/92opUMq+w=,Activo
+72,benja,,,Usuario sin perfil,!sVM1NgM50NyBNtiL4HKus54qCmykFVaVy5wXBJXy,Activo
+37,estudiante1,José González Sepúlveda,estudiante1@colegio.com,Super Admin,pbkdf2_sha256$1000000$s5Ew2kJ3qZ6X3dYdVvDeov$S6O//DIIqa88bi9HIdEJ6c/KLM3pIS36P5eivSFT6zw=,Activo

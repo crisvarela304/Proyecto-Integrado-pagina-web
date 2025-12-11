@@ -289,39 +289,19 @@ class ProfesorMensajeForm(forms.Form):
                 is_active=True
             ).distinct()
     
-    def _verificar_rate_limit_archivos(self):
-        """Verifica límites de archivos por minuto"""
-        un_minuto_atras = timezone.now() - timezone.timedelta(minutes=1)
-        
-        archivos_recientes = RateLimit.objects.filter(
-            usuario=self.usuario,
-            tipo_accion='archivo',
-            timestamp__gte=un_minuto_atras
-        ).count()
-        
-        config = getattr(self.usuario, 'config_mensajeria', None)
-        limite = config.limite_adjuntos_por_minuto if config else 5
-        
-        if archivos_recientes >= limite:
-            RateLimit.objects.create(
-                usuario=self.usuario,
-                tipo_accion='archivo',
-                ip_address='127.0.0.1'
-            )
-            return True
-        
-        return False
+
     
     def clean(self):
         """Validaciones generales del formulario"""
         cleaned_data = super().clean()
         
-        # Verificar que el usuario puede acceder a la conversación
-        if self.conversacion and self.usuario:
-            if not self.conversacion.puede_acceder(self.usuario):
-                raise ValidationError("No tienes permisos para enviar mensajes en esta conversación")
+        # En este form, el usuario es el profesor
+        self.usuario = self.profesor
         
         # Verificar que el usuario puede enviar mensajes (rate limiting)
+        # Nota: ProfesorMensajeForm no maneja 'conversacion' en clean, 
+        # porque la conversación se crea/obtiene en la vista.
+        
         if self._verificar_rate_limit_mensajes():
             raise ValidationError("Demasiados mensajes enviados. Espera un momento.")
         
@@ -329,10 +309,13 @@ class ProfesorMensajeForm(forms.Form):
     
     def _verificar_rate_limit_mensajes(self):
         """Verifica límites de mensajes por minuto"""
+        if not self.profesor:
+            return False
+
         un_minuto_atras = timezone.now() - timezone.timedelta(minutes=1)
         
         mensajes_recientes = RateLimit.objects.filter(
-            usuario=self.usuario,
+            usuario=self.profesor,
             tipo_accion='mensaje',
             timestamp__gte=un_minuto_atras
         ).count()
@@ -340,7 +323,7 @@ class ProfesorMensajeForm(forms.Form):
         # Límite: 20 mensajes por minuto
         if mensajes_recientes >= 20:
             RateLimit.objects.create(
-                usuario=self.usuario,
+                usuario=self.profesor,
                 tipo_accion='mensaje',
                 ip_address='127.0.0.1'
             )
@@ -348,24 +331,15 @@ class ProfesorMensajeForm(forms.Form):
         
         return False
     
-    @transaction.atomic
-    def save(self, commit=True):
-        """Override save para manejo de rate limits"""
-        # Registrar actividad de rate limiting
-        RateLimit.objects.create(
-            usuario=self.usuario,
-            tipo_accion='mensaje',
-            ip_address='127.0.0.1'
-        )
-        
-        if self.cleaned_data.get('adjunto'):
+    # save() no se usa en la vista (se maneja manual), pero si se usara, debería actulizar rate limit
+    def registrar_actividad(self):
+        """Helper para registrar actividad de rate limit al guardar manualmente"""
+        if self.profesor:
             RateLimit.objects.create(
-                usuario=self.usuario,
-                tipo_accion='archivo',
+                usuario=self.profesor,
+                tipo_accion='mensaje',
                 ip_address='127.0.0.1'
             )
-        
-        return super().save(commit=commit)
 
 
 class PaginacionForm(forms.Form):

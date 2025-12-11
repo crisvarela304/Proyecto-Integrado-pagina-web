@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Historial: {{ estudiante.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-person-rolodex me-2"></i>Historial de Anotaciones</h4>
+            <p class="text-muted mb-0">Estudiante: <strong>{{ estudiante.get_full_name }}</strong></p>
+        </div>
+        <div>
+            <a href="{% url 'academico:crear_anotacion' estudiante.id %}" class="btn btn-primary rounded-pill fw-bold">
+                <i class="bi bi-plus-circle me-2"></i>Nueva Anotación
+            </a>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill ms-2">Volver</a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-success text-white border-0 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Méritos (Positivas)</h6>
+                        <h2 class="fw-bold mb-0">{{ positivas }}</h2>
+                    </div>
+                    <i class="bi bi-hand-thumbs-up-fill fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-danger text-white border-0 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Faltas (Negativas)</h6>
+                        <h2 class="fw-bold mb-0">{{ negativas }}</h2>
+                    </div>
+                    <i class="bi bi-hand-thumbs-down-fill fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Tipo</th>
+                            <th>Categoria</th>
+                            <th>Observación</th>
+                            <th>Profesor</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for anotacion in anotaciones %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if anotacion.tipo == 'positiva' %}
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Positiva
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Negativa
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ anotacion.get_categoria_display }}</span></td>
+                            <td class="text-secondary">{{ anotacion.observacion|truncatechars:100 }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle-sm bg-primary text-white me-2 small">
+                                        {{ anotacion.profesor.get_short_name|make_list|first }}
+                                    </div>
+                                    <span>{{ anotacion.profesor.get_full_name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-muted small">{{ anotacion.fecha|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-journal text-secondary fs-1 d-block mb-3 opacity-25"></i>
+                                Este estudiante no tiene anotaciones registradas.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

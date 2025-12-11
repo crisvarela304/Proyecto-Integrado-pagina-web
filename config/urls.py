@@ -12,6 +12,7 @@ urlpatterns = [
     path('academico/', include('academico.urls', namespace='academico')),    # Sistema académico
     path('documentos/', include('documentos.urls', namespace='documentos')),  # Sistema documentos
     path('mensajeria/', include('mensajeria.urls', namespace='mensajeria')),  # Sistema mensajería
+    path('panel-administrativo/', include('administrativo.urls', namespace='administrativo')), # LiceoOS Dashboard
 ]
 
 # Handler personalizado para errores 404

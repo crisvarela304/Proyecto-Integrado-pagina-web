@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Redactar Mensaje a Estudiante{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white border-0 py-4 px-5">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-send-plus me-2"></i>Redactar Mensaje</h4>
+                    <p class="mb-0 opacity-75">Envía un mensaje directo a tus estudiantes</p>
+                </div>
+                <div class="card-body p-5">
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Destinatario</label>
+                            {{ form.destinatario|as_crispy_field }}
+                            <div class="form-text">Solo aparecen estudiantes inscritos en tus cursos activos.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Asunto</label>
+                            {{ form.asunto|as_crispy_field }}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Contenido</label>
+                            {{ form.contenido|as_crispy_field }}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
+                            <a href="{% url 'mensajeria:conversaciones_list' %}"
+                                class="btn btn-light rounded-pill px-4 me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                <i class="bi bi-paperplane-fill me-2"></i>Enviar Mensaje
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card border-0 bg-info bg-opacity-10 mt-4 rounded-4">
+                <div class="card-body d-flex align-items-center p-3">
+                    <i class="bi bi-info-circle-fill text-info fs-3 me-3"></i>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Importante</h6>
+                        <p class="mb-0 small text-muted">El mensaje iniciará una nueva conversación si no existe una
+                            previa.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

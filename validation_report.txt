@@ -1,0 +1,2 @@
+Authorization complete. Checked 73 files. Found 0 errors.
+All templates valid.

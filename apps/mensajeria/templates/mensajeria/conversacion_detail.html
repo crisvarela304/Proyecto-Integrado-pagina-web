@@ -353,8 +353,7 @@ Mensajería{% endblock %}
 {% if conversacion.get_contador_no_leidos > 0 %}
 <div class="unread-indicator" id="unreadIndicator">
     <i class="bi bi-bell"></i>
-    {{ conversacion.get_contador_no_leidos }} mensaje{{ conversacion.get_contador_no_leidos|pluralize }} nuevo{{
-    conversacion.get_contador_no_leidos|pluralize }}
+    {{ conversacion.get_contador_no_leidos }} mensaje{{ conversacion.get_contador_no_leidos|pluralize }} nuevo{{ conversacion.get_contador_no_leidos|pluralize }}
 </div>
 {% endif %}
 {% endblock %}

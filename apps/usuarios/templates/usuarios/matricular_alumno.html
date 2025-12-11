@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Matrícula de Estudiante{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Matrícula de Estudiante</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h5 class="mb-3 text-secondary border-bottom pb-2">Datos del Estudiante</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.rut_estudiante.label }}</label>
+                                {{ form.rut_estudiante }}
+                                {{ form.rut_estudiante.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.nombres.label }}</label>
+                                {{ form.nombres }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.apellidos.label }}</label>
+                                {{ form.apellidos }}
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4 text-secondary border-bottom pb-2">Asignación Académica</h5>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.curso.label }}</label>
+                            {{ form.curso }}
+                            <div class="form-text">Si se selecciona un curso, se creará la inscripción automáticamente.
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4 text-secondary border-bottom pb-2">Datos del Apoderado</h5>
+                        <div class="mb-3 form-check">
+                            {{ form.tiene_apoderado }}
+                            <label class="form-check-label" for="{{ form.tiene_apoderado.id_for_label }}">
+                                {{ form.tiene_apoderado.label }}
+                            </label>
+                        </div>
+
+                        <div id="apoderado-fields" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">{{ form.rut_apoderado.label }}</label>
+                                    {{ form.rut_apoderado }}
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">{{ form.nombre_apoderado.label }}</label>
+                                    {{ form.nombre_apoderado }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.email_apoderado.label }}</label>
+                                {{ form.email_apoderado }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
+                            <a href="{% url 'administrativo:dashboard' %}"
+                                class="btn btn-outline-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-success px-5">Registrar Matrícula</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleApoderado(checkbox) {
+        const fields = document.getElementById('apoderado-fields');
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+
+        // Limpiar campos si se oculta (opcional)
+        // if (!checkbox.checked) {
+        //     fields.querySelectorAll('input').forEach(input => input.value = '');
+        // }
+    }
+
+    // Inicializar estado
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkbox = document.getElementById('{{ form.tiene_apoderado.id_for_label }}');
+        if (checkbox) {
+            toggleApoderado(checkbox);
+        }
+    });
+</script>
+{% endblock %}

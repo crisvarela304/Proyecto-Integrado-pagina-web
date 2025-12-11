@@ -24,6 +24,8 @@ urlpatterns = [
     
     # Endpoints AJAX
     path('conversacion/<int:conversacion_id>/enviar/', views.enviar_mensaje, name='enviar_mensaje'),
+    
+    # Endpoints AJAX
     path('conversacion/<int:conversacion_id>/leido/', views.marcar_leido, name='marcar_leido'),
     
     # Eliminar conversación (solo alumnos)
@@ -31,4 +33,7 @@ urlpatterns = [
     
     # Mensajes destacados (solo profesores/staff)
     path('destacados/', views.mensajes_destacados, name='mensajes_destacados'),
+    
+    # Gestión Administrativa
+    path('gestion/', views.gestion_mensajeria, name='gestion_mensajeria'),
 ]

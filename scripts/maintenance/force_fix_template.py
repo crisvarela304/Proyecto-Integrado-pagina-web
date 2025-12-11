@@ -1,0 +1,78 @@
+
+import os
+
+content = """{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Noticias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Cabecera -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="fw-bold text-primary mb-3">Noticias y Comunicados</h1>
+            <p class="lead text-muted">Mantente informado de las últimas novedades de nuestra comunidad</p>
+        </div>
+    </div>
+
+    <!-- Buscador y Filtros -->
+    <div class="row mb-5 justify-content-center">
+        <div class="col-md-8">
+            <form action="." method="get" class="d-flex gap-2">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0 ps-0" 
+                           placeholder="Buscar noticias..." value="{{ query|default:'' }}">
+                    <select name="categoria" class="form-select" style="max-width: 200px;">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.nombre }}" {% if categoria_filtro == cat.nombre %}selected{% endif %}>
+                            {{ cat.nombre|title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary px-4">Buscar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Noticias (Partial) -->
+    {% include "comunicacion/_noticias_list_partial.html" %}
+
+</div>
+{% endblock %}
+"""
+
+file_path = r"c:\Users\crist\Proyecto integrado corregido\Proyecto Integrado pagina web\apps\comunicacion\templates\comunicacion\noticias_list.html"
+
+with open(file_path, "w", encoding="utf-8") as f:
+    f.write(content)
+
+print(f"Successfully wrote to {file_path}")

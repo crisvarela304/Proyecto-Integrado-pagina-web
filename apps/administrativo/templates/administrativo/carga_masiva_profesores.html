@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'includes/admin_sidebar.html' %}
+
+        <!-- Contenido -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+
+            <div
+                class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-success fw-bold"><i class="bi bi-person-video3 me-2"></i>Carga Masiva de Profesores
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{% url 'usuarios:gestion_usuarios' %}?tipo=profesor" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver a Profesores
+                    </a>
+                </div>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="alert alert-success shadow-sm" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-info-circle-fill"></i> Instrucciones Importantes</h4>
+                <p>Para cargar <strong>profesores</strong> masivamente, debes utilizar la <strong>Plantilla Oficial de
+                        Docentes</strong>. El sistema procesará el archivo y realizará las siguientes acciones:</p>
+                <ul>
+                    <li>Creará automáticamente las cuentas de usuario con el <strong>RUT</strong> como usuario.</li>
+                    <li>Generará una contraseña temporal usando los <strong>primeros 6 dígitos del RUT</strong>.</li>
+                    <li>Creará el perfil de tipo <strong>'Profesor'</strong>.</li>
+                    <li>Asignará automáticamente al usuario al grupo de seguridad <strong>"Profesores"</strong>.</li>
+                </ul>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle"></i> Los RUTs duplicados serán omitidos.</span>
+                    <a href="{% url 'administrativo:descargar_plantilla_carga_tipo' 'profesor' %}"
+                        class="btn btn-dark fw-bold">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Descargar Plantilla Profesores
+                    </a>
+                </div>
+            </div>
+
+            <!-- Formulario de Carga -->
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0 fw-bold">Subir Archivo de Profesores</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+
+                                <div class="mb-4">
+                                    <label for="{{ form.archivo.id_for_label }}" class="form-label fw-bold">Seleccionar
+                                        Archivo Excel (.xlsx)</label>
+                                    {{ form.archivo }}
+                                    {% if form.archivo.errors %}
+                                    <div class="text-danger small mt-1">{{ form.archivo.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted">Asegúrese de usar la plantilla específica de
+                                        profesores.</div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="bi bi-cloud-upload-fill me-2"></i>Iniciar Importación
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log de Errores (si existen) -->
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </main>
+    </div>
+</div>
+{% endblock %}

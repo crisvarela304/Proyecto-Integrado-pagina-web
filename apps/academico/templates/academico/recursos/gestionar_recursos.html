@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Recursos Académicos - LiceoOS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Recursos Académicos</h1>
+            <p class="text-muted">Gestiona el material de estudio para tus cursos.</p>
+        </div>
+        <a href="{% url 'usuarios:panel' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Formulario de Subida -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0 text-primary">Subir Nuevo Recurso</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{% url 'academico:subir_recurso' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Título del Documento</label>
+                            <input type="text" name="titulo" class="form-control" required
+                                placeholder="Ej: Guía de Matemáticas - Unidad 1">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Curso Destino</label>
+                            <select name="curso" class="form-select" required>
+                                <option value="">Seleccionar Curso...</option>
+                                {% for curso in cursos %}
+                                <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Archivo (PDF, Doc, Zip)</label>
+                            <input type="file" name="archivo" class="form-control" required>
+                            <div class="form-text">Tamaño máximo recomendado: 10MB</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary rounded-pill fw-bold">
+                                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Subir Recurso
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado de Recursos -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0">Mis Recursos Publicados</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Documento</th>
+                                    <th>Curso</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for recurso in recursos %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded bg-light-primary p-2 me-3 text-primary">
+                                                <i class="bi bi-file-earmark-text fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ recurso.titulo }}</div>
+                                                <small class="text-muted">{{ recurso.archivo.size|filesizeformat }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">{{ recurso.curso.nombre }}</span>
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ recurso.creado|date:"d M Y" }}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="{% url 'academico:descargar_recurso' recurso.id %}"
+                                                class="btn btn-sm btn-outline-primary" title="Descargar">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <a href="{% url 'academico:eliminar_recurso' recurso.id %}"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('¿Estás seguro de eliminar este recurso?');"
+                                                title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <div class="mb-2">
+                                            <i class="bi bi-folder2-open fs-1 opacity-50"></i>
+                                        </div>
+                                        No has subido ningún recurso todavía.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load l10n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<!-- Layout con Sidebar -->
+<div class="row">
+    <!-- Sidebar -->
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Contenido Principal -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <!-- Header -->
+        <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <div>
+                <h1 class="h2 text-primary fw-bold">
+                    <i class="bi bi-speedometer2 me-2"></i>Centro de Mando
+                </h1>
+                <p class="text-muted mb-0">LiceoOS v1.0 - Sistema de Gestión Inteligente</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Compartir</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Exportar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs Globales -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="text-muted mb-0 small text-uppercase fw-bold">Matrícula</p>
+                                <h2 class="mb-0 fw-bold">{{ kpis.total_alumnos }}</h2>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                                <i class="bi bi-people-fill fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ... otros KPIs se mantienen ... -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="text-muted mb-0 small text-uppercase fw-bold">Asistencia</p>
+                                <h2 class="mb-0 fw-bold">{{ kpis.asistencia_hoy_pct }}%</h2>
+                            </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                                <i class="bi bi-graph-up-arrow fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="text-muted mb-0 small text-uppercase fw-bold">Profesores</p>
+                                <h2 class="mb-0 fw-bold">{{ kpis.total_profes }}</h2>
+                            </div>
+                            <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                                <i class="bi bi-briefcase-fill fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="text-muted mb-0 small text-uppercase fw-bold">Noticias</p>
+                                <h2 class="mb-0 fw-bold">{{ kpis.noticias_mes }}</h2>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                                <i class="bi bi-newspaper fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Columna Izquierda: SAT -->
+            <div class="col-lg-8">
+
+                <!-- Sistema de Alerta Temprana -->
+                <div class="card border-0 shadow">
+                    <div
+                        class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-danger">
+                            <i class="bi bi-shield-exclamation me-2"></i>SAT (Alerta Temprana)
+                        </h5>
+                        {% if alertas %}
+                        <span class="badge bg-danger rounded-pill">{{ alertas|length }} En Riesgo</span>
+                        {% else %}
+                        <span class="badge bg-success rounded-pill">Sin Riesgos</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-0">
+                        {% if alertas %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Estudiante</th>
+                                        <th>Curso</th>
+                                        <th class="text-center">Prom</th>
+                                        <th class="text-center">Asist</th>
+                                        <th>Motivo</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for alerta in alertas %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-danger bg-opacity-10 text-danger me-2">
+                                                    {{ alerta.estudiante.first_name|first }}{{ alerta.estudiante.last_name|first }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ alerta.estudiante.get_full_name }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">{{ alerta.curso }}</span></td>
+                                        <td
+                                            class="text-center fw-bold {% if alerta.promedio < 4.0 %}text-danger{% endif %}">
+                                            {{ alerta.promedio }}</td>
+                                        <td
+                                            class="text-center fw-bold {% if alerta.asistencia < 85 %}text-danger{% endif %}">
+                                            {{ alerta.asistencia }}%</td>
+                                        <td>
+                                            {% for motivo in alerta.motivos %}
+                                            <span
+                                                class="badge bg-danger bg-opacity-10 text-danger border border-danger">{{ motivo }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'academico:detalle_estudiante' alerta.estudiante.pk %}"
+                                                class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-check-circle fs-1 text-success mb-3"></i>
+                            <h5>Sin Alertas Activas</h5>
+                            <p class="text-muted">No se detectaron estudiantes en zona de riesgo académico.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Gráficos -->
+            <div class="col-lg-4">
+                <!-- Gráfico de Rendimiento -->
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase text-muted mb-3">Asistencia Global</h6>
+                        <canvas id="asistenciaChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feed de Actividad Reciente -->
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-uppercase text-muted"> <i class="bi bi-activity me-2"></i>Actividad
+                            Reciente</h6>
+                        <a href="{% url 'administrativo:historial_actividad' %}"
+                            class="btn btn-sm btn-light text-muted small">Ver todo</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for actividad in actividades_recientes %}
+                            <div class="list-group-item px-3 py-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        {% if actividad.tipo_accion == 'nota' %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-circle p-2"><i
+                                                class="bi bi-pencil"></i></span>
+                                        {% elif actividad.tipo_accion == 'asistencia' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-circle p-2"><i
+                                                class="bi bi-check-lg"></i></span>
+                                        {% elif actividad.tipo_accion == 'recurso' %}
+                                        <span class="badge bg-info bg-opacity-10 text-info rounded-circle p-2"><i
+                                                class="bi bi-file-earmark"></i></span>
+                                        {% else %}
+                                        <span
+                                            class="badge bg-secondary bg-opacity-10 text-secondary rounded-circle p-2"><i
+                                                class="bi bi-bell"></i></span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1 small fw-bold text-dark">{{ actividad.descripcion }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                <i class="bi bi-person me-1"></i>
+                                                {% if actividad.usuario %}
+                                                {{ actividad.usuario.get_full_name|default:actividad.usuario.username }}
+                                                {% else %}
+                                                Sistema
+                                                {% endif %}
+                                            </small>
+                                            <small class="text-muted" style="font-size: 0.75rem;">{{ actividad.fecha|naturaltime }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <small>Sin actividad reciente</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico simple de Asistencia
+    const ctx = document.getElementById('asistenciaChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Presentes', 'Ausentes', 'Justificados'],
+            datasets: [{
+                data: [{{ kpis.asistencia_hoy_pct_js | safe }}, {{ kpis.ausentismo_hoy_pct_js | safe }}, 0],
+        backgroundColor: ['#4cc9f0', '#e63946', '#f72585'],
+        borderWidth: 0
+    }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' }
+        },
+        cutout: '70%'
+    }
+    });
+
+    // Efecto Hover en botones
+    document.querySelectorAll('.hover-lift').forEach(el => {
+        el.addEventListener('mouseenter', () => el.style.transform = 'translateY(-5px)');
+        el.addEventListener('mouseleave', () => el.style.transform = 'translateY(0)');
+        el.style.transition = 'transform 0.2s';
+    });
+</script>
+{% endblock %}

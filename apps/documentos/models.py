@@ -43,6 +43,7 @@ class Documento(models.Model):
     descripcion = models.TextField(blank=True)
     archivo = models.FileField(upload_to='documentos/', null=True, blank=True)
     categoria = models.ForeignKey(CategoriaDocumento, on_delete=models.CASCADE, related_name='documentos')
+    curso = models.ForeignKey('academico.Curso', on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos', help_text="Curso al que pertenece el documento (opcional)")
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='pdf')
     visibilidad = models.CharField(max_length=20, choices=VISIBILIDAD_CHOICES, default='publico')
     tags = models.CharField(max_length=200, blank=True, help_text="Separados por comas")

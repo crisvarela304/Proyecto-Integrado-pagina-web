@@ -1,1 +1,25 @@
-<h1>Error 500 - Error interno del servidor</h1><a href="{% url 'home' %}">Volver al inicio</a>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Error del Servidor | Liceo Juan Bautista{% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
+    <div class="text-center">
+        <div class="display-1 fw-bold text-danger mb-3">500</div>
+        <h2 class="display-5 fw-bold mb-4">Error Interno del Servidor</h2>
+        <p class="lead text-muted mb-5">
+            Algo salió mal en nuestros servidores.<br>
+            Nuestro equipo técnico ha sido notificado y estamos trabajando para solucionarlo.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'home' %}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm">
+                <i class="fas fa-home me-2"></i>Ir al Inicio
+            </a>
+            <a href="javascript:location.reload()" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                <i class="fas fa-sync-alt me-2"></i>Reintentar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
