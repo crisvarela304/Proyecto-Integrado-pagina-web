@@ -43,3 +43,54 @@ class ConfiguracionAcademica(models.Model):
         """Retorna la configuración actual, creándola si no existe"""
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class Notificacion(models.Model):
+    """Sistema de notificaciones web para usuarios"""
+    from django.contrib.auth.models import User
+    
+    TIPO_CHOICES = [
+        ('info', 'Información'),
+        ('tarea', 'Nueva Tarea'),
+        ('nota', 'Nueva Calificación'),
+        ('mensaje', 'Nuevo Mensaje'),
+        ('evento', 'Evento'),
+        ('alerta', 'Alerta'),
+    ]
+    
+    usuario = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones'
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='info')
+    titulo = models.CharField(max_length=200)
+    mensaje = models.TextField(blank=True)
+    url = models.CharField(max_length=500, blank=True, help_text='URL a la que redirige al hacer clic')
+    
+    leida = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_tipo_display()}: {self.titulo}"
+    
+    @classmethod
+    def crear_notificacion(cls, usuario, tipo, titulo, mensaje='', url=''):
+        """Método helper para crear notificaciones fácilmente"""
+        return cls.objects.create(
+            usuario=usuario,
+            tipo=tipo,
+            titulo=titulo,
+            mensaje=mensaje,
+            url=url
+        )
+    
+    @classmethod
+    def no_leidas_count(cls, usuario):
+        """Retorna el número de notificaciones no leídas"""
+        return cls.objects.filter(usuario=usuario, leida=False).count()

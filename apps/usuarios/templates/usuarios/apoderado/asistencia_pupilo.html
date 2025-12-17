@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Asistencia de {{ estudiante.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Navegación -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel_apoderado' %}">Portal Apoderado</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:resumen_pupilo' estudiante.id %}">{{
+                    estudiante.user.first_name }}</a></li>
+            <li class="breadcrumb-item active">Asistencia</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">
+            <i class="bi bi-calendar-check text-primary me-2"></i>
+            Asistencia de {{ estudiante.nombre_completo }}
+        </h3>
+        <a href="{% url 'usuarios:resumen_pupilo' estudiante.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 text-center">
+                <div class="card-body py-3">
+                    <h4 class="fw-bold text-primary mb-0">{{ estadisticas.porcentaje }}%</h4>
+                    <small class="text-muted">Asistencia</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 text-center">
+                <div class="card-body py-3">
+                    <h4 class="fw-bold text-success mb-0">{{ estadisticas.presentes }}</h4>
+                    <small class="text-muted">Presentes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 text-center">
+                <div class="card-body py-3">
+                    <h4 class="fw-bold text-danger mb-0">{{ estadisticas.ausentes }}</h4>
+                    <small class="text-muted">Ausentes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 text-center">
+                <div class="card-body py-3">
+                    <h4 class="fw-bold text-warning mb-0">{{ estadisticas.tardanzas }}</h4>
+                    <small class="text-muted">Tardanzas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h6 class="fw-bold mb-0">Últimos 30 días</h6>
+        </div>
+        <div class="card-body p-0">
+            {% if asistencias %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Día</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asist in asistencias %}
+                        <tr>
+                            <td>{{ asist.fecha|date:"d/m/Y" }}</td>
+                            <td class="text-muted">{{ asist.fecha|date:"l" }}</td>
+                            <td class="text-center">
+                                {% if asist.estado == 'presente' %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Presente</span>
+                                {% elif asist.estado == 'ausente' %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Ausente</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Tardanza</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">No hay registros de asistencia.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

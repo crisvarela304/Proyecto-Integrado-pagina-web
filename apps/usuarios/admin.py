@@ -9,13 +9,49 @@ from django.contrib import messages
 import csv
 import io
 import openpyxl
-from .models import PerfilUsuario
+from .models import PerfilUsuario, Pupilo
 from .forms import QuickStudentCreationForm, ImportacionMasivaForm
 from academico.models import InscripcionCurso, Curso
 from core.models import ConfiguracionAcademica
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+
+# ====================================
+# Admin para gestión de Pupilos
+# ====================================
+@admin.register(Pupilo)
+class PupiloAdmin(admin.ModelAdmin):
+    """Admin para gestionar la relación Apoderado-Estudiante"""
+    list_display = ('estudiante_nombre', 'apoderado_nombre', 'vinculo', 'es_apoderado_principal', 'created_at')
+    list_filter = ('vinculo', 'es_apoderado_principal')
+    search_fields = (
+        'estudiante__user__first_name', 
+        'estudiante__user__last_name',
+        'estudiante__rut',
+        'apoderado__user__first_name',
+        'apoderado__user__last_name',
+        'apoderado__rut'
+    )
+    raw_id_fields = ('apoderado', 'estudiante')
+    list_per_page = 25
+    
+    fieldsets = (
+        ('Relación', {
+            'fields': ('apoderado', 'estudiante', 'vinculo')
+        }),
+        ('Estado', {
+            'fields': ('es_apoderado_principal',)
+        }),
+    )
+    
+    def estudiante_nombre(self, obj):
+        return obj.estudiante.nombre_completo
+    estudiante_nombre.short_description = 'Estudiante'
+    
+    def apoderado_nombre(self, obj):
+        return obj.apoderado.nombre_completo
+    apoderado_nombre.short_description = 'Apoderado'
 
 
 class PerfilUsuarioInline(admin.StackedInline):

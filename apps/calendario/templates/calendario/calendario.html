@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+<style>
+    #calendar {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .fc-event {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 2px 6px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2b2d42;
+    }
+
+    .fc .fc-button-primary {
+        background-color: #3a86ff;
+        border-color: #3a86ff;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: #2667cc;
+    }
+
+    .fc-day-today {
+        background-color: rgba(58, 134, 255, 0.1) !important;
+    }
+
+    .event-modal-header {
+        border-radius: 8px 8px 0 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">
+            <i class="bi bi-calendar3 text-primary me-2"></i>{{ titulo }}
+        </h3>
+        <div class="d-flex gap-2">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'tareas:mis_tareas' %}" class="btn btn-outline-success">
+                <i class="bi bi-list-task me-1"></i>Ver Tareas
+            </a>
+            {% endif %}
+            {% if request.user.is_staff %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoEvento">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo Evento
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Leyenda de colores -->
+    {% if request.user.is_authenticated %}
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <small class="text-muted fw-semibold me-2">Leyenda:</small>
+                <span class="badge" style="background-color: #28a745;">📝 Tarea Pendiente</span>
+                <span class="badge" style="background-color: #dc3545;">📝 Tarea Vencida</span>
+                <span class="badge" style="background-color: #3788d8;">📅 Evento Escolar</span>
+                {% if request.user.perfil.tipo_usuario == 'profesor' %}
+                <span class="badge" style="background-color: #6f42c1;">📋 Mis Tareas Asignadas</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Evento -->
+<div class="modal fade" id="modalEvento" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header event-modal-header text-white" id="modalEventoHeader">
+                <h5 class="modal-title" id="modalEventoTitulo"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalEventoFecha" class="text-muted mb-2"></p>
+                <p id="modalEventoDescripcion"></p>
+                <span class="badge" id="modalEventoTipo"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales-all.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                list: 'Lista'
+            },
+            events: '{% url "calendario:eventos_json" %}',
+            eventClick: function (info) {
+                var evento = info.event;
+                var props = evento.extendedProps;
+
+                // Si el evento tiene URL (es una tarea), navegar directamente
+                if (evento.url) {
+                    info.jsEvent.preventDefault(); // Prevenir navegación automática
+
+                    // Mostrar confirmación antes de navegar
+                    var tipoEvento = props.tipo === 'tarea' ? 'esta tarea' : 'este evento';
+                    if (confirm('¿Deseas ir a ' + tipoEvento + '?\n\n' + evento.title)) {
+                        window.location.href = evento.url;
+                    }
+                    return;
+                }
+
+                // Modal para eventos normales
+                document.getElementById('modalEventoTitulo').textContent = evento.title;
+                document.getElementById('modalEventoDescripcion').textContent = props.descripcion || 'Sin descripción';
+
+                // Mostrar tipo con formato amigable
+                var tipoTexto = props.tipo;
+                if (props.tipo === 'tarea') tipoTexto = '📝 Tarea - ' + (props.asignatura || '');
+                if (props.tipo === 'tarea_profesor') tipoTexto = '📋 Tarea Asignada';
+                document.getElementById('modalEventoTipo').textContent = tipoTexto;
+
+                document.getElementById('modalEventoHeader').style.backgroundColor = evento.backgroundColor;
+
+                // Formatear fecha
+                var fechaStr = evento.start.toLocaleDateString('es-CL', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('modalEventoFecha').textContent = fechaStr;
+
+                var modal = new bootstrap.Modal(document.getElementById('modalEvento'));
+                modal.show();
+            },
+            eventDidMount: function (info) {
+                // Tooltip con descripción
+                var props = info.event.extendedProps;
+                var tooltip = props.descripcion || info.event.title;
+                if (props.asignatura) tooltip = props.asignatura + ': ' + tooltip;
+                info.el.title = tooltip;
+            }
+        });
+
+        calendar.render();
+    });
+</script>
+{% endblock %}

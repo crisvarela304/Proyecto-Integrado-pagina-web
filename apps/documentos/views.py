@@ -76,9 +76,21 @@ def gestion_categorias_doc(request):
 
 @login_required
 def eliminar_categoria(request, pk):
+    """Eliminar categoría de documentos"""
+    es_admin = request.user.is_staff or (
+        hasattr(request.user, 'perfil') and 
+        request.user.perfil.tipo_usuario in ['administrativo', 'directivo']
+    )
+    if not es_admin:
+        messages.error(request, "No tienes permisos para eliminar categorías.")
+        return redirect('home')
+        
     cat = get_object_or_404(CategoriaDocumento, pk=pk)
-    cat.delete()
-    messages.success(request, "Categoría eliminada.")
+    try:
+        cat.delete()
+        messages.success(request, "Categoría eliminada.")
+    except Exception:
+        messages.error(request, "No se puede eliminar la categoría porque tiene documentos asociados.")
     return redirect('documentos:gestion_categorias_doc')
 
 # --- Vistas Públicas/Usuarios ---
@@ -370,9 +382,16 @@ def subir_documento(request):
             documento = form.save()
             messages.success(request, "Documento subido exitosamente.")
             return redirect(documento.get_absolute_url())
+        else:
+            messages.error(request, "Error al subir el documento. Verifica los datos.")
     else:
         form = DocumentoForm(usuario=request.user)
     
+    categorias = CategoriaDocumento.objects.filter(activa=True)
+    return render(request, 'documentos/subir_documento.html', {
+        'form': form,
+        'categorias': categorias
+    })
 @login_required
 def material_estudio(request):
     """Vista exclusiva para estudiantes: Material de Estudio"""
@@ -454,7 +473,9 @@ def material_estudio(request):
                 import os
                 _, ext_raw = os.path.splitext(rec.archivo.name)
                 ext = ext_raw.lower().replace('.', '')
-        except: pass
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Error calculando tamaño de recurso {rec.id}: {e}")
 
         lista_material.append({
             'tipo_obj': 'recurso',

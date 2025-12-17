@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from comunicacion.models import CategoriaNoticia
 from core.models import ConfiguracionAcademica
 
@@ -110,7 +112,15 @@ class Calificacion(models.Model):
     semestre = models.CharField(max_length=1, choices=SEMESTRE_CHOICES)
     fecha_evaluacion = models.DateField()
     numero_evaluacion = models.PositiveIntegerField(default=1)
-    nota = models.DecimalField(max_digits=4, decimal_places=2, help_text="Nota del 1.0 al 7.0")
+    nota = models.DecimalField(
+        max_digits=4, 
+        decimal_places=2, 
+        validators=[
+            MinValueValidator(1.0, message="La nota mínima es 1.0"),
+            MaxValueValidator(7.0, message="La nota máxima es 7.0")
+        ],
+        help_text="Nota del 1.0 al 7.0"
+    )
     descripcion = models.CharField(max_length=200, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
 

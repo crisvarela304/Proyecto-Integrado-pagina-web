@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Tarea{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tareas:lista_tareas_profesor' %}">Mis Tareas</a></li>
+            <li class="breadcrumb-item active">Nueva Tarea</li>
+        </ol>
+    </nav>
+
+    <h3 class="fw-bold mb-4">
+        <i class="bi bi-plus-circle text-primary me-2"></i>Crear Nueva Tarea
+    </h3>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <label class="form-label required-field">Título</label>
+                        <input type="text" name="titulo" class="form-control" required
+                            placeholder="Ej: Guía de ejercicios Capítulo 3">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <select name="tipo" class="form-select">
+                            {% for value, label in tipos %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label required-field">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="4" required
+                            placeholder="Instrucciones detalladas para los estudiantes..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-field">Curso</label>
+                        <select name="curso" class="form-select" required>
+                            <option value="">Seleccionar curso...</option>
+                            {% for curso in cursos %}
+                            <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-field">Asignatura</label>
+                        <select name="asignatura" class="form-select" required>
+                            <option value="">Seleccionar asignatura...</option>
+                            {% for asig in asignaturas %}
+                            <option value="{{ asig.id }}">{{ asig.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-field">Fecha de Entrega</label>
+                        <input type="date" name="fecha_entrega" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Puntaje Máximo</label>
+                        <input type="number" name="puntaje_maximo" class="form-control" value="100" min="1" max="1000">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Archivo Adjunto (Opcional)</label>
+                        <input type="file" name="archivo_adjunto" class="form-control">
+                        <small class="text-muted">PDF, Word, o imágenes.</small>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Crear Tarea
+                    </button>
+                    <a href="{% url 'tareas:lista_tareas_profesor' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

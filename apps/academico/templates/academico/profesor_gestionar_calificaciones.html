@@ -23,7 +23,8 @@
 
                                 <!-- Info -->
                                 <div class="estudiante-info">
-                                    <h4 class="mb-1 text-dark">{{ estudiante.get_full_name|default:estudiante.username }}</h4>
+                                    <h4 class="mb-1 text-dark">{{ estudiante.get_full_name|default:estudiante.username
+                                        }}</h4>
                                     <p class="mb-1 text-muted">
                                         <i class="bi bi-person-badge me-2"></i>
                                         {{ inscripcion.curso.nombre }} - {{ inscripcion.año }}
@@ -36,11 +37,13 @@
                                         {% if perfil_estudiante %}
                                         <p class="mb-1 text-muted">
                                             <i class="bi bi-telephone me-2"></i>
-                                            Teléfono estudiante: {{ perfil_estudiante.telefono_estudiante|default:"Sin registro" }}
+                                            Teléfono estudiante: {{ perfil_estudiante.telefono_estudiante|default:"Sin
+                                            registro" }}
                                         </p>
                                         <p class="mb-0 text-dark fw-bold">
                                             <i class="bi bi-phone me-2"></i>
-                                            Teléfono apoderado: {{ perfil_estudiante.telefono_apoderado|default:"Sin registro" }}
+                                            Teléfono apoderado: {{ perfil_estudiante.telefono_apoderado|default:"Sin
+                                            registro" }}
                                         </p>
                                         {% else %}
                                         <p class="mb-0 text-muted">
@@ -122,9 +125,11 @@
                                                     <tr class="fila-nota {% if i > 4 %}d-none campo-extra{% endif %}">
                                                         <td class="text-center fw-bold text-muted">{{ i }}</td>
                                                         <td>
-                                                            <input type="number" step="0.1" min="1.0" max="7.0"
-                                                                class="form-control form-control-sm text-center fw-bold"
+                                                            <input type="text" inputmode="decimal"
+                                                                pattern="^[1-6](\.[0-9])?$|^7(\.0)?$"
+                                                                class="form-control form-control-sm text-center fw-bold nota-input"
                                                                 name="nota_{{ asignatura.id }}_{{ i }}" placeholder="-"
+                                                                maxlength="3" title="Ingresa una nota del 1.0 al 7.0"
                                                                 value="{% for cal in calificaciones_dict|get_item:asignatura.id %}{% if cal.numero_evaluacion == i %}{{ cal.nota|stringformat:'s' }}{% endif %}{% endfor %}">
                                                         </td>
                                                         <td>
@@ -215,6 +220,27 @@
             transform: translateY(0);
         }
     }
+
+    /* Estilos para validación de notas */
+    .nota-input {
+        transition: all 0.2s ease;
+    }
+
+    .nota-input.is-invalid {
+        border-color: #dc3545 !important;
+        background-color: #fff5f5 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .nota-input.is-valid {
+        border-color: #198754 !important;
+        background-color: #f0fff4 !important;
+    }
+
+    .nota-input:focus {
+        border-color: #3a86ff !important;
+        box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25) !important;
+    }
 </style>
 
 <script>
@@ -227,27 +253,59 @@
             alert('Has alcanzado el máximo de 10 notas.');
             return;
         }
-
-        // Incrementamos
         columnasVisibles++;
-
-        // Buscamos todas las filas que correspondan al nuevo número y les quitamos d-none
-        // Como la estructura es por asignatura, iteramos sobre todas las tablas
         const filas = document.querySelectorAll(`.fila-nota:nth-child(${columnasVisibles})`);
         filas.forEach(fila => {
             fila.classList.remove('d-none');
-            // Pequeña animación
             fila.classList.add('animate__animated', 'animate__fadeIn');
         });
     }
 
-    // Al cargar, verificar si hay notas guardadas en campos ocultos (>4) y mostrarlos automáticamente
+    // Validar si un valor es una nota válida (1.0 - 7.0)
+    function esNotaValida(valor) {
+        if (!valor || valor.trim() === '' || valor === '-') return true; // Campo vacío es válido
+        const num = parseFloat(valor.replace(',', '.'));
+        return !isNaN(num) && num >= 1.0 && num <= 7.0;
+    }
+
+    // Formatear nota a formato correcto
+    function formatearNota(valor) {
+        if (!valor || valor.trim() === '') return '';
+        let num = parseFloat(valor.replace(',', '.'));
+        if (isNaN(num)) return '';
+        // Redondear a 1 decimal
+        num = Math.round(num * 10) / 10;
+        // Clampar al rango válido
+        if (num < 1.0) num = 1.0;
+        if (num > 7.0) num = 7.0;
+        return num.toFixed(1);
+    }
+
+    // Validar todos los campos de nota
+    function validarTodasLasNotas() {
+        const inputs = document.querySelectorAll('.nota-input');
+        let hayErrores = false;
+
+        inputs.forEach(input => {
+            const valor = input.value.trim();
+            if (!esNotaValida(valor)) {
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+                hayErrores = true;
+            } else if (valor && valor !== '-') {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            } else {
+                input.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+
+        return !hayErrores;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        // Logica simple: revisar todos los inputs > 4. Si tienen valor, mostrar esa fila.
+        // Mostrar columnas ocultas si tienen datos
         for (let i = 5; i <= 10; i++) {
-            // Buscamos inputs de nota para la columna i
-            // El name es nota_{asignatura_id}_{i}
-            // Usamos un selector parcial
             const inputs = document.querySelectorAll(`input[name$="_${i}"]`);
             let hayDatos = false;
             inputs.forEach(input => {
@@ -255,52 +313,96 @@
                     hayDatos = true;
                 }
             });
-
             if (hayDatos) {
-                // Si encontramos datos en la columna i, nos aseguramos que todas las columnas hasta i sean visibles
                 while (columnasVisibles < i) {
                     mostrarMasNotas();
                 }
             }
         }
-    });
 
-    function validarNotas() {
-        const inputs = document.querySelectorAll('input[type="number"]');
-        let tieneErrores = false;
-        inputs.forEach(input => {
-            const valor = parseFloat(input.value);
-            if (input.value && (valor < 1.0 || valor > 7.0)) {
-                input.classList.add('is-invalid');
-                tieneErrores = true;
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        });
-        if (tieneErrores) {
-            alert('Por favor, corrige las notas que están fuera del rango válido (1.0 - 7.0)');
-            return false;
-        }
-        return true;
-    }
+        // Configurar validación en tiempo real para inputs de nota
+        const notaInputs = document.querySelectorAll('.nota-input');
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const inputs = document.querySelectorAll('input[type="number"]');
-        inputs.forEach(input => {
+        notaInputs.forEach(input => {
+            // Prevenir caracteres no válidos al escribir
+            input.addEventListener('keypress', function (e) {
+                const char = String.fromCharCode(e.which);
+                const currentValue = this.value;
+
+                // Permitir solo: dígitos 1-7, punto, coma
+                if (!/[0-9.,]/.test(char)) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Si ya hay un punto o coma, no permitir otro
+                if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Limitar primer dígito a 1-7
+                if (currentValue === '' && !/[1-7]/.test(char)) {
+                    e.preventDefault();
+                    return;
+                }
+            });
+
+            // Validar al perder el foco y formatear
             input.addEventListener('blur', function () {
-                if (this.value && (this.value < 1.0 || this.value > 7.0)) {
-                    this.classList.add('is-invalid');
+                let valor = this.value.trim();
+
+                if (valor && valor !== '-') {
+                    const formateado = formatearNota(valor);
+                    this.value = formateado;
+
+                    if (!esNotaValida(formateado)) {
+                        this.classList.add('is-invalid');
+                        this.classList.remove('is-valid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    }
                 } else {
-                    this.classList.remove('is-invalid');
+                    this.classList.remove('is-invalid', 'is-valid');
+                }
+            });
+
+            // Validar mientras escribe
+            input.addEventListener('input', function () {
+                const valor = this.value.trim();
+
+                // Quitar validación visual temporalmente mientras escribe
+                this.classList.remove('is-invalid', 'is-valid');
+
+                // Mostrar error inmediato si el primer dígito es 8 o 9
+                if (valor.length === 1 && /[089]/.test(valor)) {
+                    this.value = '';
+                    this.classList.add('is-invalid');
+                }
+
+                // Si escribe algo como "8" o "9" después de otro número, corregir
+                const num = parseFloat(valor.replace(',', '.'));
+                if (!isNaN(num) && num > 7.0) {
+                    this.classList.add('is-invalid');
                 }
             });
         });
 
+        // Validar antes de enviar el formulario
         const form = document.getElementById('calificacionesForm');
         if (form) {
             form.addEventListener('submit', function (e) {
-                if (!validarNotas()) {
+                if (!validarTodasLasNotas()) {
                     e.preventDefault();
+                    alert('⚠️ Por favor, corrige las notas marcadas en rojo.\n\nLas notas deben estar entre 1.0 y 7.0');
+
+                    // Scroll al primer error
+                    const primerError = document.querySelector('.nota-input.is-invalid');
+                    if (primerError) {
+                        primerError.focus();
+                        primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
             });
         }

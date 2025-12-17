@@ -16,6 +16,14 @@ from .views import (
     eliminar_usuario
 )
 
+# Vistas del apoderado
+from .apoderado_views import (
+    panel_apoderado,
+    resumen_pupilo,
+    notas_pupilo,
+    asistencia_pupilo
+)
+
 app_name = 'usuarios'
 
 urlpatterns = [
@@ -35,4 +43,10 @@ urlpatterns = [
     path('editar/<int:usuario_id>/', editar_usuario, name='editar_usuario'),
     path('admin-reset-password/', admin_reset_password, name='admin_reset_password'),
     path('eliminar/<int:usuario_id>/', eliminar_usuario, name='eliminar_usuario'),
+    
+    # Portal del Apoderado
+    path('apoderado/', panel_apoderado, name='panel_apoderado'),
+    path('apoderado/pupilo/<int:estudiante_id>/', resumen_pupilo, name='resumen_pupilo'),
+    path('apoderado/pupilo/<int:estudiante_id>/notas/', notas_pupilo, name='notas_pupilo'),
+    path('apoderado/pupilo/<int:estudiante_id>/asistencia/', asistencia_pupilo, name='asistencia_pupilo'),
 ]

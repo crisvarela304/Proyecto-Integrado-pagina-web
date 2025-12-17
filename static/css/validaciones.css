@@ -1,0 +1,193 @@
+/**
+ * LiceoOS - Estilos de Validación y UX
+ * Estilos reutilizables para feedback visual de formularios
+ */
+
+/* ===== INPUTS DE RUT ===== */
+.rut-input {
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.rut-input.is-invalid {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.rut-input.is-valid {
+    border-color: #198754 !important;
+    background-color: #f0fff4 !important;
+}
+
+.rut-input:focus {
+    border-color: #3a86ff !important;
+    box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25) !important;
+}
+
+/* ===== INPUTS DE NOTAS ===== */
+.nota-input {
+    transition: all 0.2s ease;
+}
+
+.nota-input.is-invalid {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.nota-input.is-valid {
+    border-color: #198754 !important;
+    background-color: #f0fff4 !important;
+}
+
+.nota-input:focus {
+    border-color: #3a86ff !important;
+    box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25) !important;
+}
+
+/* ===== CAMPOS OBLIGATORIOS ===== */
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.form-label .text-danger {
+    font-weight: bold;
+}
+
+/* ===== FEEDBACK DE VALIDACIÓN BOOTSTRAP ===== */
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+
+.is-invalid~.invalid-feedback {
+    display: block;
+}
+
+/* ===== BREADCRUMBS PERSONALIZADOS ===== */
+.breadcrumb {
+    background: transparent;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    content: "›";
+    font-weight: bold;
+    color: #adb5bd;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(5px);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== BOTONES CON LOADING ===== */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== TARJETAS CON HOVER ===== */
+.card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ===== TOOLTIPS MEJORADOS ===== */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    background: #2b2d42;
+    color: white;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 8px);
+}

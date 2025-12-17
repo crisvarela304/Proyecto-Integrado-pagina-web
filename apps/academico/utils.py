@@ -128,3 +128,114 @@ def generar_certificado_notas(alumno):
     c.save()
     buffer.seek(0)
     return buffer
+
+
+def generar_reporte_asistencia(alumno, fecha_inicio=None, fecha_fin=None):
+    """Genera un informe PDF de asistencia del estudiante"""
+    from datetime import date, timedelta
+    from .models import Asistencia, InscripcionCurso
+    
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    c.setTitle(f"Reporte de Asistencia - {alumno.username}")
+    
+    # Encabezado
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(width/2, height - 60, "REPORTE DE ASISTENCIA")
+    
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(width/2, height - 80, "Liceo Juan Bautista de Hualqui")
+    
+    # Línea
+    c.line(70, height - 90, width - 70, height - 90)
+    
+    # Datos del estudiante
+    y = height - 120
+    c.setFont("Helvetica", 11)
+    c.drawString(70, y, f"Estudiante: {alumno.get_full_name()}")
+    y -= 20
+    rut = getattr(alumno.perfil, 'rut', alumno.username) if hasattr(alumno, 'perfil') else alumno.username
+    c.drawString(70, y, f"RUT: {rut}")
+    
+    # Curso
+    inscripcion = InscripcionCurso.objects.filter(estudiante=alumno, estado='activo').first()
+    y -= 20
+    if inscripcion:
+        c.drawString(70, y, f"Curso: {inscripcion.curso.nombre}")
+    
+    # Rango de fechas
+    if not fecha_inicio:
+        fecha_inicio = date.today().replace(day=1)
+    if not fecha_fin:
+        fecha_fin = date.today()
+    
+    y -= 30
+    c.drawString(70, y, f"Período: {fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}")
+    
+    # Obtener asistencias
+    asistencias = Asistencia.objects.filter(
+        estudiante=alumno,
+        fecha__gte=fecha_inicio,
+        fecha__lte=fecha_fin
+    ).order_by('-fecha')
+    
+    total = asistencias.count()
+    presentes = asistencias.filter(estado='presente').count()
+    ausentes = asistencias.filter(estado='ausente').count()
+    tardanzas = asistencias.filter(estado='tardanza').count()
+    porcentaje = round((presentes / total * 100), 1) if total > 0 else 100
+    
+    # Estadísticas
+    y -= 40
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(70, y, "RESUMEN")
+    c.line(70, y-5, 200, y-5)
+    y -= 25
+    
+    c.setFont("Helvetica", 11)
+    c.drawString(70, y, f"Total de días: {total}")
+    y -= 18
+    c.drawString(70, y, f"Presente: {presentes}")
+    y -= 18
+    c.drawString(70, y, f"Ausente: {ausentes}")
+    y -= 18
+    c.drawString(70, y, f"Tardanzas: {tardanzas}")
+    y -= 25
+    c.setFont("Helvetica-Bold", 12)
+    color_porcentaje = "red" if porcentaje < 85 else "black"
+    c.drawString(70, y, f"Porcentaje de asistencia: {porcentaje}%")
+    
+    # Detalle
+    y -= 40
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(70, y, "DETALLE")
+    c.line(70, y-5, 200, y-5)
+    y -= 25
+    
+    # Tabla
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(70, y, "Fecha")
+    c.drawString(200, y, "Estado")
+    c.drawString(350, y, "Observación")
+    y -= 15
+    
+    c.setFont("Helvetica", 10)
+    for asist in asistencias[:20]:  # Limitar a 20 registros
+        if y < 80:
+            break
+        c.drawString(70, y, asist.fecha.strftime('%d/%m/%Y'))
+        c.drawString(200, y, asist.get_estado_display())
+        obs = asist.observacion[:30] + '...' if asist.observacion and len(asist.observacion) > 30 else (asist.observacion or '-')
+        c.drawString(350, y, obs)
+        y -= 15
+    
+    # Footer
+    c.setFont("Helvetica-Oblique", 9)
+    c.drawCentredString(width/2, 40, f"Generado el {timezone.now().strftime('%d/%m/%Y %H:%M')}")
+    
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer

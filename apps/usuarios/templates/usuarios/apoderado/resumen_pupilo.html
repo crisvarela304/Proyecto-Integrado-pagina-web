@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ estudiante.nombre_completo }} - Resumen{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Navegación de pupilos (si hay más de uno) -->
+    {% if pupilos.count > 1 %}
+    <div class="mb-3">
+        <div class="d-flex gap-2 flex-wrap">
+            {% for p in pupilos %}
+            <a href="{% url 'usuarios:resumen_pupilo' p.estudiante.id %}"
+                class="btn btn-sm {% if p.estudiante.id == estudiante.id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                {{ p.estudiante.user.first_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Cabecera del estudiante -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4">
+                            <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
+                                style="width: 80px; height: 80px;">
+                                <span class="text-primary fs-2 fw-bold">
+                                    {{ estudiante.user.first_name|slice:":1" }}{{ estudiante.user.last_name|slice:":1"
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-1">{{ estudiante.nombre_completo }}</h3>
+                            <p class="mb-0 opacity-75">
+                                <i class="bi bi-card-text me-1"></i>{{ estudiante.rut }}
+                                {% if inscripcion %}
+                                <span class="ms-3">
+                                    <i class="bi bi-mortarboard me-1"></i>{{ inscripcion.curso.nombre }}
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Asistencia del Mes -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-{{ porcentaje_asistencia >= 85|yesno:'success,warning' }} bg-opacity-10 d-inline-flex align-items-center justify-content-center"
+                            style="width: 60px; height: 60px;">
+                            <i
+                                class="bi bi-calendar-check fs-4 text-{{ porcentaje_asistencia >= 85|yesno:'success,warning' }}"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ porcentaje_asistencia }}%</h4>
+                    <p class="text-muted small mb-3">Asistencia del mes</p>
+                    <a href="{% url 'usuarios:asistencia_pupilo' estudiante.id %}"
+                        class="btn btn-sm btn-outline-secondary">
+                        Ver Historial
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promedio General -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center"
+                            style="width: 60px; height: 60px;">
+                            <i class="bi bi-graph-up fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                    {% with promedio_general=estudiante.promedio_general|default:0 %}
+                    <h4 class="fw-bold mb-0">{{ promedio_general|floatformat:1 }}</h4>
+                    {% endwith %}
+                    <p class="text-muted small mb-3">Promedio General</p>
+                    <a href="{% url 'usuarios:notas_pupilo' estudiante.id %}" class="btn btn-sm btn-outline-primary">
+                        Ver Notas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimas Notas -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-journal-check text-primary me-2"></i>Últimas Calificaciones
+                    </h6>
+                </div>
+                <div class="card-body px-4">
+                    {% if ultimas_notas %}
+                    <div class="list-group list-group-flush">
+                        {% for nota in ultimas_notas %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold">{{ nota.asignatura.nombre }}</span>
+                                <small class="text-muted d-block">{{ nota.fecha_evaluacion|date:"d M" }}</small>
+                            </div>
+                            <span
+                                class="badge rounded-pill fs-6 {% if nota.nota >= 4 %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ nota.nota|floatformat:1 }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">Sin calificaciones recientes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promedios por Asignatura -->
+    {% if promedios %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-bar-chart text-primary me-2"></i>Promedios por Asignatura
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        {% for p in promedios %}
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="p-3 bg-light rounded-3 text-center">
+                                <small class="text-muted d-block text-truncate">{{ p.asignatura__nombre }}</small>
+                                <span
+                                    class="fs-5 fw-bold {% if p.promedio >= 4 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ p.promedio|floatformat:1 }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

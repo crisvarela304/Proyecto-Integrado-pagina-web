@@ -1,0 +1,78 @@
+{% comment %}
+Modal de Confirmación Reutilizable
+
+Uso:
+{% include 'includes/modal_confirmacion.html' %}
+
+JavaScript para usar:
+confirmarAccion('¿Eliminar usuario Juan?', '/usuarios/eliminar/1/', 'danger');
+{% endcomment %}
+
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-0" id="modalConfirmacionHeader">
+                <h5 class="modal-title fw-bold" id="modalConfirmacionTitulo">
+                    <i class="bi bi-exclamation-triangle me-2" id="modalConfirmacionIcono"></i>
+                    <span id="modalConfirmacionTituloTexto">Confirmar Acción</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p id="modalConfirmacionMensaje" class="mb-0 fs-5"></p>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Cancelar
+                </button>
+                <a href="#" id="modalConfirmacionBoton" class="btn px-4">
+                    <i class="bi bi-check-lg me-1"></i><span id="modalConfirmacionBotonTexto">Confirmar</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Muestra un modal de confirmación dinámico
+     * @param {string} mensaje - Mensaje a mostrar
+     * @param {string} url - URL a la que redirigir si confirma
+     * @param {string} tipo - Tipo de acción: 'danger', 'warning', 'primary'
+     * @param {string} textoBoton - Texto del botón de confirmación (opcional)
+     */
+    function confirmarAccion(mensaje, url, tipo = 'danger', textoBoton = null) {
+        const modal = document.getElementById('modalConfirmacion');
+        const header = document.getElementById('modalConfirmacionHeader');
+        const icono = document.getElementById('modalConfirmacionIcono');
+        const boton = document.getElementById('modalConfirmacionBoton');
+        const textoBtn = document.getElementById('modalConfirmacionBotonTexto');
+
+        // Configurar mensaje
+        document.getElementById('modalConfirmacionMensaje').innerHTML = mensaje;
+
+        // Configurar estilos según tipo
+        const estilos = {
+            'danger': { bg: 'bg-danger', icon: 'bi-trash', btnClass: 'btn-danger', btnText: 'Eliminar' },
+            'warning': { bg: 'bg-warning', icon: 'bi-exclamation-triangle', btnClass: 'btn-warning', btnText: 'Continuar' },
+            'primary': { bg: 'bg-primary', icon: 'bi-question-circle', btnClass: 'btn-primary', btnText: 'Confirmar' }
+        };
+
+        const estilo = estilos[tipo] || estilos['primary'];
+
+        header.className = `modal-header border-0 ${estilo.bg} text-white`;
+        icono.className = `bi ${estilo.icon} me-2`;
+        boton.className = `btn ${estilo.btnClass} px-4`;
+        boton.href = url;
+        textoBtn.textContent = textoBoton || estilo.btnText;
+
+        // Mostrar modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    // Alias corto para eliminar
+    function confirmarEliminar(mensaje, url) {
+        confirmarAccion(mensaje, url, 'danger', 'Eliminar');
+    }
+</script>

@@ -48,3 +48,57 @@ class PerfilUsuario(models.Model):
             raise ValidationError({'rut': 'El RUT ingresado no es válido.'})
 
 
+class Pupilo(models.Model):
+    """
+    Relación entre Apoderado y Estudiante.
+    Permite que un apoderado tenga múltiples pupilos y viceversa.
+    """
+    VINCULO_CHOICES = [
+        ('padre', 'Padre'),
+        ('madre', 'Madre'),
+        ('tutor', 'Tutor Legal'),
+        ('abuelo', 'Abuelo/a'),
+        ('otro', 'Otro Familiar'),
+    ]
+    
+    apoderado = models.ForeignKey(
+        PerfilUsuario, 
+        on_delete=models.CASCADE, 
+        related_name='pupilos',
+        limit_choices_to={'tipo_usuario': 'apoderado'},
+        verbose_name='Apoderado'
+    )
+    estudiante = models.ForeignKey(
+        PerfilUsuario, 
+        on_delete=models.CASCADE, 
+        related_name='apoderados',
+        limit_choices_to={'tipo_usuario': 'estudiante'},
+        verbose_name='Estudiante'
+    )
+    vinculo = models.CharField(
+        'Vínculo Familiar',
+        max_length=20, 
+        choices=VINCULO_CHOICES, 
+        default='tutor'
+    )
+    es_apoderado_principal = models.BooleanField(
+        default=False,
+        help_text='Marcar si es el apoderado principal del estudiante'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Pupilo'
+        verbose_name_plural = 'Pupilos'
+        unique_together = ['apoderado', 'estudiante']
+        ordering = ['estudiante__user__last_name']
+    
+    def __str__(self):
+        return f"{self.apoderado.nombre_completo} → {self.estudiante.nombre_completo} ({self.get_vinculo_display()})"
+    
+    def clean(self):
+        """Validaciones del modelo"""
+        if hasattr(self, 'apoderado') and self.apoderado.tipo_usuario != 'apoderado':
+            raise ValidationError({'apoderado': 'El usuario seleccionado debe ser de tipo apoderado.'})
+        if hasattr(self, 'estudiante') and self.estudiante.tipo_usuario != 'estudiante':
+            raise ValidationError({'estudiante': 'El usuario seleccionado debe ser de tipo estudiante.'})

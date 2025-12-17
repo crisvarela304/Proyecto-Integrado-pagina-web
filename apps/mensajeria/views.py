@@ -300,15 +300,17 @@ def conversacion_detail(request, conversacion_id):
     # Obtener otros datos necesarios
     otro_participante = conversacion.get_otro_participante(request.user)
     contador_no_leidos = conversacion.get_contador_no_leidos(request.user)
+    es_alumno = request.user == conversacion.alumno
     
     contexto = {
         'conversacion': conversacion,
         'mensajes': page_obj.object_list,
         'page_obj': page_obj,
-        'form_mensaje': form_mensaje,
+        'mensaje_form': form_mensaje,
         'otro_participante': otro_participante,
         'contador_no_leidos': contador_no_leidos,
         'usuario_actual': request.user,
+        'es_alumno': es_alumno,
     }
     
     return render(request, 'mensajeria/conversacion_detail.html', contexto)

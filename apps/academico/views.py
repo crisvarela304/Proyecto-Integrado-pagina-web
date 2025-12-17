@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from .models import Asignatura, Curso, InscripcionCurso, Calificacion, HorarioClases, Asistencia
 from comunicacion.models import Noticia
 from core.models import ConfiguracionAcademica
-from .utils import render_to_pdf, generar_certificado_alumno_regular, generar_certificado_notas
+from .utils import render_to_pdf, generar_certificado_alumno_regular, generar_certificado_notas, generar_reporte_asistencia
 from django.utils import timezone
 from .services import AcademicoService
 import secrets
@@ -302,8 +302,6 @@ def tomar_asistencia(request, curso_id):
                         'registrado_por': request.user
                     }
                 )
-                registros_creados += 1
-        
                 registros_creados += 1
         
         # --- LOGGING ---
@@ -855,6 +853,9 @@ def descargar_certificado_pdf(request, tipo):
         elif tipo == 'notas':
             buffer = generar_certificado_notas(request.user)
             filename = f"Informe_Notas_{request.user.username}.pdf"
+        elif tipo == 'asistencia':
+            buffer = generar_reporte_asistencia(request.user)
+            filename = f"Reporte_Asistencia_{request.user.username}.pdf"
         else:
             messages.error(request, "Tipo de certificado no válido.")
             return redirect('academico:mis_certificados')
@@ -899,6 +900,15 @@ def gestion_asignaturas(request):
 @login_required
 def editar_asignatura(request, asignatura_id):
     """Editar asignatura existente"""
+    # Verificar permisos
+    es_admin = request.user.is_staff or (
+        hasattr(request.user, 'perfil') and 
+        request.user.perfil.tipo_usuario in ['administrativo', 'directivo']
+    )
+    if not es_admin:
+        messages.error(request, "No tienes permisos para editar asignaturas.")
+        return redirect('home')
+        
     asignatura = get_object_or_404(Asignatura, id=asignatura_id)
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -913,9 +923,16 @@ def editar_asignatura(request, asignatura_id):
 @login_required
 def eliminar_asignatura(request, asignatura_id):
     """Eliminar asignatura"""
+    # Verificar permisos
+    es_admin = request.user.is_staff or (
+        hasattr(request.user, 'perfil') and 
+        request.user.perfil.tipo_usuario in ['administrativo', 'directivo']
+    )
+    if not es_admin:
+        messages.error(request, "No tienes permisos para eliminar asignaturas.")
+        return redirect('home')
+        
     asignatura = get_object_or_404(Asignatura, id=asignatura_id)
-    # Validar si tiene uso? Por ahora borrado simple o soft delete si el modelo lo soporta
-    # Asumimos borrado directo con proteccion de DB
     try:
         asignatura.delete()
         messages.success(request, "Asignatura eliminada.")
@@ -964,7 +981,7 @@ def crear_anotacion(request, estudiante_id):
             anotacion.profesor = request.user
             # Intentar asignar curso actual si existe inscripción
             try:
-                inscripcion = InscripcionCurso.objects.filter(alumno=estudiante, activo=True).first()
+                inscripcion = InscripcionCurso.objects.filter(estudiante=estudiante, estado='activo').first()
                 if inscripcion:
                     anotacion.curso = inscripcion.curso
             except Exception:

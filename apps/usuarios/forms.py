@@ -96,9 +96,13 @@ class QuickStudentCreationForm(forms.ModelForm):
             if password1 and password2 and password1 != password2:
                 raise forms.ValidationError("Las contraseñas no coinciden.")
             
-            # Validar longitud mínima de contraseña
-            if password1 and len(password1) < 6:
-                raise forms.ValidationError("La contraseña debe tener al menos 6 caracteres.")
+            # Validar contraseña con validadores de Django
+            if password1:
+                from django.contrib.auth.password_validation import validate_password
+                try:
+                    validate_password(password1)
+                except forms.ValidationError as e:
+                    raise forms.ValidationError(e.messages)
                 
         return cleaned_data
 
@@ -147,7 +151,14 @@ class QuickStudentCreationForm(forms.ModelForm):
 class MatriculaForm(forms.Form):
     """Formulario unificado para matrícula rápida"""
     # Estudiante
-    rut_estudiante = forms.CharField(label='RUT Estudiante', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '12.345.678-9'}))
+    rut_estudiante = forms.CharField(
+        label='RUT Estudiante', 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control rut-input', 
+            'placeholder': '12.345.678-9',
+            'maxlength': '12'
+        })
+    )
     nombres = forms.CharField(label='Nombres', widget=forms.TextInput(attrs={'class': 'form-control'}))
     apellidos = forms.CharField(label='Apellidos', widget=forms.TextInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(label='Email (Opcional)', required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
@@ -163,9 +174,36 @@ class MatriculaForm(forms.Form):
     
     # Apoderado
     tiene_apoderado = forms.BooleanField(label='Registrar Apoderado', required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'onchange': 'toggleApoderado(this)'}))
-    rut_apoderado = forms.CharField(label='RUT Apoderado', required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    rut_apoderado = forms.CharField(
+        label='RUT Apoderado', 
+        required=False, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control rut-input',
+            'maxlength': '12'
+        })
+    )
     nombre_apoderado = forms.CharField(label='Nombre Completo Apoderado', required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     email_apoderado = forms.EmailField(label='Email Apoderado', required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    def clean_rut_estudiante(self):
+        """Valida el formato y dígito verificador del RUT del estudiante"""
+        from core.utils import validar_rut, formatear_rut
+        rut = self.cleaned_data.get('rut_estudiante', '')
+        if rut:
+            rut = formatear_rut(rut)
+            if not validar_rut(rut):
+                raise forms.ValidationError('El RUT del estudiante no es válido.')
+        return rut
+
+    def clean_rut_apoderado(self):
+        """Valida el formato y dígito verificador del RUT del apoderado"""
+        from core.utils import validar_rut, formatear_rut
+        rut = self.cleaned_data.get('rut_apoderado', '')
+        if rut:
+            rut = formatear_rut(rut)
+            if not validar_rut(rut):
+                raise forms.ValidationError('El RUT del apoderado no es válido.')
+        return rut
 
     def clean(self):
         cleaned_data = super().clean()

@@ -91,6 +91,8 @@ INSTALLED_APPS = [
     'mensajeria',
     'django_htmx',
     'administrativo',
+    'tareas',
+    'calendario',
 ]
 
 MIDDLEWARE = [

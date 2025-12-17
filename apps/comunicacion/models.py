@@ -37,6 +37,10 @@ class Noticia(models.Model):
     es_publica = models.BooleanField(default=True)
     destacado = models.BooleanField(default=False)
     urgente = models.BooleanField(default=False)
+    requiere_confirmacion = models.BooleanField(
+        default=False,
+        help_text='Si está activo, los usuarios deben confirmar que leyeron este comunicado'
+    )
     autor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
@@ -54,3 +58,35 @@ class Noticia(models.Model):
         self.visitas = F('visitas') + 1
         self.save(update_fields=['visitas'])
         self.refresh_from_db()
+    
+    def confirmaciones_count(self):
+        """Retorna la cantidad de confirmaciones de lectura"""
+        return self.confirmaciones.count()
+    
+    def usuario_confirmo(self, user):
+        """Verifica si un usuario ya confirmó la lectura"""
+        return self.confirmaciones.filter(usuario=user).exists()
+
+
+class ConfirmacionLectura(models.Model):
+    """Registro de confirmación de lectura de noticias/comunicados"""
+    noticia = models.ForeignKey(
+        Noticia, 
+        on_delete=models.CASCADE, 
+        related_name='confirmaciones'
+    )
+    usuario = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='lecturas_confirmadas'
+    )
+    fecha_confirmacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Confirmación de Lectura'
+        verbose_name_plural = 'Confirmaciones de Lectura'
+        unique_together = ['noticia', 'usuario']
+        ordering = ['-fecha_confirmacion']
+    
+    def __str__(self):
+        return f"{self.usuario.get_full_name()} leyó '{self.noticia.titulo}'"

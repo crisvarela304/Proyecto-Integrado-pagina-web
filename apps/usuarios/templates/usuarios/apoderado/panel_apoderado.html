@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portal del Apoderado{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumbs -->
+    {% include 'includes/breadcrumbs.html' with items=breadcrumbs %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-0">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Portal del Apoderado
+                    </h2>
+                    <p class="text-muted mb-0">Bienvenido/a, {{ request.user.get_full_name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de Pupilos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Mis Pupilos</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Selecciona un pupilo para ver su información académica:</p>
+
+                    <div class="row g-4">
+                        {% for pupilo in pupilos %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card border-0 shadow-sm rounded-3 card-hover h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <div class="mx-auto rounded-circle bg-primary bg-gradient d-flex align-items-center justify-content-center"
+                                            style="width: 80px; height: 80px;">
+                                            <span class="text-white fs-3 fw-bold">
+                                                {{ pupilo.estudiante.user.first_name|slice:":1" }}{{
+                                                pupilo.estudiante.user.last_name|slice:":1" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <h5 class="fw-bold mb-1">{{ pupilo.estudiante.nombre_completo }}</h5>
+                                    <p class="text-muted small mb-2">{{ pupilo.get_vinculo_display }}</p>
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-card-text me-1"></i>{{ pupilo.estudiante.rut }}
+                                    </p>
+
+                                    <a href="{% url 'usuarios:resumen_pupilo' pupilo.estudiante.id %}"
+                                        class="btn btn-primary w-100">
+                                        <i class="bi bi-eye me-1"></i>Ver Resumen
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                            <p class="text-muted mt-3">No tienes pupilos asignados.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

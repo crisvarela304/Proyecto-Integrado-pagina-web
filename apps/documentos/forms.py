@@ -80,12 +80,28 @@ class DocumentoForm(forms.ModelForm):
                 # No restringimos curso, pero lo hacemos opcional
                 self.fields['curso'].required = False
 
+    EXTENSIONES_PERMITIDAS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', 
+                               '.jpg', '.jpeg', '.png', '.gif', '.zip', '.rar', '.txt']
+    MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+
     def clean_archivo(self):
         archivo = self.cleaned_data.get('archivo')
         if not archivo:
             raise forms.ValidationError("Debes adjuntar un archivo.")
         if archivo.size == 0:
-            raise forms.ValidationError("El archivo esta vacio.")
+            raise forms.ValidationError("El archivo está vacío.")
+        
+        # Validar tamaño máximo
+        if archivo.size > self.MAX_UPLOAD_SIZE:
+            raise forms.ValidationError(f"El archivo excede el tamaño máximo permitido de 10MB.")
+        
+        # Validar extensión
+        ext = os.path.splitext(archivo.name)[1].lower()
+        if ext not in self.EXTENSIONES_PERMITIDAS:
+            raise forms.ValidationError(
+                f"Tipo de archivo no permitido. Extensiones válidas: {', '.join(self.EXTENSIONES_PERMITIDAS)}"
+            )
+        
         return archivo
 
     def save(self, commit=True):

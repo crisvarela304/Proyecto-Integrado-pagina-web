@@ -221,9 +221,12 @@
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">RUT</label>
-                                        <input type="text" name="rut" class="form-control" placeholder="12.345.678-9"
+                                        <label class="form-label">RUT <span class="text-danger">*</span></label>
+                                        <input type="text" name="rut" class="form-control rut-input"
+                                            placeholder="12.345.678-9" maxlength="12" title="Ingresa un RUT válido"
                                             required>
+                                        <div class="invalid-feedback">RUT inválido. Verifica el formato y dígito
+                                            verificador.</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email (Opcional)</label>
@@ -371,5 +374,143 @@
         var myModal = new bootstrap.Modal(document.getElementById('modalEliminar'));
         myModal.show();
     }
+    // ===== VALIDACIÓN DE RUT CHILENO =====
+
+    // Formatear RUT mientras escribe (XX.XXX.XXX-X)
+    function formatearRUT(valor) {
+        // Limpiar todo excepto números y K
+        let rut = valor.replace(/[^0-9kK]/g, '').toUpperCase();
+        if (rut.length === 0) return '';
+
+        // Separar cuerpo y dígito verificador
+        let dv = rut.slice(-1);
+        let cuerpo = rut.slice(0, -1);
+
+        // Agregar puntos al cuerpo
+        cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        return cuerpo + '-' + dv;
+    }
+
+    // Calcular dígito verificador
+    function calcularDV(rut) {
+        let suma = 0;
+        let multiplo = 2;
+
+        for (let i = rut.length - 1; i >= 0; i--) {
+            suma += parseInt(rut[i]) * multiplo;
+            multiplo = multiplo === 7 ? 2 : multiplo + 1;
+        }
+
+        let residuo = suma % 11;
+        let dv = 11 - residuo;
+
+        if (dv === 11) return '0';
+        if (dv === 10) return 'K';
+        return dv.toString();
+    }
+
+    // Validar RUT completo
+    function validarRUT(rutCompleto) {
+        if (!rutCompleto || rutCompleto.length < 3) return false;
+
+        // Limpiar
+        let rut = rutCompleto.replace(/[^0-9kK]/g, '').toUpperCase();
+        if (rut.length < 2) return false;
+
+        let dv = rut.slice(-1);
+        let cuerpo = rut.slice(0, -1);
+
+        // Validar que el cuerpo sean solo números
+        if (!/^\d+$/.test(cuerpo)) return false;
+
+        // Calcular y comparar DV
+        return calcularDV(cuerpo) === dv;
+    }
+
+    // Aplicar validación a todos los inputs de RUT
+    document.addEventListener('DOMContentLoaded', function () {
+        const rutInputs = document.querySelectorAll('.rut-input');
+
+        rutInputs.forEach(input => {
+            // Formatear mientras escribe
+            input.addEventListener('input', function () {
+                let valor = this.value;
+                let cursorPos = this.selectionStart;
+                let antiguaLongitud = valor.length;
+
+                this.value = formatearRUT(valor);
+
+                // Ajustar posición del cursor
+                let nuevaLongitud = this.value.length;
+                let diff = nuevaLongitud - antiguaLongitud;
+                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+
+                // Quitar clases mientras escribe
+                this.classList.remove('is-valid', 'is-invalid');
+            });
+
+            // Validar al perder foco
+            input.addEventListener('blur', function () {
+                let valor = this.value.trim();
+
+                if (valor.length > 0) {
+                    if (validarRUT(valor)) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                }
+            });
+
+            // Prevenir caracteres no válidos
+            input.addEventListener('keypress', function (e) {
+                const char = String.fromCharCode(e.which).toUpperCase();
+
+                // Solo permitir números, K, puntos y guión
+                if (!/[0-9kK.-]/.test(char)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Validar RUT antes de enviar formulario del modal
+        const formCrearUsuario = document.querySelector('#modalCrearUsuario form');
+        if (formCrearUsuario) {
+            formCrearUsuario.addEventListener('submit', function (e) {
+                const rutInput = this.querySelector('.rut-input');
+                if (rutInput && rutInput.value.trim() !== '') {
+                    if (!validarRUT(rutInput.value)) {
+                        e.preventDefault();
+                        rutInput.classList.add('is-invalid');
+                        rutInput.focus();
+                        alert('⚠️ El RUT ingresado no es válido.\n\nVerifica el formato y el dígito verificador.');
+                    }
+                }
+            });
+        }
+    });
 </script>
+
+<style>
+    /* Estilos para validación de RUT */
+    .rut-input.is-invalid {
+        border-color: #dc3545 !important;
+        background-color: #fff5f5 !important;
+    }
+
+    .rut-input.is-valid {
+        border-color: #198754 !important;
+        background-color: #f0fff4 !important;
+    }
+
+    .rut-input:focus {
+        border-color: #3a86ff !important;
+        box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25) !important;
+    }
+</style>
 {% endblock %}

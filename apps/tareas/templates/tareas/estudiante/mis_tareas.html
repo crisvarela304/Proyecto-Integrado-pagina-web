@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Tareas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="fw-bold mb-0">
+                    <i class="bi bi-list-task text-primary me-2"></i>Mis Tareas
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    {% if tareas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Asignatura</th>
+                                    <th>Fecha de Entrega</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarea in tareas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ tarea.titulo }}</strong>
+                                        <small class="d-block text-muted">{{ tarea.tipo|title }}</small>
+                                    </td>
+                                    <td>{{ tarea.asignatura.nombre }}</td>
+                                    <td>
+                                        <span class="{% if tarea.esta_vencida_flag %}text-danger{% endif %}">
+                                            {{ tarea.fecha_entrega|date:"d/m/Y" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if tarea.ya_entregue %}
+                                        <span class="badge bg-success">Entregada</span>
+                                        {% elif tarea.esta_vencida_flag %}
+                                        <span class="badge bg-danger">Vencida</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'tareas:entregar_tarea' tarea.id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            {% if tarea.ya_entregue %}
+                                            <i class="bi bi-eye me-1"></i>Ver
+                                            {% else %}
+                                            <i class="bi bi-upload me-1"></i>Entregar
+                                            {% endif %}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                        <p class="text-muted mt-3">No tienes tareas asignadas.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

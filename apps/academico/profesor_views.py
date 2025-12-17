@@ -215,6 +215,8 @@ def gestionar_calificaciones(request, estudiante_id):
                         
                         if nota_str:
                             try:
+                                # Reemplazar coma por punto para soportar formato local
+                                nota_str = nota_str.replace(',', '.')
                                 nota = float(nota_str)
                                 if 1.0 <= nota <= 7.0:
                                     Calificacion.objects.update_or_create(
@@ -231,8 +233,10 @@ def gestionar_calificaciones(request, estudiante_id):
                                             'semestre': '1',
                                         }
                                     )
+                                else:
+                                    messages.error(request, f'⚠️ Nota fuera de rango en {asignatura.nombre} - Evaluación {i}: {nota}. Las notas deben estar entre 1.0 y 7.0')
                             except ValueError:
-                                messages.warning(request, f'Nota inválida para {asignatura.nombre} - Evaluación {i}')
+                                messages.warning(request, f'Nota inválida para {asignatura.nombre} - Evaluación {i}. Solo se permiten números.')
             
             # --- LOGGING ---
             try:

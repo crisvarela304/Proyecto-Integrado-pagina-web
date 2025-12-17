@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q
+from django.core.cache import cache
 from .models import PerfilUsuario
 import secrets
 from .forms import (
@@ -22,6 +23,51 @@ from core.utils import limpiar_rut, validar_rut, formatear_rut
 # Importaciones de modelos académicos y comunicación
 from comunicacion.models import Noticia
 from academico.models import RecursoAcademico, InscripcionCurso
+
+# ============================================
+# RATE LIMITING PARA LOGIN (Seguridad)
+# ============================================
+INTENTOS_MAXIMOS = 5  # Máximo intentos fallidos
+TIEMPO_BLOQUEO = 15 * 60  # 15 minutos en segundos
+
+def get_client_ip(request):
+    """Obtiene la IP del cliente"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+def get_intentos_key(ip):
+    """Genera la clave de caché para los intentos"""
+    return f"login_intentos_{ip}"
+
+def verificar_bloqueo(request):
+    """Verifica si la IP está bloqueada. Retorna (bloqueado, minutos_restantes)"""
+    ip = get_client_ip(request)
+    key = get_intentos_key(ip)
+    intentos = cache.get(key, 0)
+    
+    if intentos >= INTENTOS_MAXIMOS:
+        ttl = cache.ttl(key) if hasattr(cache, 'ttl') else TIEMPO_BLOQUEO
+        minutos = max(1, ttl // 60) if ttl else 15
+        return True, minutos
+    return False, 0
+
+def registrar_intento_fallido(request):
+    """Registra un intento fallido de login"""
+    ip = get_client_ip(request)
+    key = get_intentos_key(ip)
+    intentos = cache.get(key, 0)
+    cache.set(key, intentos + 1, TIEMPO_BLOQUEO)
+    return INTENTOS_MAXIMOS - intentos - 1
+
+def limpiar_intentos(request):
+    """Limpia los intentos fallidos después de un login exitoso"""
+    ip = get_client_ip(request)
+    key = get_intentos_key(ip)
+    cache.delete(key)
 
 def autenticar_con_rut(request, rut, password):
     """Autentica un usuario usando su RUT"""
@@ -78,7 +124,14 @@ def registrar_usuario(request):
 
 # Iniciar sesión
 def login_usuario(request):
-    """Login genérico o redirección"""
+    """Login genérico con protección contra ataques de fuerza bruta"""
+    
+    # Verificar si la IP está bloqueada
+    bloqueado, minutos = verificar_bloqueo(request)
+    if bloqueado:
+        messages.error(request, f'⚠️ Demasiados intentos fallidos. Intenta de nuevo en {minutos} minutos.')
+        return render(request, 'usuarios/login.html', {'form': LoginForm(), 'bloqueado': True})
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -106,19 +159,34 @@ def login_usuario(request):
                 except PerfilUsuario.DoesNotExist:
                     pass
                 
+                # Login exitoso: limpiar intentos fallidos
+                limpiar_intentos(request)
                 login(request, user)
                 return redirect('usuarios:panel')
             else:
-                messages.error(request, 'RUT/Usuario o contraseña incorrectos.')
+                # Login fallido: registrar intento
+                intentos_restantes = registrar_intento_fallido(request)
+                if intentos_restantes > 0:
+                    messages.error(request, f'RUT/Usuario o contraseña incorrectos. Te quedan {intentos_restantes} intentos.')
+                else:
+                    messages.error(request, '⚠️ Cuenta bloqueada por 15 minutos debido a múltiples intentos fallidos.')
+                    return render(request, 'usuarios/login.html', {'form': form, 'bloqueado': True})
     else:
         form = LoginForm()
     
     return render(request, 'usuarios/login.html', {'form': form})
 
 def login_base(request, allowed_roles, template_context, success_url='usuarios:panel'):
-    """Vista base para logins específicos"""
+    """Vista base para logins específicos con protección rate limiting"""
     if request.user.is_authenticated:
         return redirect(success_url)
+
+    # Verificar bloqueo
+    bloqueado, minutos = verificar_bloqueo(request)
+    if bloqueado:
+        messages.error(request, f'⚠️ Demasiados intentos fallidos. Intenta de nuevo en {minutos} minutos.')
+        context = {**template_context, 'form': LoginForm(), 'bloqueado': True}
+        return render(request, 'usuarios/login_role.html', context)
 
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -153,10 +221,19 @@ def login_base(request, allowed_roles, template_context, success_url='usuarios:p
                         messages.error(request, 'Perfil de usuario no encontrado.')
                         return render(request, 'usuarios/login_role.html', {**template_context, 'form': form})
                 
+                # Login exitoso: limpiar intentos
+                limpiar_intentos(request)
                 login(request, user)
                 return redirect(success_url)
             else:
-                messages.error(request, 'Credenciales incorrectas.')
+                # Login fallido: registrar intento
+                intentos_restantes = registrar_intento_fallido(request)
+                if intentos_restantes > 0:
+                    messages.error(request, f'Credenciales incorrectas. Te quedan {intentos_restantes} intentos.')
+                else:
+                    messages.error(request, '⚠️ Bloqueado por 15 minutos debido a múltiples intentos fallidos.')
+                    context = {**template_context, 'form': form, 'bloqueado': True}
+                    return render(request, 'usuarios/login_role.html', context)
     else:
         form = LoginForm()
     
@@ -216,7 +293,8 @@ def panel(request):
     
     # Flags para la plantilla
     es_profesor = rol_codigo in ['profesor', 'administrativo', 'directivo'] or user.is_staff
-    es_estudiante = rol_codigo in ['estudiante', 'apoderado']
+    es_estudiante = rol_codigo == 'estudiante'
+    es_apoderado = rol_codigo == 'apoderado'
     
     # Contexto base
     ctx = {
@@ -227,6 +305,7 @@ def panel(request):
         "is_admin": user.is_staff,
         "es_profesor": es_profesor,
         "es_estudiante": es_estudiante,
+        "es_apoderado": es_apoderado,
     }
 
     # --- Lógica delegada al servicio ---
@@ -314,6 +393,8 @@ def panel(request):
         return render(request, "usuarios/panel_profesor.html", ctx)
     elif es_estudiante:
         return render(request, "usuarios/panel_estudiante.html", ctx)
+    elif es_apoderado:
+        return render(request, "usuarios/panel.html", ctx)
     else:
         return render(request, "usuarios/panel.html", ctx)
 
@@ -587,7 +668,7 @@ def editar_usuario(request, usuario_id):
             
             # Redirigir según tipo
             tipo_filtro = perfil_editar.tipo_usuario if perfil_editar else 'estudiante'
-            return redirect(f"{reversed('usuarios:gestion_usuarios')}?tipo={tipo_filtro}")
+            return redirect(f"{reverse('usuarios:gestion_usuarios')}?tipo={tipo_filtro}")
 
         except Exception as e:
             messages.error(request, f'Error al actualizar: {e}')
