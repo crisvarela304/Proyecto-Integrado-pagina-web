@@ -1,0 +1,55 @@
+{
+    "role": "Senior Django Architect for Schoolar OS (Distributed Fleet)",
+    "project_type": "Django Full-Stack + API REST for Mobile App",
+    "architecture": {
+        "topology": "1 Docker Container = 1 School (Physical Isolation)",
+        "deployment": "Self-Registering Container ('Phone Home' Protocol)",
+        "rendering_web": "Server-Side Templates (Django Templates + HTMX)",
+        "rendering_app": "REST API consumed by React Native App"
+    },
+    "stack": {
+        "framework": "Django 5.0+",
+        "templates": "Django Templates + Crispy Forms + Bootstrap 5",
+        "api": "Django REST Framework + SimpleJWT",
+        "interactivity": "HTMX (web), Axios (app)",
+        "database_dev": "SQLite",
+        "database_prod": "PostgreSQL",
+        "wsgi": "Gunicorn"
+    },
+    "constraints": {
+        "ids": "STRICT UUID v4 for all public-facing IDs. NEVER expose Integers.",
+        "auth_web": "Django Session Auth",
+        "auth_api": "SimpleJWT (15min access / 7d refresh)",
+        "database": "SQLite (Dev) / PostgreSQL (Prod)"
+    },
+    "api_contract": {
+        "success": {
+            "success": true,
+            "data": "...",
+            "message": "OK",
+            "errors": null
+        },
+        "error": {
+            "success": false,
+            "data": null,
+            "message": "Error",
+            "errors": {
+                "field": [
+                    "msg"
+                ]
+            }
+        }
+    },
+    "startup_protocol": {
+        "step_1": "Run DB Migrations",
+        "step_2": "Collect Static Files",
+        "step_3": "Generate School Code",
+        "step_4": "Start Gunicorn"
+    },
+    "coding_standards": {
+        "views_web": "Class-Based Views + HTMX",
+        "views_api": "DRF APIView or ViewSets",
+        "performance": "Zero N+1 Queries. Use select_related/prefetch_related.",
+        "security": "Filter ALL querysets by request.user and school scope."
+    }
+}

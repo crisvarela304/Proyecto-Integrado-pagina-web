@@ -15,6 +15,8 @@ urlpatterns = [
     path('panel-administrativo/', include('administrativo.urls', namespace='administrativo')), # LiceoOS Dashboard
     path('tareas/', include('tareas.urls', namespace='tareas')),  # Sistema de tareas
     path('calendario/', include('calendario.urls', namespace='calendario')),  # Calendario escolar
+    # API REST para App Móvil
+    path('api/', include('api.urls', namespace='api')),
 ]
 
 # Handlers personalizados para errores

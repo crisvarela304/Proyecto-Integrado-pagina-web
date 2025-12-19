@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -13,6 +14,7 @@ class PerfilUsuario(models.Model):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     rut = models.CharField('RUT', max_length=12, unique=True, help_text='Ej: 12.345.678-9')
     tipo_usuario = models.CharField(max_length=15, choices=TIPO_USUARIO, default='estudiante')
     telefono = models.CharField(max_length=15, blank=True)
@@ -61,6 +63,7 @@ class Pupilo(models.Model):
         ('otro', 'Otro Familiar'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     apoderado = models.ForeignKey(
         PerfilUsuario, 
         on_delete=models.CASCADE, 

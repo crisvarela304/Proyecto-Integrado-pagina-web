@@ -2,6 +2,7 @@
 Modelos para el Sistema de Tareas Escolares.
 Permite a profesores asignar tareas y a estudiantes entregarlas.
 """
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from academico.models import Curso, Asignatura
@@ -23,6 +24,7 @@ class Tarea(models.Model):
         ('cerrada', 'Cerrada'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     titulo = models.CharField('Título', max_length=200)
     descripcion = models.TextField('Descripción')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='tarea')
@@ -107,6 +109,7 @@ class Entrega(models.Model):
         ('rechazada', 'Rechazada - Rehacer'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     tarea = models.ForeignKey(
         Tarea, 
         on_delete=models.CASCADE, 

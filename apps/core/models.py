@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 
 class ConfiguracionSistema(models.Model):
@@ -45,6 +46,69 @@ class ConfiguracionAcademica(models.Model):
         return obj
 
 
+class ColegioConfig(models.Model):
+    """
+    Configuración única del colegio (Singleton).
+    Usado por el Phone Home Protocol para auto-registro con el Directorio Central.
+    """
+    codigo = models.CharField(
+        max_length=8, 
+        unique=True, 
+        help_text='Código único del colegio (ej: COLE-A1B2)'
+    )
+    nombre = models.CharField(max_length=200, verbose_name='Nombre del Colegio')
+    url = models.URLField(
+        blank=True, 
+        help_text='URL pública del colegio (ej: https://colegio.schoolar.cl)'
+    )
+    
+    # Branding para la App
+    logo = models.ImageField(upload_to='colegio/', blank=True, null=True)
+    color_primario = models.CharField(max_length=7, default='#1976D2', help_text='Color HEX')
+    color_secundario = models.CharField(max_length=7, default='#424242', help_text='Color HEX')
+    
+    # Estado de registro
+    registrado_en_directorio = models.BooleanField(
+        default=False, 
+        help_text='True si el colegio ya se registró con el Directorio Central'
+    )
+    fecha_registro = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Configuración del Colegio'
+        verbose_name_plural = 'Configuración del Colegio'
+    
+    def save(self, *args, **kwargs):
+        # Singleton: siempre PK=1
+        self.pk = 1
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+    
+    @classmethod
+    def get_config(cls):
+        """Retorna la configuración del colegio, creándola si no existe"""
+        obj, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'codigo': cls._generate_code(),
+                'nombre': 'Mi Colegio'
+            }
+        )
+        return obj
+    
+    @staticmethod
+    def _generate_code():
+        """Genera un código único de 8 caracteres"""
+        import random
+        import string
+        chars = string.ascii_uppercase + string.digits
+        return 'COLE-' + ''.join(random.choices(chars, k=4))
+
 class Notificacion(models.Model):
     """Sistema de notificaciones web para usuarios"""
     from django.contrib.auth.models import User
@@ -58,6 +122,7 @@ class Notificacion(models.Model):
         ('alerta', 'Alerta'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     usuario = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 

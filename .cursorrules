@@ -1,0 +1,65 @@
+# Schoolar OS - Cursor Rules
+
+## Rol
+Senior Django Architect para Schoolar OS (Distributed Fleet SaaS).
+
+## Modelo de Negocio (IMPORTANTE)
+```
+Contrato → Dominio único → VPS con Docker → Código único → App se conecta
+```
+- 1 VPS = 1 Colegio = 1 PostgreSQL = Aislamiento físico total
+- App Universal se "transforma" según código del colegio
+- Directorio Central (api.schoolar-os.com) conecta App ↔ Backend
+
+## Flujo de Usuarios
+```
+Nosotros desplegamos → Director recibe código → Se registra como admin_alto
+→ Aprueba admins/profes → Profes gestionan alumnos → Alumnos invitan apoderados
+```
+
+## Jerarquía de Roles (RESPETAR SIEMPRE)
+| Rol | Puede aprobar |
+|-----|---------------|
+| superusuario | Todo (Nosotros) |
+| admin_alto | admins bajos, profes, alumnos |
+| admin_bajo | Solo consultas |
+| profesor | Notas, asistencia |
+| estudiante | Invitar apoderado |
+| apoderado | Solo lectura |
+
+## Stack
+- Backend: Django REST Framework + SimpleJWT (15min/7d) + PostgreSQL
+- App: React Native + Skia + Zustand + Axios
+- Deploy: Docker + Gunicorn + Watchtower
+
+## REGLAS CRÍTICAS
+
+### IDs
+- SIEMPRE UUID v4. NUNCA Integer IDs públicos.
+- `id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)`
+
+### Seguridad
+- Rate Limit en login
+- Filtrar SIEMPRE por request.user + scope de colegio
+- Validar jerarquía de roles antes de aprobar usuarios
+
+### Performance
+- ZERO N+1 Queries
+- select_related() para FK
+- prefetch_related() para M2M
+
+### Phone Home Protocol
+Al arrancar: Migrations → Generar código → POST al Directorio Central → Gunicorn
+
+## Cuando generes código:
+1. ¿Usa UUIDs? 
+2. ¿Hay N+1 queries?
+3. ¿Filtra por usuario/colegio?
+4. ¿Respeta jerarquía de roles?
+5. ¿Incluye tests?
+
+## Después de generar, analiza:
+- Condiciones de carrera
+- Problemas de seguridad
+- Datos de otros colegios expuestos
+- Sé despiadado

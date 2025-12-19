@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -14,6 +15,7 @@ def obtener_año_actual():
 
 class Asignatura(models.Model):
     """Asignaturas/materias del liceo"""
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     nombre = models.CharField(max_length=100)
     codigo = models.CharField(max_length=10, unique=True)
     descripcion = models.TextField(blank=True)
@@ -38,6 +40,7 @@ class Curso(models.Model):
         ('4', '4° Medio'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     nombre = models.CharField(max_length=50)  # "1° Medio A"
     nivel = models.CharField(max_length=1, choices=NIVEL_CHOICES)
     letra = models.CharField(max_length=1)  # A, B, C, etc.
@@ -104,6 +107,7 @@ class Calificacion(models.Model):
         ('2', 'Segundo Semestre'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calificaciones', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, related_name='calificaciones')
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='calificaciones')
@@ -183,6 +187,7 @@ class Asistencia(models.Model):
         ('justificado', 'Justificado'),
     ]
     
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='asistencias', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='asistencias')
     fecha = models.DateField()
@@ -290,6 +295,7 @@ class Anotacion(models.Model):
         ('otro', 'Otro'),
     ]
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anotaciones_recibidas', limit_choices_to={'perfil__tipo_usuario': 'estudiante'})
     profesor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anotaciones_creadas', limit_choices_to={'perfil__tipo_usuario__in': ['profesor', 'administrativo', 'directivo']})
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, null=True, blank=True)
